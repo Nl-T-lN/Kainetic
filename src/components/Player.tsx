@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import styled from "styled-components";
 import type { Track } from "@/types/music";
+import YouTube from "react-youtube";
 
 // Hooks
 import { useYTPlayer } from "@/hooks/useYTPlayer";
@@ -37,7 +38,7 @@ const MainContent = styled.div`
   display: flex;
   flex-direction: column;
   overflow-y: auto;
-  padding: 1.25rem 1.75rem;
+  padding: 0 1.75rem;
   padding-bottom: 110px;
   position: relative;
   z-index: 1;
@@ -45,20 +46,23 @@ const MainContent = styled.div`
 
 const TopBar = styled.div`
   display: flex;
-  justify-content: center;
+  justify-content: flex-start;
   align-items: center;
-  margin-bottom: 1.5rem;
   position: sticky;
-  top: -1.25rem;
-  z-index: 10;
-  padding: 1.25rem 0;
-  margin-top: -1.25rem;
+  top: 0;
+  z-index: 50;
+  padding: 1.25rem 1.75rem 1rem 1.75rem;
+  margin: 0 -1.75rem 1.5rem -1.75rem;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 `;
 
 const ResultsContainer = styled.div`
-  max-width: 960px;
-  margin: 0 auto;
+  max-width: 1200px;
   width: 100%;
+  margin: 0;
 `;
 
 const ResultsHeader = styled.h2`
@@ -66,6 +70,40 @@ const ResultsHeader = styled.h2`
   font-weight: 700;
   margin-bottom: 1rem;
   color: ${({ theme }) => theme.colors.cream};
+`;
+
+const ResultsTabs = styled.div`
+  display: flex;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+`;
+
+const ResultTabButton = styled.button<{ $active?: boolean }>`
+  background: transparent;
+  border: none;
+  color: ${({ $active, theme }) => ($active ? theme.colors.cream : theme.colors.muted)};
+  font-size: 0.9rem;
+  font-weight: 600;
+  padding: 0.5rem 0;
+  cursor: pointer;
+  position: relative;
+  transition: color ${({ theme }) => theme.transitions.fast};
+
+  &:hover {
+    color: ${({ theme }) => theme.colors.cream};
+  }
+
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: -1px;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background: ${({ $active, theme }) => ($active ? theme.colors.cream : "transparent")};
+    transition: background ${({ theme }) => theme.transitions.fast};
+  }
 `;
 
 export function Player() {
@@ -172,9 +210,13 @@ export function Player() {
     if (activeQueueId === "SEARCH" && searchCategory !== "All") {
       // Basic mock filtering since we only get standard tracks from YT
       if (searchCategory === "Artists") {
-        return tracks.filter((_, i) => i % 3 === 0); // Mock artists
+        return tracks.filter((_, i) => i % 3 === 0);
       } else if (searchCategory === "Albums") {
-        return tracks.filter((_, i) => i % 4 === 0); // Mock albums
+        return tracks.filter((_, i) => i % 4 === 0);
+      } else if (searchCategory === "Playlists") {
+        return tracks.filter((_, i) => i % 5 === 0);
+      } else if (searchCategory === "Podcasts") {
+        return []; // Usually empty for standard music search
       }
     }
     
@@ -184,6 +226,7 @@ export function Player() {
   const getResultsTitle = () => {
     if (activeQueueId === "MOOD") return "Vibe Results";
     if (activeQueueId === "PLAYLIST") return "AI Playlist";
+    if (search.query) return `Search Results for "${search.query}"`;
     return "Search Results";
   };
 
@@ -215,6 +258,21 @@ export function Player() {
         {activeView === "SEARCH" && (
           <ResultsContainer>
             <ResultsHeader>{getResultsTitle()}</ResultsHeader>
+            
+            {activeQueueId === "SEARCH" && (
+              <ResultsTabs>
+                {["All", "Tracks", "Albums", "Artists", "Playlists", "Podcasts"].map(cat => (
+                  <ResultTabButton
+                    key={cat}
+                    $active={searchCategory === cat}
+                    onClick={() => handleCategoryChange(cat)}
+                  >
+                    {cat}
+                  </ResultTabButton>
+                ))}
+              </ResultsTabs>
+            )}
+
             <TrackList
               tracks={getActiveTracks()}
               currentTrackId={playerState.currentTrack?.videoId}
@@ -254,8 +312,21 @@ export function Player() {
         {activeView === "LIBRARY" && <LibraryView onPlay={handlePlayTrack} />}
       </MainContent>
 
-      <div
-        id="yt-player"
+      <YouTube
+        videoId={playerState.currentTrack?.videoId}
+        opts={{
+          height: '200',
+          width: '200',
+          playerVars: {
+            autoplay: 1,
+            controls: 0,
+            disablekb: 1,
+            fs: 0,
+            rel: 0,
+          },
+        }}
+        onReady={player.onReady}
+        className="yt-player-hidden"
         style={{
           position: "absolute",
           top: "-9999px",

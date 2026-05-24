@@ -96,13 +96,6 @@ const RoomBadge = styled.span`
   animation: ${pulse} 2s infinite;
 `;
 
-const FooterText = styled.div`
-  color: ${({ theme }) => theme.colors.mutedDim};
-  font-size: 0.75rem;
-  padding: 1.5rem;
-  margin-top: auto;
-`;
-
 interface SidebarProps {
   activeView: string;
   setActiveView: (v: string) => void;

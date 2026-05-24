@@ -6,6 +6,7 @@ import type { Track } from "@/types/music";
 export interface UseSearchReturn {
   tracks: Track[];
   isLoading: boolean;
+  query: string;
   search: (query: string) => void;
 }
 
@@ -24,6 +25,7 @@ export interface UseSearchReturn {
 export function useSearch(): UseSearchReturn {
   const [tracks, setTracks] = useState<Track[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [query, setQuery] = useState("");
   
   // Keep the timeout ID across renders without causing a re-render
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
@@ -37,8 +39,11 @@ export function useSearch(): UseSearchReturn {
     if (!query.trim()) {
       setTracks([]);
       setIsLoading(false);
+      setQuery("");
       return;
     }
+
+    setQuery(query);
 
     setIsLoading(true);
 
@@ -58,5 +63,5 @@ export function useSearch(): UseSearchReturn {
     }, 400); // 400ms delay
   }, []);
 
-  return { tracks, isLoading, search };
+  return { tracks, isLoading, query, search };
 }

@@ -68,35 +68,6 @@ const LoadingBar = styled.div`
   margin: 0 1rem;
 `;
 
-const TabsContainer = styled.div`
-  display: flex;
-  gap: 0.4rem;
-  margin-left: 0.75rem;
-`;
-
-const TabButton = styled.button<{ $active: boolean }>`
-  background: ${({ $active }) =>
-    $active ? "rgba(255, 255, 255, 0.12)" : "transparent"};
-  border: 1px solid ${({ $active }) =>
-    $active ? "rgba(255, 255, 255, 0.15)" : "transparent"};
-  color: ${({ $active, theme }) =>
-    $active ? theme.colors.cream : theme.colors.mutedDim};
-  border-radius: var(--radius);
-  padding: 0.2rem 0.65rem;
-  font-size: 0.78rem;
-  font-weight: 500;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 0.3rem;
-  transition: all ${({ theme }) => theme.transitions.fast};
-  white-space: nowrap;
-
-  &:hover {
-    background: rgba(255, 255, 255, 0.1);
-    color: ${({ theme }) => theme.colors.cream};
-  }
-`;
 
 type SearchMode = "STANDARD" | "VIBE" | "MAGIC";
 
@@ -169,52 +140,6 @@ export function SearchHub({
         />
       </SearchBarWrapper>
       {isLoading && <LoadingBar />}
-      {mode === "STANDARD" && (
-        <TabsContainer style={{ marginTop: "0.2rem", marginBottom: "0.5rem" }}>
-          {["All", "Songs", "Artists", "Albums"].map(cat => (
-            <TabButton 
-              key={cat}
-              $active={category === cat}
-              onClick={() => {
-                setCategory(cat);
-                onCategoryChange?.(cat);
-              }}
-              style={{ padding: "0.25rem 0.75rem", fontSize: "0.8rem", fontWeight: 600 }}
-            >
-              {cat}
-            </TabButton>
-          ))}
-        </TabsContainer>
-      )}
-      <TabsContainer>
-        <TabButton
-          $active={mode === "STANDARD"}
-          onClick={() => {
-            setMode("STANDARD");
-            setQuery("");
-          }}
-        >
-          Standard
-        </TabButton>
-        <TabButton
-          $active={mode === "VIBE"}
-          onClick={() => {
-            setMode("VIBE");
-            setQuery("");
-          }}
-        >
-          <Sparkles size={13} /> Vibe
-        </TabButton>
-        <TabButton
-          $active={mode === "MAGIC"}
-          onClick={() => {
-            setMode("MAGIC");
-            setQuery("");
-          }}
-        >
-          <Wand2 size={13} /> AI Playlist
-        </TabButton>
-      </TabsContainer>
     </HubContainer>
   );
 }
