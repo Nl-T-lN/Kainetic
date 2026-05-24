@@ -20,20 +20,23 @@ const Container = styled.div`
 `;
 
 const RecommendedContainer = styled.div`
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  display: flex;
+  flex-direction: column;
+  flex-wrap: wrap;
+  max-height: 240px; /* Force it to wrap into columns of ~3 items */
+  overflow-x: auto;
   gap: 1rem;
   margin-bottom: 2.5rem;
-
-  @media (max-width: 900px) {
-    grid-template-columns: repeat(2, 1fr);
-  }
-  @media (max-width: 600px) {
-    grid-template-columns: 1fr;
+  padding-bottom: 1rem;
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
   }
 `;
 
 const RecommendedTrack = styled.div<{ $index: number }>`
+  flex: 0 0 auto;
+  width: 400px;
   display: flex;
   align-items: center;
   gap: 1rem;
@@ -143,7 +146,7 @@ const PillButton = styled.button`
   color: #000;
   border: none;
   padding: 0.4rem 1rem;
-  border-radius: 20px;
+  border-radius: var(--radius);
   font-weight: 700;
   font-size: 0.85rem;
   cursor: pointer;
@@ -181,7 +184,7 @@ const ArtistPill = styled.div<{ $index: number }>`
   gap: 0.75rem;
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 40px;
+  border-radius: var(--radius);
   padding: 0.5rem 1rem 0.5rem 0.5rem;
   cursor: pointer;
   transition: all 0.2s ease;

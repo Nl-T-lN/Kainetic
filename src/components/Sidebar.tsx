@@ -171,8 +171,6 @@ export function Sidebar({ activeView, setActiveView, roomCode }: SidebarProps) {
           </NavItem>
         </NavList>
       </NavSection>
-
-      <FooterText>Ventify © 2024</FooterText>
     </SidebarContainer>
   );
 }

@@ -24,7 +24,7 @@ const SearchBarWrapper = styled.div<{ $focused: boolean }>`
     $focused ? "rgba(255, 255, 255, 0.12)" : "rgba(255, 255, 255, 0.07)"};
   border: 1px solid ${({ $focused }) =>
     $focused ? "rgba(255, 255, 255, 0.2)" : "rgba(255, 255, 255, 0.08)"};
-  border-radius: ${({ theme }) => theme.radii.full};
+  border-radius: var(--radius);
   padding: 0.65rem 1.25rem;
   width: 100%;
   transition: all ${({ theme }) => theme.transitions.normal};
@@ -81,7 +81,7 @@ const TabButton = styled.button<{ $active: boolean }>`
     $active ? "rgba(255, 255, 255, 0.15)" : "transparent"};
   color: ${({ $active, theme }) =>
     $active ? theme.colors.cream : theme.colors.mutedDim};
-  border-radius: ${({ theme }) => theme.radii.full};
+  border-radius: var(--radius);
   padding: 0.2rem 0.65rem;
   font-size: 0.78rem;
   font-weight: 500;
