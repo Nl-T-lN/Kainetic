@@ -3,6 +3,8 @@
 import styled from "styled-components";
 import { useThemeSettings } from "@/hooks/useThemeSettings";
 import { useState } from "react";
+import { PlaylistGenerator } from "./PlaylistGenerator";
+import { useRecentTracks } from "@/hooks/useRecentTracks";
 
 const SettingsContainer = styled.div`
   width: 100%;
@@ -201,7 +203,8 @@ const PRESETS = [
 
 export function SettingsView() {
   const { settings, updateSetting, resetToDefaults, isLoaded } = useThemeSettings();
-  const [activeTab, setActiveTab] = useState<'appearance' | 'interface' | 'player'>('appearance');
+  const [activeTab, setActiveTab] = useState<'appearance' | 'interface' | 'player' | 'playlist'>('appearance');
+  const { recentTracks } = useRecentTracks();
 
   if (!isLoaded) return null;
 
@@ -213,7 +216,14 @@ export function SettingsView() {
         <Tab $active={activeTab === 'appearance'} onClick={() => setActiveTab('appearance')}>Appearance</Tab>
         <Tab $active={activeTab === 'interface'} onClick={() => setActiveTab('interface')}>Interface</Tab>
         <Tab $active={activeTab === 'player'} onClick={() => setActiveTab('player')}>Player</Tab>
+        <Tab $active={activeTab === 'playlist'} onClick={() => setActiveTab('playlist')}>Playlist Export</Tab>
       </Tabs>
+
+      {activeTab === 'playlist' && (
+        <Section>
+          <PlaylistGenerator tracks={recentTracks} />
+        </Section>
+      )}
 
       {activeTab === 'appearance' && (
         <Section>

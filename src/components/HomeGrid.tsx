@@ -111,14 +111,20 @@ const RecPlayButton = styled.div`
   }
 `;
 
-const GridContainer = styled.div`
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+const ShelfContainer = styled.div`
+  display: flex;
+  overflow-x: auto;
   gap: 1.5rem;
   padding: 0.5rem 0 2rem;
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
 `;
 
 const Card = styled.div<{ $index: number }>`
+  flex: 0 0 auto;
+  width: 200px;
   background: rgba(255, 255, 255, 0.02);
   border-radius: var(--radius);
   padding: 1rem;
@@ -136,6 +142,10 @@ const Card = styled.div<{ $index: number }>`
       opacity: 1;
       transform: translateY(0);
     }
+  }
+
+  @media (max-width: 600px) {
+    width: 150px;
   }
 `;
 
@@ -210,6 +220,8 @@ const SectionTitle = styled.h2`
 `;
 
 const SkeletonCard = styled.div<{ $index: number }>`
+  flex: 0 0 auto;
+  width: 200px;
   border-radius: var(--radius);
   padding: 1rem;
   opacity: 0;
@@ -246,9 +258,12 @@ interface HomeGridProps {
   onPlay: (track: Track) => void;
 }
 
+import { useRecentTracks } from "@/hooks/useRecentTracks";
+
 export function HomeGrid({ onPlay }: HomeGridProps) {
   const [tracks, setTracks] = useState<Track[]>([]);
   const [loading, setLoading] = useState(true);
+  const { recentTracks } = useRecentTracks();
 
   useEffect(() => {
     const fetchHomeData = async () => {
@@ -274,7 +289,7 @@ export function HomeGrid({ onPlay }: HomeGridProps) {
     return (
       <Container>
         <SectionTitle>{getGreeting()}</SectionTitle>
-        <GridContainer>
+        <ShelfContainer>
           {Array.from({ length: 8 }).map((_, i) => (
             <SkeletonCard key={i} $index={i}>
               <SkeletonImage />
@@ -282,41 +297,24 @@ export function HomeGrid({ onPlay }: HomeGridProps) {
               <SkeletonLine $width="60%" />
             </SkeletonCard>
           ))}
-        </GridContainer>
+        </ShelfContainer>
       </Container>
     );
   }
 
-  const recommendedTracks = tracks.slice(0, 6);
-  const otherTracks = tracks.slice(6);
+  const hits = tracks.slice(0, 10);
+  const recommended = tracks.slice(10);
 
   return (
     <Container>
       <SectionTitle>{getGreeting()}</SectionTitle>
       
-      {recommendedTracks.length > 0 && (
-        <RecommendedContainer>
-          {recommendedTracks.map((track, i) => (
-            <RecommendedTrack key={`rec-${track.videoId}`} $index={i} onClick={() => onPlay(track)}>
-              <img src={track.thumbnailUrl} alt={track.title} loading="lazy" />
-              <div className="info">
-                <div className="title">{track.title}</div>
-                <div className="artist">{track.channelTitle || track.artist || "Artist"}</div>
-              </div>
-              <RecPlayButton className="play-btn">
-                <Play fill="currentColor" size={16} />
-              </RecPlayButton>
-            </RecommendedTrack>
-          ))}
-        </RecommendedContainer>
-      )}
-
-      {otherTracks.length > 0 && (
+      {recentTracks.length > 0 && (
         <>
-          <SectionTitle>Made for you</SectionTitle>
-          <GridContainer>
-            {otherTracks.map((track, index) => (
-              <Card key={track.videoId} $index={index} onClick={() => onPlay(track)}>
+          <SectionTitle style={{ fontSize: "1.4rem", marginTop: "1rem" }}>Recently Played</SectionTitle>
+          <ShelfContainer>
+            {recentTracks.map((track, index) => (
+              <Card key={`recent-${track.videoId}`} $index={index} onClick={() => onPlay(track)}>
                 <ImageContainer>
                   <img src={track.thumbnailUrl} alt={track.title} loading="lazy" />
                   <PlayOverlay className="play-overlay">
@@ -329,7 +327,51 @@ export function HomeGrid({ onPlay }: HomeGridProps) {
                 </Subtitle>
               </Card>
             ))}
-          </GridContainer>
+          </ShelfContainer>
+        </>
+      )}
+
+      {hits.length > 0 && (
+        <>
+          <SectionTitle style={{ fontSize: "1.4rem", marginTop: "1rem" }}>Hits of the Week</SectionTitle>
+          <ShelfContainer>
+            {hits.map((track, index) => (
+              <Card key={`hit-${track.videoId}`} $index={index} onClick={() => onPlay(track)}>
+                <ImageContainer>
+                  <img src={track.thumbnailUrl} alt={track.title} loading="lazy" />
+                  <PlayOverlay className="play-overlay">
+                    <Play fill="currentColor" size={24} />
+                  </PlayOverlay>
+                </ImageContainer>
+                <Title>{track.title}</Title>
+                <Subtitle>
+                  {track.channelTitle || track.artist || "Artist"}
+                </Subtitle>
+              </Card>
+            ))}
+          </ShelfContainer>
+        </>
+      )}
+
+      {recommended.length > 0 && (
+        <>
+          <SectionTitle style={{ fontSize: "1.4rem", marginTop: "1rem" }}>Recommended for You</SectionTitle>
+          <ShelfContainer>
+            {recommended.map((track, index) => (
+              <Card key={`rec-${track.videoId}`} $index={index} onClick={() => onPlay(track)}>
+                <ImageContainer>
+                  <img src={track.thumbnailUrl} alt={track.title} loading="lazy" />
+                  <PlayOverlay className="play-overlay">
+                    <Play fill="currentColor" size={24} />
+                  </PlayOverlay>
+                </ImageContainer>
+                <Title>{track.title}</Title>
+                <Subtitle>
+                  {track.channelTitle || track.artist || "Artist"}
+                </Subtitle>
+              </Card>
+            ))}
+          </ShelfContainer>
         </>
       )}
     </Container>

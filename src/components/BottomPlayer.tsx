@@ -29,45 +29,36 @@ const livePulse = keyframes`
   50% { opacity: 0.4; }
 `;
 
-/* ── Bottom Bar Container ── */
 const BottomBar = styled.div<{ $isExpanded: boolean }>`
   position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: ${({ $isExpanded }) => ($isExpanded ? "100vh" : "80px")};
+  bottom: ${({ $isExpanded }) => ($isExpanded ? "0" : "15px")};
+  left: ${({ $isExpanded }) => ($isExpanded ? "0" : "calc(var(--sidebar-width, 240px) + 15px)")};
+  right: ${({ $isExpanded }) => ($isExpanded ? "0" : "15px")};
+  width: ${({ $isExpanded }) => ($isExpanded ? "100%" : "calc(100% - var(--sidebar-width, 240px) - 30px)")};
+  height: ${({ $isExpanded }) => ($isExpanded ? "100vh" : "86px")};
   background: ${({ $isExpanded }) =>
     $isExpanded
       ? "var(--bg)"
-      : "rgba(var(--bg-rgb), 0.97)"};
-  backdrop-filter: ${({ $isExpanded }) =>
-    $isExpanded ? "none" : "blur(20px)"};
-  border-top: ${({ $isExpanded }) =>
-    $isExpanded ? "none" : "1px solid rgba(255, 255, 255, 0.06)"};
+      : "color-mix(in srgb, var(--bg) 85%, transparent)"};
+  backdrop-filter: blur(20px);
+  border-radius: ${({ $isExpanded }) => ($isExpanded ? "0" : "var(--radius)")};
+  border: ${({ $isExpanded }) =>
+    $isExpanded ? "none" : "1px solid rgba(255, 255, 255, 0.1)"};
+  box-shadow: ${({ $isExpanded }) =>
+    $isExpanded ? "none" : "0 20px 40px rgba(0,0,0,0.4)"};
   display: flex;
   flex-direction: column;
   align-items: center;
   z-index: 1000;
-  transition: height 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
   overflow: hidden;
-`;
-
-const TopProgressBarContainer = styled.div`
-  width: 100%;
-  position: absolute;
-  top: -6px; /* slightly negative to make the bar sit exactly on the border edge */
-  left: 0;
-  right: 0;
-  z-index: 10;
-  
-  /* The inner ProgressBar component will handle its own height/hover states */
 `;
 
 /* ── Mini Player ── */
 const MiniPlayerContainer = styled.div`
   display: flex;
   width: 100%;
-  height: 80px;
+  height: 100%;
   align-items: center;
   justify-content: space-between;
   padding: 0 1.5rem;
@@ -121,6 +112,7 @@ const ControlsContainer = styled.div<{ $isExpanded: boolean }>`
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  gap: 0.25rem;
   width: ${({ $isExpanded }) => ($isExpanded ? "100%" : "40%")};
   max-width: ${({ $isExpanded }) => ($isExpanded ? "600px" : "560px")};
 `;
@@ -512,9 +504,6 @@ export function BottomPlayer({
     <BottomBar $isExpanded={isExpanded}>
       {!isExpanded ? (
         <>
-          <TopProgressBarContainer>
-            <ProgressBar positionMs={positionMs} durationMs={durationMs} onSeek={onSeek} />
-          </TopProgressBarContainer>
           <MiniPlayerContainer>
             <TrackInfo onClick={() => setIsExpanded(true)}>
               {currentTrack ? (
@@ -532,12 +521,15 @@ export function BottomPlayer({
 
             <ControlsContainer $isExpanded={false}>
               <ButtonsRow $isExpanded={false}>
+                <button><Shuffle size={18} fill="currentColor" /></button>
                 <button onClick={(e) => { e.stopPropagation(); onSkip(); }}><SkipBack size={22} fill="currentColor" /></button>
                 <button className="play-btn" onClick={(e) => { e.stopPropagation(); onPlayPause(); }}>
                   {isPlaying ? <Pause size={18} fill="currentColor" /> : <Play size={18} fill="currentColor" style={{ marginLeft: "2px" }} />}
                 </button>
                 <button onClick={(e) => { e.stopPropagation(); onSkip(); }}><SkipForward size={22} fill="currentColor" /></button>
+                <button><Repeat size={18} fill="currentColor" /></button>
               </ButtonsRow>
+              <ProgressBar positionMs={positionMs} durationMs={durationMs} onSeek={onSeek} />
             </ControlsContainer>
 
             <ExtraControls>

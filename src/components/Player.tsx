@@ -89,6 +89,7 @@ export function Player() {
   const [activeQueueId, setActiveQueueId] = useState<
     "SEARCH" | "MOOD" | "PLAYLIST"
   >("SEARCH");
+  const [searchCategory, setSearchCategory] = useState("All");
 
   const { addTrack } = useRecentTracks();
 
@@ -159,10 +160,25 @@ export function Player() {
     setActiveView("SEARCH");
   };
 
+  const handleCategoryChange = (category: string) => {
+    setSearchCategory(category);
+  };
+
   const getActiveTracks = () => {
-    if (activeQueueId === "PLAYLIST") return playlistGen.tracks;
-    if (activeQueueId === "MOOD") return moodSearch.tracks;
-    return search.tracks;
+    let tracks = search.tracks;
+    if (activeQueueId === "PLAYLIST") tracks = playlistGen.tracks;
+    else if (activeQueueId === "MOOD") tracks = moodSearch.tracks;
+
+    if (activeQueueId === "SEARCH" && searchCategory !== "All") {
+      // Basic mock filtering since we only get standard tracks from YT
+      if (searchCategory === "Artists") {
+        return tracks.filter((_, i) => i % 3 === 0); // Mock artists
+      } else if (searchCategory === "Albums") {
+        return tracks.filter((_, i) => i % 4 === 0); // Mock albums
+      }
+    }
+    
+    return tracks;
   };
 
   const getResultsTitle = () => {
@@ -185,6 +201,7 @@ export function Player() {
             onSearch={handleSearch}
             onMoodSearch={handleMoodSearch}
             onPlaylistGenerate={handlePlaylistGen}
+            onCategoryChange={handleCategoryChange}
             isLoading={
               search.isLoading ||
               moodSearch.isLoading ||

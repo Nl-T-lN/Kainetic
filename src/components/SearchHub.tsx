@@ -104,6 +104,7 @@ interface SearchHubProps {
   onSearch: (q: string) => void;
   onMoodSearch: (vibe: string) => void;
   onPlaylistGenerate: (vibe: string) => void;
+  onCategoryChange?: (category: string) => void;
   isLoading: boolean;
 }
 
@@ -111,10 +112,12 @@ export function SearchHub({
   onSearch,
   onMoodSearch,
   onPlaylistGenerate,
+  onCategoryChange,
   isLoading,
 }: SearchHubProps) {
   const [query, setQuery] = useState("");
   const [mode, setMode] = useState<SearchMode>("STANDARD");
+  const [category, setCategory] = useState("All");
   const [isFocused, setIsFocused] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -166,6 +169,23 @@ export function SearchHub({
         />
       </SearchBarWrapper>
       {isLoading && <LoadingBar />}
+      {mode === "STANDARD" && (
+        <TabsContainer style={{ marginTop: "0.2rem", marginBottom: "0.5rem" }}>
+          {["All", "Songs", "Artists", "Albums"].map(cat => (
+            <TabButton 
+              key={cat}
+              $active={category === cat}
+              onClick={() => {
+                setCategory(cat);
+                onCategoryChange?.(cat);
+              }}
+              style={{ padding: "0.25rem 0.75rem", fontSize: "0.8rem", fontWeight: 600 }}
+            >
+              {cat}
+            </TabButton>
+          ))}
+        </TabsContainer>
+      )}
       <TabsContainer>
         <TabButton
           $active={mode === "STANDARD"}
