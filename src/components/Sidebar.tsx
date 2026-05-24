@@ -64,6 +64,8 @@ const Logo = styled.div`
   font-weight: 800;
   letter-spacing: -0.5px;
   margin-left: 1rem;
+  cursor: pointer;
+  user-select: none;
   
   span {
     opacity: 1;
@@ -179,9 +181,10 @@ interface SidebarProps {
   activeView: string;
   setActiveView: (v: string) => void;
   roomCode?: string | null;
+  onLogoClick?: () => void;
 }
 
-export function Sidebar({ activeView, setActiveView, roomCode }: SidebarProps) {
+export function Sidebar({ activeView, setActiveView, roomCode, onLogoClick }: SidebarProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
 
   return (
@@ -190,7 +193,10 @@ export function Sidebar({ activeView, setActiveView, roomCode }: SidebarProps) {
         <MenuButton onClick={() => setIsCollapsed(!isCollapsed)}>
           <Menu size={24} />
         </MenuButton>
-        <Logo>
+        <Logo 
+          onClick={onLogoClick || (() => setActiveView("HOME"))}
+          style={{ cursor: 'pointer' }}
+        >
           <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
             <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2"/>
             <circle cx="12" cy="12" r="3" fill="currentColor"/>

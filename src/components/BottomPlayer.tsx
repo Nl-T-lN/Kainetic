@@ -458,6 +458,7 @@ interface BottomPlayerProps {
   roomCode?: string | null;
   listenerCount?: number;
   isHost?: boolean;
+  onArtistClick?: (artistId: string) => void;
 }
 
 export function BottomPlayer({
@@ -476,6 +477,7 @@ export function BottomPlayer({
   roomCode,
   listenerCount = 0,
   isHost = true,
+  onArtistClick,
 }: BottomPlayerProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [volume, setVolume] = useState(70);
@@ -525,7 +527,30 @@ export function BottomPlayer({
                   <img className="mini-thumb" src={currentTrack.thumbnailUrl} alt={currentTrack.title} />
                   <TrackText>
                     <div className="title">{currentTrack.title}</div>
-                    <div className="artist">{currentTrack.channelTitle || currentTrack.artist || "Unknown Artist"}</div>
+                    <div 
+                      className="artist"
+                      onClick={(e) => {
+                        if (onArtistClick && currentTrack.artistId) {
+                          e.stopPropagation();
+                          setIsExpanded(false);
+                          onArtistClick(currentTrack.artistId);
+                        }
+                      }}
+                      style={{ 
+                        cursor: (onArtistClick && currentTrack.artistId) ? 'pointer' : 'default',
+                        pointerEvents: 'auto'
+                      }}
+                      onMouseEnter={(e) => {
+                        if (onArtistClick && currentTrack.artistId) {
+                          e.currentTarget.style.textDecoration = 'underline';
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.textDecoration = 'none';
+                      }}
+                    >
+                      {currentTrack.channelTitle || currentTrack.artist || "Unknown Artist"}
+                    </div>
                   </TrackText>
                   <button 
                     onClick={(e) => {
@@ -589,7 +614,30 @@ export function BottomPlayer({
                 </ArtworkContainer>
                 <TrackDetails>
                   <div className="title">{currentTrack.title}</div>
-                  <div className="artist">{currentTrack.channelTitle || currentTrack.artist || "Unknown Artist"}</div>
+                  <div 
+                    className="artist"
+                    onClick={(e) => {
+                      if (onArtistClick && currentTrack.artistId) {
+                        e.stopPropagation();
+                        setIsExpanded(false);
+                        onArtistClick(currentTrack.artistId);
+                      }
+                    }}
+                    style={{ 
+                      cursor: (onArtistClick && currentTrack.artistId) ? 'pointer' : 'default',
+                      pointerEvents: 'auto'
+                    }}
+                    onMouseEnter={(e) => {
+                      if (onArtistClick && currentTrack.artistId) {
+                        e.currentTarget.style.textDecoration = 'underline';
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.textDecoration = 'none';
+                    }}
+                  >
+                    {currentTrack.channelTitle || currentTrack.artist || "Unknown Artist"}
+                  </div>
                 </TrackDetails>
               </ExpandedLeft>
               <ExpandedRight ref={scrollRef}>{renderLyrics()}</ExpandedRight>

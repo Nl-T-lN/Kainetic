@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import styled, { keyframes } from "styled-components";
 import type { Track } from "@/types/music";
 import { Play, Heart, RefreshCw, Radio } from "lucide-react";
+import Link from "next/link";
 
 const slideUpFade = keyframes`
   from { opacity: 0; transform: translateY(16px); }
@@ -23,7 +24,7 @@ const RecommendedContainer = styled.div`
   display: flex;
   flex-direction: column;
   flex-wrap: wrap;
-  max-height: 240px; /* Force it to wrap into columns of ~3 items */
+  max-height: 340px; /* Force it to wrap into columns of 4 items */
   overflow-x: auto;
   gap: 1rem;
   margin-bottom: 2.5rem;
@@ -104,6 +105,11 @@ const RecommendedTrack = styled.div<{ $index: number }>`
       opacity: 0;
       transition: all 0.2s;
     }
+
+    .context-menu-btn {
+      opacity: 0;
+      transition: all 0.2s;
+    }
     
     &:hover .heart {
       opacity: 1;
@@ -111,7 +117,8 @@ const RecommendedTrack = styled.div<{ $index: number }>`
     }
   }
 
-  &:hover .meta .heart {
+  &:hover .meta .heart,
+  &:hover .meta .context-menu-btn {
     opacity: 1;
   }
 `;
@@ -177,15 +184,13 @@ const IconButton = styled.button`
   }
 `;
 
-const ArtistPill = styled.div<{ $index: number }>`
+const ArtistCircle = styled.div<{ $index: number }>`
   flex: 0 0 auto;
   display: flex;
+  flex-direction: column;
   align-items: center;
   gap: 0.75rem;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: var(--radius);
-  padding: 0.5rem 1rem 0.5rem 0.5rem;
+  width: 140px;
   cursor: pointer;
   transition: all 0.2s ease;
   opacity: 0;
@@ -193,22 +198,30 @@ const ArtistPill = styled.div<{ $index: number }>`
   animation-delay: ${({ $index }) => `${0.05 + $index * 0.03}s`};
 
   &:hover {
-    background: rgba(255, 255, 255, 0.1);
-    transform: translateY(-2px);
+    transform: translateY(-4px) scale(1.05);
+    img {
+      box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+    }
   }
 
   img {
-    width: 32px;
-    height: 32px;
+    width: 140px;
+    height: 140px;
     border-radius: 50%;
     object-fit: cover;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    transition: all 0.2s;
   }
 
   span {
-    font-size: 0.9rem;
+    font-size: 0.95rem;
     font-weight: 600;
     color: #fff;
+    text-align: center;
+    width: 100%;
     white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 `;
 
@@ -249,6 +262,13 @@ const ShelfContainer = styled.div`
   }
 `;
 
+const GridContainer = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 1.5rem;
+  padding: 0.5rem 0 2rem;
+`;
+
 const Card = styled.div<{ $index: number }>`
   flex: 0 0 auto;
   width: 200px;
@@ -262,12 +282,21 @@ const Card = styled.div<{ $index: number }>`
   animation: ${slideUpFade} 0.4s ease-out forwards;
   animation-delay: ${({ $index }) => `${0.05 + $index * 0.03}s`};
 
+  .context-menu-btn {
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+
   &:hover {
     background: rgba(255, 255, 255, 0.06);
 
     .play-overlay {
       opacity: 1;
       transform: translateY(0);
+    }
+
+    .context-menu-btn {
+      opacity: 1;
     }
   }
 
@@ -386,17 +415,21 @@ interface HomeGridProps {
   onPlayNext?: (track: Track) => void;
   onAddToQueue?: (track: Track) => void;
   onStartRadio?: (track: Track) => void;
+  onArtistClick?: (artistId: string) => void;
+  onAlbumClick?: (albumId: string) => void;
 }
 
 import { useRecentTracks } from "@/hooks/useRecentTracks";
 import { TrackContextMenu } from "./TrackContextMenu";
 import { MoreVertical } from "lucide-react";
 
-export function HomeGrid({ 
+export function HomeGrid({
   onPlay,
   onPlayNext,
   onAddToQueue,
-  onStartRadio 
+  onStartRadio,
+  onArtistClick,
+  onAlbumClick
 }: HomeGridProps) {
   const [menuTrack, setMenuTrack] = useState<{ track: Track, x: number, y: number } | null>(null);
 
@@ -407,21 +440,41 @@ export function HomeGrid({
     setMenuTrack({ track, x: rect.right - 240, y: rect.bottom });
   };
   const [tracks, setTracks] = useState<Track[]>([]);
+  const [hitlists, setHitlists] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const { recentTracks } = useRecentTracks();
 
   useEffect(() => {
     const fetchHomeData = async () => {
       try {
-        const res = await fetch(
-          `/api/search?q=${encodeURIComponent("Top Pop Hits 2024")}`
-        );
-        if (res.ok) {
-          const data = await res.json();
+        let recentArtistsStr = "";
+        try {
+          const stored = localStorage.getItem('ventify-recent-tracks');
+          if (stored) {
+            const tracks = JSON.parse(stored);
+            const artists = Array.from(new Set(tracks.map((t: any) => t.channelTitle || t.artist).filter(Boolean))).slice(0, 2);
+            if (artists.length > 0) recentArtistsStr = (artists as string[]).join(',');
+          }
+        } catch (e) { }
+
+        const hitlistUrl = recentArtistsStr ? `/api/home/hitlist?artists=${encodeURIComponent(recentArtistsStr)}` : `/api/home/hitlist`;
+
+        const [searchRes, hitlistRes] = await Promise.all([
+          fetch(`/api/search?q=${encodeURIComponent("Top Pop Hits 2024")}`),
+          fetch(hitlistUrl)
+        ]);
+
+        if (searchRes.ok) {
+          const data = await searchRes.json();
           setTracks(data.tracks || []);
         }
+
+        if (hitlistRes.ok) {
+          const data = await hitlistRes.json();
+          setHitlists(data.hitlists || []);
+        }
       } catch (error) {
-        console.error("Error fetching home tracks", error);
+        console.error("Error fetching home data", error);
       } finally {
         setLoading(false);
       }
@@ -453,12 +506,12 @@ export function HomeGrid({
   return (
     <Container>
       <SectionTitle>{getGreeting()}</SectionTitle>
-      
+
       {recentTracks.length > 0 && (
         <>
           <SectionHeaderRow>
             <SectionTitleGroup>
-              <h2>Jump Back In</h2>
+              <h2>Jam Again</h2>
             </SectionTitleGroup>
           </SectionHeaderRow>
           <ShelfContainer>
@@ -469,13 +522,13 @@ export function HomeGrid({
                   <PlayOverlay className="play-overlay">
                     <Play fill="currentColor" size={24} />
                   </PlayOverlay>
-                  <button 
+                  <button
                     onClick={(e) => handleContextMenuClick(e, track)}
                     className="context-menu-btn"
                     style={{
                       position: 'absolute', top: '8px', right: '8px',
-                      background: 'rgba(0,0,0,0.5)', borderRadius: '50%', border: 'none', 
-                      color: 'rgba(255,255,255,0.9)', cursor: 'pointer', padding: '6px', 
+                      background: 'rgba(0,0,0,0.5)', borderRadius: '50%', border: 'none',
+                      color: 'rgba(255,255,255,0.9)', cursor: 'pointer', padding: '6px',
                       display: 'flex', zIndex: 10, backdropFilter: 'blur(4px)'
                     }}
                   >
@@ -496,8 +549,7 @@ export function HomeGrid({
         <>
           <SectionHeaderRow>
             <SectionTitleGroup>
-              <h2>Recommended Songs</h2>
-              <PillButton><Radio size={16} /> Start Infinite Radio</PillButton>
+              <h2>Recommendations</h2>
             </SectionTitleGroup>
             <IconButton><RefreshCw size={16} /></IconButton>
           </SectionHeaderRow>
@@ -511,10 +563,11 @@ export function HomeGrid({
                 </div>
                 <div className="meta">
                   <span>{track.durationMs ? `${Math.floor(track.durationMs / 60000)}:${String(Math.floor((track.durationMs % 60000) / 1000)).padStart(2, '0')}` : "3:45"}</span>
-                  <button 
+                  <button
+                    className="context-menu-btn"
                     onClick={(e) => handleContextMenuClick(e, track)}
                     style={{
-                      background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', 
+                      background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)',
                       cursor: 'pointer', padding: '0px', display: 'flex', marginLeft: '12px'
                     }}
                   >
@@ -527,71 +580,68 @@ export function HomeGrid({
         </>
       )}
 
-      <SectionHeaderRow>
-        <SectionTitleGroup>
-          <h2>Recommended Albums</h2>
-        </SectionTitleGroup>
-        <IconButton><RefreshCw size={16} /></IconButton>
-      </SectionHeaderRow>
-      <PlaceholderText>
-        Tell us more about what you like so we can recommend albums!
-      </PlaceholderText>
-
-      <SectionHeaderRow>
-        <SectionTitleGroup>
-          <h2>Recommended Artists</h2>
-        </SectionTitleGroup>
-        <IconButton><RefreshCw size={16} /></IconButton>
-      </SectionHeaderRow>
-      <ShelfContainer>
-        {recommended.slice(0, 8).map((track, index) => (
-          <ArtistPill key={`artist-${track.videoId}`} $index={index}>
-            <img src={track.thumbnailUrl} alt={track.channelTitle} loading="lazy" />
-            <span>{track.channelTitle || track.artist || "Artist"}</span>
-          </ArtistPill>
-        ))}
-      </ShelfContainer>
+      {hitlists.map((hitlist, idx) => (
+        <div key={`hitlist-${idx}`}>
+          <SectionHeaderRow>
+            <SectionTitleGroup>
+              <h2>{hitlist.title}</h2>
+            </SectionTitleGroup>
+            <IconButton><RefreshCw size={16} /></IconButton>
+          </SectionHeaderRow>
+          <ShelfContainer>
+            {hitlist.items.map((item: any, i: number) => (
+              <Card 
+                key={`hl-${item.id}-${i}`} 
+                $index={i}
+                onClick={() => {
+                  if (onAlbumClick && item.id) {
+                    onAlbumClick(item.id);
+                  }
+                }}
+              >
+                <ImageContainer>
+                  <img src={item.thumbnailUrl} alt={item.title} loading="lazy" />
+                  <PlayOverlay className="play-overlay">
+                    <Play fill="currentColor" size={24} />
+                  </PlayOverlay>
+                </ImageContainer>
+                <Title>{item.title}</Title>
+                <Subtitle>{item.subtitle}</Subtitle>
+              </Card>
+            ))}
+          </ShelfContainer>
+        </div>
+      ))}
 
       {recommended.length > 0 && (
         <>
           <SectionHeaderRow>
             <SectionTitleGroup>
-              <h2>Editor's Picks</h2>
+              <h2>Recommended Artists</h2>
             </SectionTitleGroup>
+            <IconButton><RefreshCw size={16} /></IconButton>
           </SectionHeaderRow>
           <ShelfContainer>
-            {recommended.map((track, index) => (
-              <Card key={`ed-${track.videoId}`} $index={index} onClick={() => onPlay(track)} onContextMenu={(e) => handleContextMenuClick(e, track)}>
-                <ImageContainer>
-                  <img src={track.thumbnailUrl} alt={track.title} loading="lazy" />
-                  <PlayOverlay className="play-overlay">
-                    <Play fill="currentColor" size={24} />
-                  </PlayOverlay>
-                  <button 
-                    onClick={(e) => handleContextMenuClick(e, track)}
-                    className="context-menu-btn"
-                    style={{
-                      position: 'absolute', top: '8px', right: '8px',
-                      background: 'rgba(0,0,0,0.5)', borderRadius: '50%', border: 'none', 
-                      color: 'rgba(255,255,255,0.9)', cursor: 'pointer', padding: '6px', 
-                      display: 'flex', zIndex: 10, backdropFilter: 'blur(4px)'
-                    }}
-                  >
-                    <MoreVertical size={16} />
-                  </button>
-                </ImageContainer>
-                <Title>{track.title}</Title>
-                <Subtitle>
-                  {track.channelTitle || track.artist || "Artist"}
-                </Subtitle>
-              </Card>
+            {recommended.slice(0, 8).map((track, index) => (
+              <ArtistCircle
+                key={`artist-${track.videoId}`}
+                $index={index}
+                onClick={() => {
+                  if (track.artistId && onArtistClick) {
+                    onArtistClick(track.artistId);
+                  }
+                }}
+              >
+                <img src={track.thumbnailUrl} alt={track.channelTitle} loading="lazy" />
+                <span>{track.channelTitle || track.artist || "Artist"}</span>
+              </ArtistCircle>
             ))}
           </ShelfContainer>
         </>
       )}
 
       {menuTrack && (
-        <TrackContextMenu 
+        <TrackContextMenu
           track={menuTrack.track}
           x={menuTrack.x}
           y={menuTrack.y}

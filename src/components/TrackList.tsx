@@ -146,6 +146,7 @@ interface TrackListProps {
   onPlayNext?: (track: Track) => void;
   onAddToQueue?: (track: Track) => void;
   onStartRadio?: (track: Track) => void;
+  onArtistClick?: (artistId: string) => void;
 }
 
 export function TrackList({
@@ -155,7 +156,8 @@ export function TrackList({
   isLoading,
   onPlayNext,
   onAddToQueue,
-  onStartRadio
+  onStartRadio,
+  onArtistClick
 }: TrackListProps) {
   const [menuTrack, setMenuTrack] = useState<{ track: Track, x: number, y: number } | null>(null);
 
@@ -214,7 +216,25 @@ export function TrackList({
 
               <TrackInfo>
                 <Title className="title">{track.title}</Title>
-                <Artist>{track.artist || track.channelTitle || "Unknown Artist"}</Artist>
+                <Artist 
+                  onClick={(e) => {
+                    if (onArtistClick && track.artistId) {
+                      e.stopPropagation(); // prevent playing the track
+                      onArtistClick(track.artistId);
+                    }
+                  }}
+                  style={{ cursor: (onArtistClick && track.artistId) ? 'pointer' : 'default' }}
+                  onMouseEnter={(e) => {
+                    if (onArtistClick && track.artistId) {
+                      e.currentTarget.style.textDecoration = 'underline';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.textDecoration = 'none';
+                  }}
+                >
+                  {track.artist || track.channelTitle || "Unknown Artist"}
+                </Artist>
               </TrackInfo>
 
               <Duration>{formatDuration(track.durationMs)}</Duration>

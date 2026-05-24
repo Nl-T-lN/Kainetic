@@ -26,6 +26,9 @@ import { SettingsView } from "./SettingsView";
 import { RecentView } from "./RecentView";
 import { LibraryView } from "./LibraryView";
 import { QueueSidebar } from "./QueueSidebar";
+import { ArtistView } from "./ArtistView";
+import { ArtistGrid } from "./ArtistGrid";
+import { AlbumView } from "./AlbumView";
 
 const AppLayout = styled.div`
   display: flex;
@@ -126,11 +129,32 @@ export function Player() {
   });
 
   const [activeView, setActiveView] = useState("HOME");
+  const [homeKey, setHomeKey] = useState(0);
   const [activeQueueId, setActiveQueueId] = useState<
     "SEARCH" | "MOOD" | "PLAYLIST"
   >("SEARCH");
   const [searchCategory, setSearchCategory] = useState("All");
   const [isQueueOpen, setIsQueueOpen] = useState(false);
+  const [activeArtistId, setActiveArtistId] = useState<string | null>(null);
+  const [activeAlbumId, setActiveAlbumId] = useState<string | null>(null);
+
+  const handleLogoClick = () => {
+    if (activeView === "HOME") {
+      setHomeKey(prev => prev + 1);
+    } else {
+      setActiveView("HOME");
+    }
+  };
+
+  const handleArtistClick = (artistId: string) => {
+    setActiveArtistId(artistId);
+    setActiveView("ARTIST");
+  };
+
+  const handleAlbumClick = (albumId: string) => {
+    setActiveAlbumId(albumId);
+    setActiveView("ALBUM");
+  };
 
   const { addTrack } = useRecentTracks();
 
@@ -257,6 +281,7 @@ export function Player() {
         activeView={activeView}
         setActiveView={setActiveView}
         roomCode={party.roomCode}
+        onLogoClick={handleLogoClick}
       />
 
       <MainContent>
@@ -276,10 +301,13 @@ export function Player() {
 
         {activeView === "HOME" && (
           <HomeGrid 
+            key={homeKey}
             onPlay={handlePlayTrack} 
             onPlayNext={playerState.insertNext}
             onAddToQueue={playerState.addToQueue}
             onStartRadio={handlePlayTrack}
+            onArtistClick={handleArtistClick}
+            onAlbumClick={handleAlbumClick}
           />
         )}
 
@@ -301,19 +329,27 @@ export function Player() {
               </ResultsTabs>
             )}
 
-            <TrackList
-              tracks={getActiveTracks()}
-              currentTrackId={playerState.currentTrack?.videoId}
-              onTrackSelect={handlePlayTrack}
-              isLoading={
-                search.isLoading ||
-                moodSearch.isLoading ||
-                playlistGen.isLoading
-              }
-              onPlayNext={playerState.insertNext}
-              onAddToQueue={playerState.addToQueue}
-              onStartRadio={handlePlayTrack}
-            />
+            {searchCategory === "Artists" ? (
+              <ArtistGrid 
+                artists={search.artists} 
+                onArtistClick={handleArtistClick} 
+              />
+            ) : (
+              <TrackList
+                tracks={getActiveTracks()}
+                currentTrackId={playerState.currentTrack?.videoId}
+                onTrackSelect={handlePlayTrack}
+                isLoading={
+                  search.isLoading ||
+                  moodSearch.isLoading ||
+                  playlistGen.isLoading
+                }
+                onPlayNext={playerState.insertNext}
+                onAddToQueue={playerState.addToQueue}
+                onStartRadio={handlePlayTrack}
+                onArtistClick={handleArtistClick}
+              />
+            )}
 
             {similar.tracks.length > 0 && (
               <SimilarTracksComponent
@@ -353,6 +389,24 @@ export function Player() {
             onPlayNext={playerState.insertNext}
             onAddToQueue={playerState.addToQueue}
             onStartRadio={handlePlayTrack}
+          />
+        )}
+
+        {activeView === "ARTIST" && activeArtistId && (
+          <ArtistView 
+            artistId={activeArtistId}
+            onPlay={handlePlayTrack}
+            onPlayNext={playerState.insertNext}
+            onAddToQueue={playerState.addToQueue}
+          />
+        )}
+
+        {activeView === "ALBUM" && activeAlbumId && (
+          <AlbumView 
+            albumId={activeAlbumId}
+            onPlay={handlePlayTrack}
+            onPlayNext={playerState.insertNext}
+            onAddToQueue={playerState.addToQueue}
           />
         )}
       </MainContent>
@@ -398,6 +452,7 @@ export function Player() {
         roomCode={party.roomCode}
         listenerCount={party.listenerCount}
         isHost={party.isHost}
+        onArtistClick={handleArtistClick}
       />
 
       <QueueSidebar 
@@ -427,6 +482,7 @@ export function Player() {
             playerState.setQueue(newQueue, newIdx);
           }
         }}
+        onArtistClick={handleArtistClick}
       />
     </AppLayout>
   );

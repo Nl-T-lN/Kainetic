@@ -10,7 +10,16 @@ export function getHighResThumbnail(thumbnails: any[]): string {
     // Replace size parameters like =w60-h60 or =w226-h226-l90-rj with =w1200-h1200
     // to get a high quality image without breaking the URL completely
     url = url.replace(/=[ws]\d+(?:-h\d+)?(?:-[a-zA-Z0-9_-]+)*/, "=w1200-h1200");
-  } 
+  } else if (url.includes("i.ytimg.com")) {
+    // maxresdefault is often returned by the API but returns 404 for older videos
+    // hqdefault is guaranteed to exist and offers decent quality (480x360)
+    url = url.replace("maxresdefault.jpg", "hqdefault.jpg");
+    // Also, if it has hq720, sometimes it works, but hqdefault is safest.
+  }
+  
+  if (url.startsWith('//')) {
+    url = 'https:' + url;
+  }
 
   return url;
 }

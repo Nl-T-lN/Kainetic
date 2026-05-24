@@ -5,6 +5,7 @@ import type { Track } from "@/types/music";
 
 export interface UseSearchReturn {
   tracks: Track[];
+  artists: any[];
   isLoading: boolean;
   query: string;
   search: (query: string) => void;
@@ -30,38 +31,52 @@ export function useSearch(): UseSearchReturn {
   // Keep the timeout ID across renders without causing a re-render
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
 
+  const [artists, setArtists] = useState<any[]>([]);
+
   const search = useCallback((query: string) => {
-    // 🟢 YOU CODE (Done for you): The Debounce Logic
     if (debounceRef.current) {
-      clearTimeout(debounceRef.current); // Cancel the previous timer!
+      clearTimeout(debounceRef.current);
     }
 
     if (!query.trim()) {
       setTracks([]);
-      setIsLoading(false);
+      setArtists([]);
       setQuery("");
       return;
     }
 
-    setQuery(query);
-
     setIsLoading(true);
+    setQuery(query);
 
     debounceRef.current = setTimeout(async () => {
       try {
-        const res = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
-        if (!res.ok) throw new Error("Search failed");
-        
-        const data = await res.json();
-        setTracks(data.tracks || []);
+        const [trackRes, artistRes] = await Promise.all([
+          fetch(`/api/search?q=${encodeURIComponent(query)}&type=song`),
+          fetch(`/api/search?q=${encodeURIComponent(query)}&type=artist`)
+        ]);
+
+        if (trackRes.ok) {
+          const data = await trackRes.json();
+          setTracks(data.tracks || []);
+        } else {
+          setTracks([]);
+        }
+
+        if (artistRes.ok) {
+          const data = await artistRes.json();
+          setArtists(data.results || []);
+        } else {
+          setArtists([]);
+        }
       } catch (error) {
-        console.error("Search error:", error);
+        console.error("Search failed:", error);
         setTracks([]);
+        setArtists([]);
       } finally {
         setIsLoading(false);
       }
-    }, 400); // 400ms delay
+    }, 400); // 400ms debounce
   }, []);
 
-  return { tracks, isLoading, query, search };
+  return { tracks, artists, isLoading, query, search };
 }

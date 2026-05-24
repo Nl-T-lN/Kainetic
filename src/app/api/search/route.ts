@@ -25,6 +25,7 @@ async function getInnertube() {
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const query = searchParams.get("q");
+  const type = searchParams.get("type") || "song";
 
   if (!query) {
     return NextResponse.json({ error: "Query 'q' is required" }, { status: 400 });
@@ -33,8 +34,26 @@ export async function GET(request: Request) {
   try {
     const yt = await getInnertube();
     
-    // 1. Search strictly for songs in YouTube Music
-    const searchData = await yt.music.search(query, { type: 'song' });
+    // Search strictly for the specified type in YouTube Music
+    const searchData = await yt.music.search(query, { type: type as any });
+
+    if (type === "artist") {
+      if (!searchData.artists?.contents || searchData.artists.contents.length === 0) {
+        return NextResponse.json({ results: [] });
+      }
+
+      const results = searchData.artists.contents.map((item: any) => {
+        const thumbnail = getHighResThumbnail(item.thumbnails);
+        return {
+          id: item.id,
+          name: item.name,
+          subscribers: item.subscribers || "",
+          thumbnailUrl: thumbnail,
+          type: "artist"
+        };
+      });
+      return NextResponse.json({ results });
+    }
 
     if (!searchData.songs?.contents || searchData.songs.contents.length === 0) {
       return NextResponse.json({ tracks: [] });
@@ -54,16 +73,21 @@ export async function GET(request: Request) {
 
       // Extract the artist name safely
       let channelTitle = "Unknown Artist";
+      let artistId = undefined;
+      
       if (item.artists && item.artists.length > 0) {
         channelTitle = item.artists.map((a: any) => a.name).join(", ");
+        artistId = item.artists[0]?.channel_id || item.artists[0]?.id || item.artists[0]?.endpoint?.payload?.browseId;
       } else if (item.authors && item.authors.length > 0) {
         channelTitle = item.authors.map((a: any) => a.name).join(", ");
+        artistId = item.authors[0]?.channel_id || item.authors[0]?.id || item.authors[0]?.endpoint?.payload?.browseId;
       }
 
       return {
         videoId: item.id,
         title: item.title,
         channelTitle: channelTitle,
+        artistId: artistId,
         thumbnailUrl: thumbnail,
         durationMs,
       };

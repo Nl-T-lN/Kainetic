@@ -187,6 +187,7 @@ interface QueueSidebarProps {
   onAddToQueue?: (track: Track) => void;
   onStartRadio?: (track: Track) => void;
   onReorderQueue?: (startIndex: number, endIndex: number) => void;
+  onArtistClick?: (artistId: string) => void;
 }
 
 export function QueueSidebar({
@@ -199,7 +200,8 @@ export function QueueSidebar({
   onPlayNext,
   onAddToQueue,
   onStartRadio,
-  onReorderQueue
+  onReorderQueue,
+  onArtistClick
 }: QueueSidebarProps) {
   const { toggleLike, isLiked } = useLikedTracks();
   const [menuTrack, setMenuTrack] = useState<{ track: Track, x: number, y: number } | null>(null);
@@ -313,7 +315,30 @@ export function QueueSidebar({
                 <div className="title">
                   {track.title}
                 </div>
-                <div className="artist">{track.artist || track.channelTitle || "Unknown Artist"}</div>
+                <div 
+                  className="artist"
+                  onClick={(e) => {
+                    if (onArtistClick && track.artistId) {
+                      e.stopPropagation();
+                      onClose(); // Optional: close queue when navigating
+                      onArtistClick(track.artistId);
+                    }
+                  }}
+                  style={{ 
+                    cursor: (onArtistClick && track.artistId) ? 'pointer' : 'default',
+                    pointerEvents: 'auto'
+                  }}
+                  onMouseEnter={(e) => {
+                    if (onArtistClick && track.artistId) {
+                      e.currentTarget.style.textDecoration = 'underline';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.textDecoration = 'none';
+                  }}
+                >
+                  {track.artist || track.channelTitle || "Unknown Artist"}
+                </div>
               </div>
               
               <div className="duration">{formatDuration(track.durationMs)}</div>
