@@ -35,12 +35,12 @@ export async function GET(request: Request) {
     // 1. Search strictly for songs in YouTube Music
     const searchData = await yt.music.search(query, { type: 'song' });
 
-    if (!searchData.results || searchData.results.length === 0) {
+    if (!searchData.songs?.contents || searchData.songs.contents.length === 0) {
       return NextResponse.json({ tracks: [] });
     }
 
     // 2. Map into our clean SearchResult type
-    const tracks: SearchResult[] = searchData.results.map((item: any) => {
+    const tracks: SearchResult[] = searchData.songs.contents.map((item: any) => {
       
       // Parse duration
       let durationMs = 0;
