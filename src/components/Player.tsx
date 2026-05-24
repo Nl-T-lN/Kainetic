@@ -411,6 +411,7 @@ export function Player() {
         onPlayNext={playerState.insertNext}
         onAddToQueue={playerState.addToQueue}
         onStartRadio={handlePlayTrack}
+        onReorderQueue={playerState.reorderQueue}
         onRemoveTrack={(idx) => {
           const newQueue = [...playerState.queue];
           newQueue.splice(idx, 1);

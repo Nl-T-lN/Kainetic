@@ -186,6 +186,7 @@ interface QueueSidebarProps {
   onPlayNext?: (track: Track) => void;
   onAddToQueue?: (track: Track) => void;
   onStartRadio?: (track: Track) => void;
+  onReorderQueue?: (startIndex: number, endIndex: number) => void;
 }
 
 export function QueueSidebar({
@@ -197,15 +198,56 @@ export function QueueSidebar({
   onRemoveTrack,
   onPlayNext,
   onAddToQueue,
-  onStartRadio
+  onStartRadio,
+  onReorderQueue
 }: QueueSidebarProps) {
   const { toggleLike, isLiked } = useLikedTracks();
   const [menuTrack, setMenuTrack] = useState<{ track: Track, x: number, y: number } | null>(null);
+  
+  // Drag and drop state
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
 
   const handleContextMenuClick = (e: React.MouseEvent, track: Track) => {
+    e.preventDefault();
     e.stopPropagation();
     const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
     setMenuTrack({ track, x: rect.right - 240, y: rect.bottom });
+  };
+
+  const handleDragStart = (e: React.DragEvent, index: number) => {
+    setDraggedIndex(index);
+    e.dataTransfer.effectAllowed = "move";
+    // For Firefox compatibility
+    e.dataTransfer.setData("text/html", "");
+  };
+
+  const handleDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+    if (draggedIndex === null) return;
+    if (draggedIndex !== index) {
+      setDragOverIndex(index);
+    }
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    setDragOverIndex(null);
+  };
+
+  const handleDrop = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    if (draggedIndex !== null && draggedIndex !== index && onReorderQueue) {
+      onReorderQueue(draggedIndex, index);
+    }
+    setDraggedIndex(null);
+    setDragOverIndex(null);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedIndex(null);
+    setDragOverIndex(null);
   };
 
   return (
@@ -235,10 +277,28 @@ export function QueueSidebar({
         {queue.map((track, i) => {
           const isActive = i === queueIndex;
           const liked = isLiked(track.videoId);
+          const isDragOver = dragOverIndex === i;
+          const isDragging = draggedIndex === i;
 
           return (
-            <TrackItem key={`${track.videoId}-${i}`} $isActive={isActive}>
-              <div className="drag-handle">
+            <TrackItem 
+              key={`${track.videoId}-${i}`} 
+              $isActive={isActive}
+              draggable
+              onDragStart={(e) => handleDragStart(e, i)}
+              onDragOver={(e) => handleDragOver(e, i)}
+              onDragLeave={handleDragLeave}
+              onDrop={(e) => handleDrop(e, i)}
+              onDragEnd={handleDragEnd}
+              onContextMenu={(e) => handleContextMenuClick(e, track)}
+              style={{
+                opacity: isDragging ? 0.5 : 1,
+                borderTop: isDragOver && draggedIndex !== null && draggedIndex > i ? '2px solid var(--accent)' : 'none',
+                borderBottom: isDragOver && draggedIndex !== null && draggedIndex < i ? '2px solid var(--accent)' : 'none',
+                cursor: isDragging ? 'grabbing' : 'auto'
+              }}
+            >
+              <div className="drag-handle" style={{ cursor: isDragging ? 'grabbing' : 'grab' }}>
                 <GripVertical size={16} />
               </div>
               

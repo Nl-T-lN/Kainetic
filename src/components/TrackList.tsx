@@ -160,6 +160,7 @@ export function TrackList({
   const [menuTrack, setMenuTrack] = useState<{ track: Track, x: number, y: number } | null>(null);
 
   const handleContextMenuClick = (e: React.MouseEvent, track: Track) => {
+    e.preventDefault();
     e.stopPropagation();
     const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
     setMenuTrack({ track, x: rect.right - 240, y: rect.bottom });
@@ -186,6 +187,7 @@ export function TrackList({
               key={`${track.videoId}-${index}`}
               $isPlaying={isActive}
               onClick={() => onTrackSelect(track)}
+              onContextMenu={(e) => handleContextMenuClick(e, track)}
             >
               <RowIndex>
                 <span className="row-number">{index + 1}</span>

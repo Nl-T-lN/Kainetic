@@ -23,6 +23,7 @@ export interface UsePlayerStateReturn extends PlayerState {
   playPrev: () => void;
   insertNext: (track: Track) => void;
   addToQueue: (track: Track) => void;
+  reorderQueue: (startIndex: number, endIndex: number) => void;
 }
 
 export function usePlayerState(
@@ -150,6 +151,26 @@ export function usePlayerState(
     }
   };
 
+  const reorderQueue = (startIndex: number, endIndex: number) => {
+    const newQueue = [...queue];
+    const [removed] = newQueue.splice(startIndex, 1);
+    newQueue.splice(endIndex, 0, removed);
+    
+    // Update queue index if the currently playing track was moved,
+    // or if tracks were moved around the currently playing track
+    let newIndex = queueIndex;
+    if (startIndex === queueIndex) {
+      newIndex = endIndex;
+    } else if (startIndex < queueIndex && endIndex >= queueIndex) {
+      newIndex--;
+    } else if (startIndex > queueIndex && endIndex <= queueIndex) {
+      newIndex++;
+    }
+
+    setQueueState(newQueue);
+    setQueueIndex(newIndex);
+  };
+
   return { 
     currentTrack, 
     isPlaying, 
@@ -162,6 +183,7 @@ export function usePlayerState(
     playNext,
     playPrev,
     insertNext,
-    addToQueue
+    addToQueue,
+    reorderQueue
   };
 }

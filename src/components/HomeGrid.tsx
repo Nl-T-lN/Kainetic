@@ -401,6 +401,7 @@ export function HomeGrid({
   const [menuTrack, setMenuTrack] = useState<{ track: Track, x: number, y: number } | null>(null);
 
   const handleContextMenuClick = (e: React.MouseEvent, track: Track) => {
+    e.preventDefault();
     e.stopPropagation();
     const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
     setMenuTrack({ track, x: rect.right - 240, y: rect.bottom });
@@ -462,27 +463,28 @@ export function HomeGrid({
           </SectionHeaderRow>
           <ShelfContainer>
             {recentTracks.map((track, index) => (
-              <Card key={`recent-${track.videoId}`} $index={index} onClick={() => onPlay(track)}>
+              <Card key={`recent-${track.videoId}`} $index={index} onClick={() => onPlay(track)} onContextMenu={(e) => handleContextMenuClick(e, track)}>
                 <ImageContainer>
                   <img src={track.thumbnailUrl} alt={track.title} loading="lazy" />
                   <PlayOverlay className="play-overlay">
                     <Play fill="currentColor" size={24} />
                   </PlayOverlay>
-                </ImageContainer>
-                <Title>{track.title}</Title>
-                <Subtitle style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    {track.channelTitle || track.artist || "Artist"}
-                  </span>
                   <button 
                     onClick={(e) => handleContextMenuClick(e, track)}
+                    className="context-menu-btn"
                     style={{
-                      background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', 
-                      cursor: 'pointer', padding: '0px', display: 'flex'
+                      position: 'absolute', top: '8px', right: '8px',
+                      background: 'rgba(0,0,0,0.5)', borderRadius: '50%', border: 'none', 
+                      color: 'rgba(255,255,255,0.9)', cursor: 'pointer', padding: '6px', 
+                      display: 'flex', zIndex: 10, backdropFilter: 'blur(4px)'
                     }}
                   >
-                    <MoreVertical size={14} />
+                    <MoreVertical size={16} />
                   </button>
+                </ImageContainer>
+                <Title>{track.title}</Title>
+                <Subtitle>
+                  {track.channelTitle || track.artist || "Artist"}
                 </Subtitle>
               </Card>
             ))}
@@ -501,7 +503,7 @@ export function HomeGrid({
           </SectionHeaderRow>
           <RecommendedContainer>
             {hits.map((track, index) => (
-              <RecommendedTrack key={`hit-${track.videoId}`} $index={index} onClick={() => onPlay(track)}>
+              <RecommendedTrack key={`hit-${track.videoId}`} $index={index} onClick={() => onPlay(track)} onContextMenu={(e) => handleContextMenuClick(e, track)}>
                 <img src={track.thumbnailUrl} alt={track.title} loading="lazy" />
                 <div className="info">
                   <div className="title">{track.title}</div>
@@ -559,27 +561,28 @@ export function HomeGrid({
           </SectionHeaderRow>
           <ShelfContainer>
             {recommended.map((track, index) => (
-              <Card key={`ed-${track.videoId}`} $index={index} onClick={() => onPlay(track)}>
+              <Card key={`ed-${track.videoId}`} $index={index} onClick={() => onPlay(track)} onContextMenu={(e) => handleContextMenuClick(e, track)}>
                 <ImageContainer>
                   <img src={track.thumbnailUrl} alt={track.title} loading="lazy" />
                   <PlayOverlay className="play-overlay">
                     <Play fill="currentColor" size={24} />
                   </PlayOverlay>
-                </ImageContainer>
-                <Title>{track.title}</Title>
-                <Subtitle style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    {track.channelTitle || track.artist || "Artist"}
-                  </span>
                   <button 
                     onClick={(e) => handleContextMenuClick(e, track)}
+                    className="context-menu-btn"
                     style={{
-                      background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', 
-                      cursor: 'pointer', padding: '0px', display: 'flex'
+                      position: 'absolute', top: '8px', right: '8px',
+                      background: 'rgba(0,0,0,0.5)', borderRadius: '50%', border: 'none', 
+                      color: 'rgba(255,255,255,0.9)', cursor: 'pointer', padding: '6px', 
+                      display: 'flex', zIndex: 10, backdropFilter: 'blur(4px)'
                     }}
                   >
-                    <MoreVertical size={14} />
+                    <MoreVertical size={16} />
                   </button>
+                </ImageContainer>
+                <Title>{track.title}</Title>
+                <Subtitle>
+                  {track.channelTitle || track.artist || "Artist"}
                 </Subtitle>
               </Card>
             ))}
