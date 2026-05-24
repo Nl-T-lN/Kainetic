@@ -12,6 +12,7 @@
 
 import type { Metadata } from "next";
 import { Press_Start_2P, Inter } from "next/font/google";
+import { Analytics } from "@vercel/analytics/next";
 import StyledComponentsRegistry from "@/styles/StyledRegistry";
 import { GlobalStyles } from "@/styles/GlobalStyles";
 import { theme } from "@/styles/theme";
@@ -47,6 +48,7 @@ export default function RootLayout({
           <GlobalStyles theme={theme} />
           <Providers>{children}</Providers>
         </StyledComponentsRegistry>
+        <Analytics />
       </body>
     </html>
   );
