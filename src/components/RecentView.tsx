@@ -82,7 +82,19 @@ const EmptyState = styled.div`
   }
 `;
 
-export function RecentView({ onPlay }: { onPlay: (track: Track) => void }) {
+interface RecentViewProps {
+  onPlay: (track: Track) => void;
+  onPlayNext?: (track: Track) => void;
+  onAddToQueue?: (track: Track) => void;
+  onStartRadio?: (track: Track) => void;
+}
+
+export function RecentView({ 
+  onPlay,
+  onPlayNext,
+  onAddToQueue,
+  onStartRadio
+}: RecentViewProps) {
   const { recentTracks, clearRecent } = useRecentTracks();
 
   return (
@@ -104,6 +116,9 @@ export function RecentView({ onPlay }: { onPlay: (track: Track) => void }) {
         <TrackList 
           tracks={recentTracks} 
           onTrackSelect={onPlay} 
+          onPlayNext={onPlayNext}
+          onAddToQueue={onAddToQueue}
+          onStartRadio={onStartRadio}
           currentTrackId={undefined} 
         />
       ) : (

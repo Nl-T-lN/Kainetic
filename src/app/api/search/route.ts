@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { Innertube } from "youtubei.js";
+import { getHighResThumbnail } from "@/lib/thumbnail";
 import type { SearchResult } from "@/types/music";
 
 // ============================================================
@@ -49,9 +50,7 @@ export async function GET(request: Request) {
       }
 
       // Get the highest resolution thumbnail
-      const thumbnail = item.thumbnails && item.thumbnails.length > 0 
-        ? item.thumbnails[item.thumbnails.length - 1].url 
-        : "";
+      const thumbnail = getHighResThumbnail(item.thumbnails);
 
       // Extract the artist name safely
       let channelTitle = "Unknown Artist";

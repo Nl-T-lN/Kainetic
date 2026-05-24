@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { Innertube } from "youtubei.js";
 import type { SearchResult } from "@/types/music";
+import { getHighResThumbnail } from "@/lib/thumbnail";
 
 let innertube: Innertube | null = null;
 
@@ -48,9 +49,7 @@ export async function GET(request: Request) {
             durationMs = obj.duration.seconds * 1000;
           }
 
-          const thumbnail = obj.thumbnails && obj.thumbnails.length > 0 
-            ? obj.thumbnails[obj.thumbnails.length - 1].url 
-            : "";
+          const thumbnail = getHighResThumbnail(obj.thumbnails);
 
           let channelTitle = "Unknown Artist";
           if (obj.artists && obj.artists.length > 0) {

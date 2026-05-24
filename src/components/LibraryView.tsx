@@ -5,6 +5,7 @@ import { TrackList } from "./TrackList";
 import { useState } from "react";
 import type { Track } from "@/types/music";
 import { Library, Heart, ListMusic, Plus } from "lucide-react";
+import { useLikedTracks } from "@/hooks/useLikedTracks";
 
 const fadeSlideIn = keyframes`
   from { opacity: 0; transform: translateY(12px); }
@@ -150,8 +151,21 @@ const PlaylistCount = styled.div`
   color: var(--muted);
 `;
 
-export function LibraryView({ onPlay }: { onPlay: (track: Track) => void }) {
-  const [likedSongs] = useState<Track[]>([]);
+interface LibraryViewProps {
+  onPlay: (track: Track) => void;
+  onPlayNext?: (track: Track) => void;
+  onAddToQueue?: (track: Track) => void;
+  onStartRadio?: (track: Track) => void;
+}
+
+export function LibraryView({ 
+  onPlay,
+  onPlayNext,
+  onAddToQueue,
+  onStartRadio
+}: LibraryViewProps) {
+  const [activeTab, setActiveTab] = useState("Liked Songs");
+  const { likedTracks } = useLikedTracks();
   const [playlists] = useState<{ id: string; name: string; count: number }[]>([]);
 
   return (
@@ -204,10 +218,13 @@ export function LibraryView({ onPlay }: { onPlay: (track: Track) => void }) {
           </h3>
         </SectionHeader>
 
-        {likedSongs.length > 0 ? (
+        {likedTracks.length > 0 ? (
           <TrackList 
-            tracks={likedSongs} 
+            tracks={likedTracks} 
             onTrackSelect={onPlay} 
+            onPlayNext={onPlayNext}
+            onAddToQueue={onAddToQueue}
+            onStartRadio={onStartRadio}
             currentTrackId={undefined} 
           />
         ) : (

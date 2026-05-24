@@ -25,6 +25,8 @@ import { ListenAlong } from "./ListenAlong";
 import { SettingsView } from "./SettingsView";
 import { RecentView } from "./RecentView";
 import { LibraryView } from "./LibraryView";
+import { QueueSidebar } from "./QueueSidebar";
+
 const AppLayout = styled.div`
   display: flex;
   height: 100vh;
@@ -128,6 +130,7 @@ export function Player() {
     "SEARCH" | "MOOD" | "PLAYLIST"
   >("SEARCH");
   const [searchCategory, setSearchCategory] = useState("All");
+  const [isQueueOpen, setIsQueueOpen] = useState(false);
 
   const { addTrack } = useRecentTracks();
 
@@ -163,10 +166,28 @@ export function Player() {
     }
   }, [party.isHost, party.partyPlayerState, player, playerState, playerState.currentTrack?.videoId, playerState.isPlaying, playerState.positionMs]);
 
-  const handlePlayTrack = (track: Track) => {
+  const handlePlayTrack = async (track: Track) => {
+    // 1. Play track immediately and clear old queue
     playerState.setCurrentTrack(track);
     player.play(track);
     addTrack(track);
+    
+    // Set queue to just this track initially
+    playerState.setQueue([track], 0);
+
+    // 2. Fetch UpNext / Radio in background
+    try {
+      const res = await fetch(`/api/music/upnext?videoId=${track.videoId}`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.tracks && data.tracks.length > 0) {
+          // Append the related tracks to form a radio station
+          playerState.setQueue([track, ...data.tracks], 0);
+        }
+      }
+    } catch (e) {
+      console.error("Failed to fetch upnext radio tracks", e);
+    }
   };
 
   const togglePlay = () => {
@@ -253,7 +274,14 @@ export function Player() {
           />
         </TopBar>
 
-        {activeView === "HOME" && <HomeGrid onPlay={handlePlayTrack} />}
+        {activeView === "HOME" && (
+          <HomeGrid 
+            onPlay={handlePlayTrack} 
+            onPlayNext={playerState.insertNext}
+            onAddToQueue={playerState.addToQueue}
+            onStartRadio={handlePlayTrack}
+          />
+        )}
 
         {activeView === "SEARCH" && (
           <ResultsContainer>
@@ -282,6 +310,9 @@ export function Player() {
                 moodSearch.isLoading ||
                 playlistGen.isLoading
               }
+              onPlayNext={playerState.insertNext}
+              onAddToQueue={playerState.addToQueue}
+              onStartRadio={handlePlayTrack}
             />
 
             {similar.tracks.length > 0 && (
@@ -308,8 +339,22 @@ export function Player() {
         )}
 
         {activeView === "SETTINGS" && <SettingsView />}
-        {activeView === "RECENT" && <RecentView onPlay={handlePlayTrack} />}
-        {activeView === "LIBRARY" && <LibraryView onPlay={handlePlayTrack} />}
+        {activeView === "RECENT" && (
+          <RecentView 
+            onPlay={handlePlayTrack} 
+            onPlayNext={playerState.insertNext}
+            onAddToQueue={playerState.addToQueue}
+            onStartRadio={handlePlayTrack}
+          />
+        )}
+        {activeView === "LIBRARY" && (
+          <LibraryView 
+            onPlay={handlePlayTrack} 
+            onPlayNext={playerState.insertNext}
+            onAddToQueue={playerState.addToQueue}
+            onStartRadio={handlePlayTrack}
+          />
+        )}
       </MainContent>
 
       <YouTube
@@ -326,6 +371,7 @@ export function Player() {
           },
         }}
         onReady={player.onReady}
+        onEnd={playerState.playNext}
         className="yt-player-hidden"
         style={{
           position: "absolute",
@@ -341,12 +387,45 @@ export function Player() {
         isPlaying={playerState.isPlaying}
         positionMs={playerState.positionMs}
         durationMs={playerState.durationMs}
+        queue={playerState.queue}
+        queueIndex={playerState.queueIndex}
         onPlayPause={togglePlay}
         onSkip={handleSkip}
         onSeek={player.seek}
+        onNext={playerState.playNext}
+        onPrev={playerState.playPrev}
+        onToggleQueue={() => setIsQueueOpen(!isQueueOpen)}
         roomCode={party.roomCode}
         listenerCount={party.listenerCount}
         isHost={party.isHost}
+      />
+
+      <QueueSidebar 
+        isOpen={isQueueOpen} 
+        onClose={() => setIsQueueOpen(false)}
+        queue={playerState.queue}
+        queueIndex={playerState.queueIndex}
+        onPlayTrack={(idx) => {
+          playerState.setQueue(playerState.queue, idx);
+        }}
+        onPlayNext={playerState.insertNext}
+        onAddToQueue={playerState.addToQueue}
+        onStartRadio={handlePlayTrack}
+        onRemoveTrack={(idx) => {
+          const newQueue = [...playerState.queue];
+          newQueue.splice(idx, 1);
+          if (newQueue.length === 0) {
+            playerState.setQueue([], 0);
+            playerState.setCurrentTrack(null);
+          } else {
+            let newIdx = playerState.queueIndex;
+            if (idx < playerState.queueIndex) newIdx--;
+            else if (idx === playerState.queueIndex) {
+              if (newIdx >= newQueue.length) newIdx = newQueue.length - 1;
+            }
+            playerState.setQueue(newQueue, newIdx);
+          }
+        }}
       />
     </AppLayout>
   );

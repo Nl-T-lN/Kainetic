@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { Innertube } from "youtubei.js";
+import { getHighResThumbnail } from "@/lib/thumbnail";
 
 // Keep a global singleton so we don't recreate Innertube on every request (which is slow)
 let ytClient: Innertube | null = null;
@@ -41,7 +42,7 @@ export async function GET(request: Request) {
         title: c.title?.text || "Unknown Title",
         artist: c.author || c.artists?.[0]?.name || "Unknown Artist",
         channelTitle: c.author || c.artists?.[0]?.name || "Unknown Artist",
-        thumbnailUrl: c.thumbnail?.[0]?.url || "",
+        thumbnailUrl: getHighResThumbnail(c.thumbnail),
         durationMs: (c.duration?.seconds || 0) * 1000,
       }));
 

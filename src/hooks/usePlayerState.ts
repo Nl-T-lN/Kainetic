@@ -16,6 +16,13 @@ import type { PlayerState, Track } from "@/types/music";
 
 export interface UsePlayerStateReturn extends PlayerState {
   setCurrentTrack: (track: Track | null) => void;
+  queue: Track[];
+  queueIndex: number;
+  setQueue: (tracks: Track[], index?: number) => void;
+  playNext: () => void;
+  playPrev: () => void;
+  insertNext: (track: Track) => void;
+  addToQueue: (track: Track) => void;
 }
 
 export function usePlayerState(
@@ -25,11 +32,39 @@ export function usePlayerState(
   const [isPlaying, setIsPlaying] = useState(false);
   const [positionMs, setPositionMs] = useState(0);
   const [durationMs, setDurationMs] = useState(0);
+  
+  const [queue, setQueueState] = useState<Track[]>([]);
+  const [queueIndex, setQueueIndex] = useState(0);
 
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
+  // Load state from localStorage on initial mount
   useEffect(() => {
-    // 🟢 YOU CODE (Done for you): Polling function
+    try {
+      const savedState = localStorage.getItem("vintify_player_state");
+      if (savedState) {
+        const { track, savedQueue, savedIndex } = JSON.parse(savedState);
+        if (track) setCurrentTrack(track);
+        if (savedQueue) setQueueState(savedQueue);
+        if (savedIndex !== undefined) setQueueIndex(savedIndex);
+      }
+    } catch (e) {
+      console.error("Failed to parse saved player state", e);
+    }
+  }, []);
+
+  // Save state to localStorage whenever it changes
+  useEffect(() => {
+    if (currentTrack || queue.length > 0) {
+      localStorage.setItem("vintify_player_state", JSON.stringify({
+        track: currentTrack,
+        savedQueue: queue,
+        savedIndex: queueIndex
+      }));
+    }
+  }, [currentTrack, queue, queueIndex]);
+
+  useEffect(() => {
     const pollState = () => {
       if (!playerRef.current || !playerRef.current.getPlayerState) return;
 
@@ -38,11 +73,9 @@ export function usePlayerState(
       // YT.PlayerState.PLAYING is 1
       if (stateName === 1) {
         setIsPlaying(true);
-        // YT returns seconds, we need ms
         const pos = playerRef.current.getCurrentTime() * 1000;
         setPositionMs(pos);
         
-        // Grab duration if we don't have it
         const dur = playerRef.current.getDuration() * 1000;
         if (dur > 0 && dur !== durationMs) {
           setDurationMs(dur);
@@ -52,7 +85,6 @@ export function usePlayerState(
       }
     };
 
-    // Run interval every 500ms
     intervalRef.current = setInterval(pollState, 500);
 
     return () => {
@@ -60,12 +92,76 @@ export function usePlayerState(
     };
   }, [playerRef, durationMs]);
 
-  // When the track changes manually, reset the UI instantly before YouTube loads
   const handleSetTrack = (track: Track | null) => {
     setCurrentTrack(track);
     setPositionMs(0);
     if (track) setDurationMs(track.durationMs);
   };
 
-  return { currentTrack, isPlaying, positionMs, durationMs, setCurrentTrack: handleSetTrack };
+  const setQueue = (tracks: Track[], index: number = 0) => {
+    setQueueState(tracks);
+    setQueueIndex(index);
+    if (tracks[index]) {
+      handleSetTrack(tracks[index]);
+    }
+  };
+
+  const playNext = () => {
+    if (queue.length > 0 && queueIndex < queue.length - 1) {
+      const nextIndex = queueIndex + 1;
+      setQueueIndex(nextIndex);
+      handleSetTrack(queue[nextIndex]);
+    }
+  };
+
+  const playPrev = () => {
+    if (positionMs > 3000) {
+      // If we are more than 3 seconds in, just restart the song
+      if (playerRef.current) playerRef.current.seekTo(0, true);
+    } else if (queue.length > 0 && queueIndex > 0) {
+      // Otherwise go to previous song
+      const prevIndex = queueIndex - 1;
+      setQueueIndex(prevIndex);
+      handleSetTrack(queue[prevIndex]);
+    }
+  };
+
+  const insertNext = (track: Track) => {
+    const newQueue = [...queue];
+    const insertIndex = queue.length > 0 ? queueIndex + 1 : 0;
+    newQueue.splice(insertIndex, 0, track);
+    setQueueState(newQueue);
+    
+    // If the queue was empty, play it immediately
+    if (queue.length === 0) {
+      setQueueIndex(0);
+      handleSetTrack(track);
+    }
+  };
+
+  const addToQueue = (track: Track) => {
+    const newQueue = [...queue, track];
+    setQueueState(newQueue);
+    
+    // If the queue was empty, play it immediately
+    if (queue.length === 0) {
+      setQueueIndex(0);
+      handleSetTrack(track);
+    }
+  };
+
+  return { 
+    currentTrack, 
+    isPlaying, 
+    positionMs, 
+    durationMs, 
+    setCurrentTrack: handleSetTrack,
+    queue,
+    queueIndex,
+    setQueue,
+    playNext,
+    playPrev,
+    insertNext,
+    addToQueue
+  };
 }

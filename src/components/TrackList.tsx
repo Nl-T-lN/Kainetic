@@ -2,7 +2,9 @@
 
 import styled, { keyframes } from "styled-components";
 import type { Track } from "@/types/music";
-import { Play } from "lucide-react";
+import { Play, MoreVertical } from "lucide-react";
+import { TrackContextMenu } from "./TrackContextMenu";
+import { useState } from "react";
 
 const ListContainer = styled.ul`
   list-style: none;
@@ -141,6 +143,9 @@ interface TrackListProps {
   onTrackSelect: (track: Track) => void;
   currentTrackId?: string;
   isLoading?: boolean;
+  onPlayNext?: (track: Track) => void;
+  onAddToQueue?: (track: Track) => void;
+  onStartRadio?: (track: Track) => void;
 }
 
 export function TrackList({
@@ -148,7 +153,17 @@ export function TrackList({
   onTrackSelect,
   currentTrackId,
   isLoading,
+  onPlayNext,
+  onAddToQueue,
+  onStartRadio
 }: TrackListProps) {
+  const [menuTrack, setMenuTrack] = useState<{ track: Track, x: number, y: number } | null>(null);
+
+  const handleContextMenuClick = (e: React.MouseEvent, track: Track) => {
+    e.stopPropagation();
+    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+    setMenuTrack({ track, x: rect.right - 240, y: rect.bottom });
+  };
   if (isLoading) {
     return (
       <div style={{ padding: "1rem", color: "#727272", fontSize: "0.9rem" }}>
@@ -162,46 +177,71 @@ export function TrackList({
   }
 
   return (
-    <ListContainer>
-      {tracks.map((track, index) => {
-        const isActive = track.videoId === currentTrackId;
-        return (
-          <TrackItem
-            key={track.videoId}
-            onClick={() => onTrackSelect(track)}
-            $isPlaying={isActive}
-          >
-            <RowIndex>
-              {isActive ? (
-                <EqBars>
-                  <EqBar $delay="0s" />
-                  <EqBar $delay="0.15s" />
-                  <EqBar $delay="0.3s" />
-                </EqBars>
-              ) : (
-                <>
-                  <span className="row-number">{index + 1}</span>
-                  <span className="play-icon">
-                    <Play fill="currentColor" size={14} />
-                  </span>
-                </>
-              )}
-            </RowIndex>
-            <ThumbContainer>
-              <Thumbnail
-                src={track.thumbnailUrl}
-                alt={track.title}
-                loading="lazy"
-              />
-            </ThumbContainer>
-            <TrackInfo>
-              <Title className="title">{track.title}</Title>
-              <Artist>{track.channelTitle}</Artist>
-            </TrackInfo>
-            <Duration>{formatDuration(track.durationMs)}</Duration>
-          </TrackItem>
-        );
-      })}
-    </ListContainer>
+    <>
+      <ListContainer>
+        {tracks.map((track, index) => {
+          const isActive = track.videoId === currentTrackId;
+          return (
+            <TrackItem
+              key={`${track.videoId}-${index}`}
+              $isPlaying={isActive}
+              onClick={() => onTrackSelect(track)}
+            >
+              <RowIndex>
+                <span className="row-number">{index + 1}</span>
+                <span className="play-icon">
+                  {isActive ? (
+                    <EqBars>
+                      <EqBar $delay="0s" />
+                      <EqBar $delay="0.2s" />
+                      <EqBar $delay="0.4s" />
+                    </EqBars>
+                  ) : (
+                    <Play size={14} fill="currentColor" />
+                  )}
+                </span>
+              </RowIndex>
+
+              <ThumbContainer>
+                <Thumbnail
+                  src={track.thumbnailUrl || "https://images.unsplash.com/photo-1619983081563-430f63602796?auto=format&fit=crop&q=80&w=200"}
+                  alt={track.title}
+                  loading="lazy"
+                />
+              </ThumbContainer>
+
+              <TrackInfo>
+                <Title className="title">{track.title}</Title>
+                <Artist>{track.artist || track.channelTitle || "Unknown Artist"}</Artist>
+              </TrackInfo>
+
+              <Duration>{formatDuration(track.durationMs)}</Duration>
+              
+              <button 
+                onClick={(e) => handleContextMenuClick(e, track)}
+                style={{
+                  background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', 
+                  cursor: 'pointer', padding: '4px', display: 'flex', marginLeft: '8px'
+                }}
+              >
+                <MoreVertical size={16} />
+              </button>
+            </TrackItem>
+          );
+        })}
+      </ListContainer>
+      
+      {menuTrack && (
+        <TrackContextMenu 
+          track={menuTrack.track}
+          x={menuTrack.x}
+          y={menuTrack.y}
+          onClose={() => setMenuTrack(null)}
+          onPlayNext={onPlayNext}
+          onAddToQueue={onAddToQueue}
+          onStartRadio={onStartRadio}
+        />
+      )}
+    </>
   );
 }

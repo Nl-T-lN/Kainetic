@@ -13,6 +13,7 @@ import {
   Shuffle,
   ChevronDown,
   Users,
+  ListMusic,
 } from "lucide-react";
 import type { Track } from "@/types/music";
 import { ProgressBar } from "./ProgressBar";
@@ -438,15 +439,22 @@ const LiveDot = styled.div`
   animation: ${livePulse} 2s ease-in-out infinite;
 `;
 
+import { useLikedTracks } from "@/hooks/useLikedTracks";
+
 /* ── Component ── */
 interface BottomPlayerProps {
   currentTrack: Track | null;
   isPlaying: boolean;
   positionMs: number;
   durationMs: number;
+  queue?: Track[];
+  queueIndex?: number;
   onPlayPause: () => void;
   onSkip: () => void;
   onSeek: (ms: number) => void;
+  onNext?: () => void;
+  onPrev?: () => void;
+  onToggleQueue?: () => void;
   roomCode?: string | null;
   listenerCount?: number;
   isHost?: boolean;
@@ -457,9 +465,14 @@ export function BottomPlayer({
   isPlaying,
   positionMs,
   durationMs,
+  queue,
+  queueIndex,
   onPlayPause,
   onSkip,
   onSeek,
+  onNext,
+  onPrev,
+  onToggleQueue,
   roomCode,
   listenerCount = 0,
   isHost = true,
@@ -467,6 +480,7 @@ export function BottomPlayer({
   const [isExpanded, setIsExpanded] = useState(false);
   const [volume, setVolume] = useState(70);
   const { lyrics, plainLyrics, isLoading: lyricsLoading } = useLyrics(currentTrack);
+  const { toggleLike, isLiked } = useLikedTracks();
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const activeLyricIndex = lyrics.findIndex((line, index) => {
@@ -513,6 +527,21 @@ export function BottomPlayer({
                     <div className="title">{currentTrack.title}</div>
                     <div className="artist">{currentTrack.channelTitle || currentTrack.artist || "Unknown Artist"}</div>
                   </TrackText>
+                  <button 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      toggleLike(currentTrack);
+                    }}
+                    style={{
+                      background: 'none', border: 'none', cursor: 'pointer',
+                      color: isLiked(currentTrack.videoId) ? 'var(--accent)' : 'rgba(255,255,255,0.5)',
+                      padding: '4px', display: 'flex', alignItems: 'center'
+                    }}
+                  >
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill={isLiked(currentTrack.videoId) ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2">
+                      <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                    </svg>
+                  </button>
                 </>
               ) : (
                 <TrackText><div className="title" style={{ color: "rgba(255,255,255,0.3)" }}>No track playing</div></TrackText>
@@ -522,11 +551,11 @@ export function BottomPlayer({
             <ControlsContainer $isExpanded={false}>
               <ButtonsRow $isExpanded={false}>
                 <button><Shuffle size={18} fill="currentColor" /></button>
-                <button onClick={(e) => { e.stopPropagation(); onSkip(); }}><SkipBack size={22} fill="currentColor" /></button>
+                <button onClick={(e) => { e.stopPropagation(); if(onPrev) onPrev(); }}><SkipBack size={22} fill="currentColor" /></button>
                 <button className="play-btn" onClick={(e) => { e.stopPropagation(); onPlayPause(); }}>
-                  {isPlaying ? <Pause size={18} fill="currentColor" /> : <Play size={18} fill="currentColor" style={{ marginLeft: "2px" }} />}
+                  {isPlaying ? <Pause size={20} fill="currentColor" /> : <Play size={20} fill="currentColor" style={{ marginLeft: "2px" }} />}
                 </button>
-                <button onClick={(e) => { e.stopPropagation(); onSkip(); }}><SkipForward size={22} fill="currentColor" /></button>
+                <button onClick={(e) => { e.stopPropagation(); if(onNext) onNext(); }}><SkipForward size={22} fill="currentColor" /></button>
                 <button><Repeat size={18} fill="currentColor" /></button>
               </ButtonsRow>
               <ProgressBar positionMs={positionMs} durationMs={durationMs} onSeek={onSeek} />
@@ -534,6 +563,12 @@ export function BottomPlayer({
 
             <ExtraControls>
               {roomCode && <RoomBadge><LiveDot /> {roomCode}</RoomBadge>}
+              <button 
+                onClick={(e) => { e.stopPropagation(); if (onToggleQueue) onToggleQueue(); }}
+                style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.6)', cursor: 'pointer', padding: '4px', display: 'flex' }}
+              >
+                <ListMusic size={20} />
+              </button>
               <VolumeContainer>
                 {volume === 0 ? <VolumeX size={20} onClick={() => setVolume(70)} /> : <Volume2 size={20} onClick={() => setVolume(0)} />}
                 <VolumeSlider onClick={handleVolumeClick}><VolumeFill className="vol-fill" style={{ width: `${volume}%` }} /></VolumeSlider>
@@ -566,12 +601,12 @@ export function BottomPlayer({
             <div style={{ height: "2rem" }} />
             <ButtonsRow $isExpanded={true}>
               <button><Shuffle size={24} /></button>
-              <button onClick={onSkip}><SkipBack size={36} fill="currentColor" /></button>
+              <button onClick={onPrev}><SkipBack size={36} fill="currentColor" /></button>
               <button className="play-btn" onClick={onPlayPause} style={{ width: "80px", height: "80px" }}>
                 {isPlaying ? <Pause size={36} fill="currentColor" /> : <Play size={36} fill="currentColor" style={{ marginLeft: "6px" }} />}
               </button>
-              <button onClick={onSkip}><SkipForward size={36} fill="currentColor" /></button>
-              <button><Repeat size={24} /></button>
+              <button onClick={onNext}><SkipForward size={36} fill="currentColor" /></button>
+              <button onClick={(e) => { e.stopPropagation(); if (onToggleQueue) onToggleQueue(); }}><ListMusic size={24} /></button>
             </ButtonsRow>
             {roomCode && (
               <div style={{ marginTop: "2rem" }}>

@@ -383,11 +383,28 @@ function getGreeting(): string {
 
 interface HomeGridProps {
   onPlay: (track: Track) => void;
+  onPlayNext?: (track: Track) => void;
+  onAddToQueue?: (track: Track) => void;
+  onStartRadio?: (track: Track) => void;
 }
 
 import { useRecentTracks } from "@/hooks/useRecentTracks";
+import { TrackContextMenu } from "./TrackContextMenu";
+import { MoreVertical } from "lucide-react";
 
-export function HomeGrid({ onPlay }: HomeGridProps) {
+export function HomeGrid({ 
+  onPlay,
+  onPlayNext,
+  onAddToQueue,
+  onStartRadio 
+}: HomeGridProps) {
+  const [menuTrack, setMenuTrack] = useState<{ track: Track, x: number, y: number } | null>(null);
+
+  const handleContextMenuClick = (e: React.MouseEvent, track: Track) => {
+    e.stopPropagation();
+    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+    setMenuTrack({ track, x: rect.right - 240, y: rect.bottom });
+  };
   const [tracks, setTracks] = useState<Track[]>([]);
   const [loading, setLoading] = useState(true);
   const { recentTracks } = useRecentTracks();
@@ -453,8 +470,19 @@ export function HomeGrid({ onPlay }: HomeGridProps) {
                   </PlayOverlay>
                 </ImageContainer>
                 <Title>{track.title}</Title>
-                <Subtitle>
-                  {track.channelTitle || track.artist || "Artist"}
+                <Subtitle style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {track.channelTitle || track.artist || "Artist"}
+                  </span>
+                  <button 
+                    onClick={(e) => handleContextMenuClick(e, track)}
+                    style={{
+                      background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', 
+                      cursor: 'pointer', padding: '0px', display: 'flex'
+                    }}
+                  >
+                    <MoreVertical size={14} />
+                  </button>
                 </Subtitle>
               </Card>
             ))}
@@ -480,8 +508,16 @@ export function HomeGrid({ onPlay }: HomeGridProps) {
                   <div className="artist">{track.channelTitle || track.artist || "Artist"}</div>
                 </div>
                 <div className="meta">
-                  <Heart className="heart" size={16} />
                   <span>{track.durationMs ? `${Math.floor(track.durationMs / 60000)}:${String(Math.floor((track.durationMs % 60000) / 1000)).padStart(2, '0')}` : "3:45"}</span>
+                  <button 
+                    onClick={(e) => handleContextMenuClick(e, track)}
+                    style={{
+                      background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', 
+                      cursor: 'pointer', padding: '0px', display: 'flex', marginLeft: '12px'
+                    }}
+                  >
+                    <MoreVertical size={16} />
+                  </button>
                 </div>
               </RecommendedTrack>
             ))}
@@ -531,15 +567,37 @@ export function HomeGrid({ onPlay }: HomeGridProps) {
                   </PlayOverlay>
                 </ImageContainer>
                 <Title>{track.title}</Title>
-                <Subtitle>
-                  {track.channelTitle || track.artist || "Artist"}
+                <Subtitle style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {track.channelTitle || track.artist || "Artist"}
+                  </span>
+                  <button 
+                    onClick={(e) => handleContextMenuClick(e, track)}
+                    style={{
+                      background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', 
+                      cursor: 'pointer', padding: '0px', display: 'flex'
+                    }}
+                  >
+                    <MoreVertical size={14} />
+                  </button>
                 </Subtitle>
               </Card>
             ))}
           </ShelfContainer>
         </>
       )}
+
+      {menuTrack && (
+        <TrackContextMenu 
+          track={menuTrack.track}
+          x={menuTrack.x}
+          y={menuTrack.y}
+          onClose={() => setMenuTrack(null)}
+          onPlayNext={onPlayNext}
+          onAddToQueue={onAddToQueue}
+          onStartRadio={onStartRadio}
+        />
+      )}
     </Container>
   );
 }
-
