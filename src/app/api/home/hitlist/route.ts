@@ -22,28 +22,38 @@ export async function GET(request: Request) {
     if (artists) {
       const artistList = artists.split(',');
       const combinedItems: any[] = [];
+      const seenIds = new Set<string>();
       
       for (const artist of artistList) {
-        // Search for a mix for this artist
-        const searchRes = await yt.music.search(`${artist} Mix`, { type: 'playlist' }) as any;
-        const results = searchRes.contents?.[0]?.contents || searchRes.results;
+        // Search for a mix and albums for this artist
+        const searchRes = await yt.music.search(`${artist}`, { type: 'playlist' }) as any;
+        const albumRes = await yt.music.search(`${artist}`, { type: 'album' }) as any;
         
-        if (results && results.length > 0) {
-          const items = results.slice(0, 5).map((item: any) => ({
-            id: item.id || item.endpoint?.payload?.browseId,
-            title: item.title?.text || item.title || "Unknown Title",
-            subtitle: item.subtitle?.text || item.author?.name || item.author || "Mix",
-            thumbnailUrl: getHighResThumbnail(item.thumbnails || item.thumbnail),
-            type: item.item_type || 'playlist'
-          })).filter((t: any) => t.id && t.thumbnailUrl);
-          
-          combinedItems.push(...items);
+        const mixResults = searchRes.contents?.[0]?.contents || searchRes.results || [];
+        const albumResults = albumRes.contents?.[0]?.contents || albumRes.results || [];
+        
+        const allResults = [...mixResults.slice(0, 3), ...albumResults.slice(0, 3)];
+        
+        for (const item of allResults) {
+          const id = item.id || item.endpoint?.payload?.browseId;
+          if (id && !seenIds.has(id)) {
+            seenIds.add(id);
+            combinedItems.push({
+              id: id,
+              title: item.title?.text || item.title || "Unknown Title",
+              subtitle: item.subtitle?.text || item.author?.name || item.author || "Mix",
+              thumbnailUrl: getHighResThumbnail(item.thumbnails || item.thumbnail),
+              type: item.item_type || 'playlist'
+            });
+          }
         }
       }
       
-      if (combinedItems.length > 0) {
-        // Shuffle or just slice the combined items to make it interesting
-        const shuffled = combinedItems.sort(() => 0.5 - Math.random()).slice(0, 15);
+      const validItems = combinedItems.filter(t => t.id && t.thumbnailUrl);
+      
+      if (validItems.length > 0) {
+        // Shuffle the combined items to limit redundancy and make it interesting
+        const shuffled = validItems.sort(() => 0.5 - Math.random()).slice(0, 15);
         hitlists.push({
           title: "Recommended Mixes",
           items: shuffled

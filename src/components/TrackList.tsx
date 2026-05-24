@@ -147,6 +147,7 @@ interface TrackListProps {
   onAddToQueue?: (track: Track) => void;
   onStartRadio?: (track: Track) => void;
   onArtistClick?: (artistId: string) => void;
+  hideThumbnails?: boolean;
 }
 
 export function TrackList({
@@ -157,7 +158,9 @@ export function TrackList({
   onPlayNext,
   onAddToQueue,
   onStartRadio,
-  onArtistClick
+  onArtistClick,
+  hideThumbnails
+
 }: TrackListProps) {
   const [menuTrack, setMenuTrack] = useState<{ track: Track, x: number, y: number } | null>(null);
 
@@ -206,13 +209,15 @@ export function TrackList({
                 </span>
               </RowIndex>
 
-              <ThumbContainer>
-                <Thumbnail
-                  src={track.thumbnailUrl || "https://images.unsplash.com/photo-1619983081563-430f63602796?auto=format&fit=crop&q=80&w=200"}
-                  alt={track.title}
-                  loading="lazy"
-                />
-              </ThumbContainer>
+              {!hideThumbnails && (
+                <ThumbContainer>
+                  <Thumbnail
+                    src={track.thumbnailUrl || "https://images.unsplash.com/photo-1619983081563-430f63602796?auto=format&fit=crop&q=80&w=200"}
+                    alt={track.title}
+                    loading="lazy"
+                  />
+                </ThumbContainer>
+              )}
 
               <TrackInfo>
                 <Title className="title">{track.title}</Title>

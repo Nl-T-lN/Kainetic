@@ -41,7 +41,7 @@ export async function GET(request: Request) {
 
     const title = result.header?.title?.text || result.title || "Unknown Album";
     const author = result.header?.author?.name || result.author || "Unknown Artist";
-    const thumbnailUrl = getHighResThumbnail(result.header?.thumbnails || result.thumbnails || []);
+    const thumbnailUrl = getHighResThumbnail(result.header?.thumbnail?.contents || result.header?.thumbnails || result.thumbnails || []);
     
     const tracks = (result.contents || result.items || []).map((item: any) => {
       // Handle both album and playlist item structures
@@ -52,7 +52,7 @@ export async function GET(request: Request) {
         videoId: trackId,
         title: item.title?.text || item.title || "Unknown Track",
         artist: item.author?.name || item.artists?.[0]?.name || author,
-        thumbnailUrl: getHighResThumbnail(item.thumbnails || []) || thumbnailUrl,
+        thumbnailUrl: getHighResThumbnail(item.thumbnail?.contents || item.thumbnails || []) || thumbnailUrl,
         durationMs: item.duration?.seconds ? item.duration.seconds * 1000 : 0
       };
     }).filter(Boolean);
