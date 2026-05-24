@@ -119,7 +119,7 @@ export function Sidebar({ activeView, setActiveView, roomCode }: SidebarProps) {
             <circle cx="12" cy="12" r="3" fill="currentColor"/>
             <path d="M12 2 C12 2 14 8 18 12 C14 16 12 22 12 22" stroke="currentColor" strokeWidth="1.5" fill="none"/>
           </svg>
-          Vintify
+          Ventify
         </Logo>
       </LogoSection>
 
@@ -172,7 +172,7 @@ export function Sidebar({ activeView, setActiveView, roomCode }: SidebarProps) {
         </NavList>
       </NavSection>
 
-      <FooterText>Vintify © 2024</FooterText>
+      <FooterText>Ventify © 2024</FooterText>
     </SidebarContainer>
   );
 }

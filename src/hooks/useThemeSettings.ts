@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import type { ThemeSettings } from "@/types/theme";
 
-const STORAGE_KEY = "vintify-theme-settings";
+const STORAGE_KEY = "ventify-theme-settings";
 
 export const defaultThemeSettings: ThemeSettings = {
   accentColor: "#FF6B9D",

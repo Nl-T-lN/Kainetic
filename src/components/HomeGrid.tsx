@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import styled, { keyframes } from "styled-components";
 import type { Track } from "@/types/music";
-import { Play } from "lucide-react";
+import { Play, Heart, RefreshCw, Radio } from "lucide-react";
 
 const slideUpFade = keyframes`
   from { opacity: 0; transform: translateY(16px); }
@@ -89,6 +89,130 @@ const RecommendedTrack = styled.div<{ $index: number }>`
       text-overflow: ellipsis;
     }
   }
+
+  .meta {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    color: var(--muted);
+    font-size: 0.85rem;
+
+    .heart {
+      opacity: 0;
+      transition: all 0.2s;
+    }
+    
+    &:hover .heart {
+      opacity: 1;
+      color: var(--accent);
+    }
+  }
+
+  &:hover .meta .heart {
+    opacity: 1;
+  }
+`;
+
+const SectionHeaderRow = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.25rem;
+  margin-top: 1rem;
+`;
+
+const SectionTitleGroup = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+
+  h2 {
+    font-size: 1.75rem;
+    font-weight: 800;
+    color: #fff;
+    letter-spacing: -0.5px;
+    margin: 0;
+  }
+`;
+
+const PillButton = styled.button`
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(255, 255, 255, 1);
+  color: #000;
+  border: none;
+  padding: 0.4rem 1rem;
+  border-radius: 20px;
+  font-weight: 700;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover {
+    transform: scale(1.05);
+    background: #e0e0e0;
+  }
+`;
+
+const IconButton = styled.button`
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--muted);
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.1);
+  }
+`;
+
+const ArtistPill = styled.div<{ $index: number }>`
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 40px;
+  padding: 0.5rem 1rem 0.5rem 0.5rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  opacity: 0;
+  animation: ${slideUpFade} 0.4s ease-out forwards;
+  animation-delay: ${({ $index }) => `${0.05 + $index * 0.03}s`};
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.1);
+    transform: translateY(-2px);
+  }
+
+  img {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    object-fit: cover;
+  }
+
+  span {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #fff;
+    white-space: nowrap;
+  }
+`;
+
+const PlaceholderText = styled.div`
+  color: var(--muted);
+  font-size: 0.9rem;
+  padding: 1rem 0;
 `;
 
 const RecPlayButton = styled.div`
@@ -311,7 +435,11 @@ export function HomeGrid({ onPlay }: HomeGridProps) {
       
       {recentTracks.length > 0 && (
         <>
-          <SectionTitle style={{ fontSize: "1.4rem", marginTop: "1rem" }}>Recently Played</SectionTitle>
+          <SectionHeaderRow>
+            <SectionTitleGroup>
+              <h2>Jump Back In</h2>
+            </SectionTitleGroup>
+          </SectionHeaderRow>
           <ShelfContainer>
             {recentTracks.map((track, index) => (
               <Card key={`recent-${track.videoId}`} $index={index} onClick={() => onPlay(track)}>
@@ -333,32 +461,66 @@ export function HomeGrid({ onPlay }: HomeGridProps) {
 
       {hits.length > 0 && (
         <>
-          <SectionTitle style={{ fontSize: "1.4rem", marginTop: "1rem" }}>Hits of the Week</SectionTitle>
-          <ShelfContainer>
+          <SectionHeaderRow>
+            <SectionTitleGroup>
+              <h2>Recommended Songs</h2>
+              <PillButton><Radio size={16} /> Start Infinite Radio</PillButton>
+            </SectionTitleGroup>
+            <IconButton><RefreshCw size={16} /></IconButton>
+          </SectionHeaderRow>
+          <RecommendedContainer>
             {hits.map((track, index) => (
-              <Card key={`hit-${track.videoId}`} $index={index} onClick={() => onPlay(track)}>
-                <ImageContainer>
-                  <img src={track.thumbnailUrl} alt={track.title} loading="lazy" />
-                  <PlayOverlay className="play-overlay">
-                    <Play fill="currentColor" size={24} />
-                  </PlayOverlay>
-                </ImageContainer>
-                <Title>{track.title}</Title>
-                <Subtitle>
-                  {track.channelTitle || track.artist || "Artist"}
-                </Subtitle>
-              </Card>
+              <RecommendedTrack key={`hit-${track.videoId}`} $index={index} onClick={() => onPlay(track)}>
+                <img src={track.thumbnailUrl} alt={track.title} loading="lazy" />
+                <div className="info">
+                  <div className="title">{track.title}</div>
+                  <div className="artist">{track.channelTitle || track.artist || "Artist"}</div>
+                </div>
+                <div className="meta">
+                  <Heart className="heart" size={16} />
+                  <span>{track.durationMs ? `${Math.floor(track.durationMs / 60000)}:${String(Math.floor((track.durationMs % 60000) / 1000)).padStart(2, '0')}` : "3:45"}</span>
+                </div>
+              </RecommendedTrack>
             ))}
-          </ShelfContainer>
+          </RecommendedContainer>
         </>
       )}
 
+      <SectionHeaderRow>
+        <SectionTitleGroup>
+          <h2>Recommended Albums</h2>
+        </SectionTitleGroup>
+        <IconButton><RefreshCw size={16} /></IconButton>
+      </SectionHeaderRow>
+      <PlaceholderText>
+        Tell us more about what you like so we can recommend albums!
+      </PlaceholderText>
+
+      <SectionHeaderRow>
+        <SectionTitleGroup>
+          <h2>Recommended Artists</h2>
+        </SectionTitleGroup>
+        <IconButton><RefreshCw size={16} /></IconButton>
+      </SectionHeaderRow>
+      <ShelfContainer>
+        {recommended.slice(0, 8).map((track, index) => (
+          <ArtistPill key={`artist-${track.videoId}`} $index={index}>
+            <img src={track.thumbnailUrl} alt={track.channelTitle} loading="lazy" />
+            <span>{track.channelTitle || track.artist || "Artist"}</span>
+          </ArtistPill>
+        ))}
+      </ShelfContainer>
+
       {recommended.length > 0 && (
         <>
-          <SectionTitle style={{ fontSize: "1.4rem", marginTop: "1rem" }}>Recommended for You</SectionTitle>
+          <SectionHeaderRow>
+            <SectionTitleGroup>
+              <h2>Editor's Picks</h2>
+            </SectionTitleGroup>
+          </SectionHeaderRow>
           <ShelfContainer>
             {recommended.map((track, index) => (
-              <Card key={`rec-${track.videoId}`} $index={index} onClick={() => onPlay(track)}>
+              <Card key={`ed-${track.videoId}`} $index={index} onClick={() => onPlay(track)}>
                 <ImageContainer>
                   <img src={track.thumbnailUrl} alt={track.title} loading="lazy" />
                   <PlayOverlay className="play-overlay">

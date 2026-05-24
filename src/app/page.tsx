@@ -18,7 +18,7 @@ import { Player } from "@/components/Player";
 // ============================================================
 // 📚 LEARN: page.tsx (You Code)
 // ============================================================
-// The root page of GROOVEBOX now renders the massive
+// The root page of Ventify now renders the massive
 // Master Player component which manages all state.
 // ============================================================
 

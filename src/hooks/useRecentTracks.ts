@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import type { Track } from '@/types/music';
 
-const RECENT_TRACKS_KEY = 'vintify-recent-tracks';
+const RECENT_TRACKS_KEY = 'ventify-recent-tracks';
 const MAX_RECENT_TRACKS = 50;
 
 export function useRecentTracks() {

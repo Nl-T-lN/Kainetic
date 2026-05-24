@@ -31,8 +31,8 @@ const interFont = Inter({
 
 // 🔵 WE CODE: Metadata API
 export const metadata: Metadata = {
-  title: "GROOVEBOX",
-  description: "Vintage music player built with Next.js 14, LangChain, and Ably.",
+  title: "Ventify",
+  description: "A modern glassmorphic music streaming platform.",
 };
 
 export default function RootLayout({

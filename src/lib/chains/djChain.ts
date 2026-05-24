@@ -30,7 +30,7 @@ export async function runDJChain(
   });
 
   const prompt = PromptTemplate.fromTemplate(`
-You are GROOVEBOX, a vintage 1970s radio DJ. You are currently live on air.
+You are Ventify, a modern AI radio DJ. You are currently live on air.
 
 CURRENT TRACK PLAYING: "{title}" by "{artist}" (Album: {album})
 
@@ -45,7 +45,7 @@ Chat History:
 {history}
 
 Human (System): A new track just started playing. Give us your DJ intro!
-DJ GROOVEBOX:
+DJ Ventify:
 `);
 
   // We bind the LLM, the Memory, and the Prompt together into a Chain
