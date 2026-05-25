@@ -182,15 +182,15 @@ interface SidebarProps {
   setActiveView: (v: string) => void;
   roomCode?: string | null;
   onLogoClick?: () => void;
+  isCollapsed: boolean;
+  onToggleCollapse: () => void;
 }
 
-export function Sidebar({ activeView, setActiveView, roomCode, onLogoClick }: SidebarProps) {
-  const [isCollapsed, setIsCollapsed] = useState(false);
-
+export function Sidebar({ activeView, setActiveView, roomCode, onLogoClick, isCollapsed, onToggleCollapse }: SidebarProps) {
   return (
     <SidebarContainer className={isCollapsed ? "collapsed" : ""}>
       <HeaderSection>
-        <MenuButton onClick={() => setIsCollapsed(!isCollapsed)}>
+        <MenuButton onClick={onToggleCollapse}>
           <Menu size={24} />
         </MenuButton>
         <Logo 

@@ -104,8 +104,8 @@ export function TrackContextMenu({
     };
   }, [onClose]);
 
-  // Prevent menu from going off-screen bottom
-  const adjustY = y > window.innerHeight - 300 ? y - 300 : y;
+  // Prevent menu from going off-screen bottom or overlapping the bottom player
+  const adjustY = y > window.innerHeight - 420 ? y - 420 : y;
   
   // Decide if we should align to the right side of the cursor
   const alignRight = x > window.innerWidth - 260;

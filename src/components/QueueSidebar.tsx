@@ -28,7 +28,7 @@ const SidebarContainer = styled.div<{ $isOpen: boolean }>`
   -webkit-backdrop-filter: blur(24px);
   border-left: 1px solid rgba(255, 255, 255, 0.05);
   box-shadow: -10px 0 30px rgba(0, 0, 0, 0.5);
-  z-index: 10000;
+  z-index: 999;
   display: flex;
   flex-direction: column;
   transform: translateX(${({ $isOpen }) => ($isOpen ? "0" : "100%")});
@@ -73,7 +73,7 @@ const Header = styled.div`
 const TrackList = styled.div`
   flex: 1;
   overflow-y: auto;
-  padding: 1rem 0;
+  padding: 1rem 0 100px 0;
 
   &::-webkit-scrollbar {
     width: 6px;

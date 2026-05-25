@@ -267,6 +267,7 @@ export function Player() {
     
     return tracks;
   };
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   const getResultsTitle = () => {
     if (activeQueueId === "MOOD") return "Vibe Results";
@@ -276,12 +277,14 @@ export function Player() {
   };
 
   return (
-    <AppLayout>
+    <AppLayout style={{ "--sidebar-width": isSidebarCollapsed ? "80px" : "230px" } as any}>
       <Sidebar
         activeView={activeView}
         setActiveView={setActiveView}
         roomCode={party.roomCode}
         onLogoClick={handleLogoClick}
+        isCollapsed={isSidebarCollapsed}
+        onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
       />
 
       <MainContent>
