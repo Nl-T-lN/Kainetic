@@ -197,10 +197,19 @@ export function Sidebar({ activeView, setActiveView, roomCode, onLogoClick, isCo
           onClick={onLogoClick || (() => setActiveView("HOME"))}
           style={{ cursor: 'pointer' }}
         >
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
-            <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2"/>
-            <circle cx="12" cy="12" r="3" fill="currentColor"/>
-            <path d="M12 2 C12 2 14 8 18 12 C14 16 12 22 12 22" stroke="currentColor" strokeWidth="1.5" fill="none"/>
+          <svg width="28" height="28" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="ventifyGradSide" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="var(--accent)" />
+                <stop offset="100%" stopColor="#FFA879" />
+              </linearGradient>
+              <filter id="glowSide" x="-20%" y="-20%" width="140%" height="140%">
+                <feGaussianBlur stdDeviation="2" result="blur" />
+                <feComposite in="SourceGraphic" in2="blur" operator="over" />
+              </filter>
+            </defs>
+            <path d="M8 8L14.5 24C14.8 24.8 15.2 24.8 15.5 24L24 8" stroke="url(#ventifyGradSide)" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" filter="url(#glowSide)"/>
+            <path d="M12 11L15 19L19 11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" strokeOpacity="0.8"/>
           </svg>
           <span>Ventify</span>
         </Logo>
