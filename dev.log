@@ -1,0 +1,141 @@
+
+> vintify@0.1.0 dev
+> next dev
+
+▲ Next.js 16.2.1 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://192.168.10.124:3000
+- Environments: .env.local
+✓ Ready in 902ms
+⚠ Turbopack's filesystem cache has been deleted because we previously detected an internal error in Turbopack. Builds or page loads may be slower as a result.
+
+ GET / 200 in 3.4s (next.js: 3.1s, application-code: 355ms)
+ GET /api/search?q=Top%20Pop%20Hits%202024 200 in 4.9s (next.js: 2.3s, application-code: 2.5s)
+ GET /api/music/upnext?videoId=JSx3PnXzMCE 200 in 4.7s (next.js: 1618ms, application-code: 3.1s)
+ GET /api/home/hitlist?artists=Gunda%20%26%20Encore%20ABJ%2CUnknown%20Artist 200 in 7.6s (next.js: 2.4s, application-code: 5.2s)
+ GET /api/home/hitlist 200 in 430ms (next.js: 11ms, application-code: 419ms)
+ GET /api/search?q=Top%20Pop%20Hits%202024 200 in 614ms (next.js: 8ms, application-code: 606ms)
+ GET /api/search?q=Top%20Pop%20Hits%202024 200 in 495ms (next.js: 4ms, application-code: 491ms)
+ GET /api/home/hitlist?artists=Gunda%20%26%20Encore%20ABJ%2CUnknown%20Artist 200 in 2.3s (next.js: 30ms, application-code: 2.3s)
+ GET /api/home/hitlist?artists=Gunda%20%26%20Encore%20ABJ%2CUnknown%20Artist 200 in 2.2s (next.js: 5ms, application-code: 2.2s)
+UpNext API Error: TypeError: fetch failed
+    at async GET (src/app/api/music/upnext/route.ts:35:18)
+  33 |   try {
+  34 |     const yt = await getYtClient();
+> 35 |     const info = await yt.music.getInfo(videoId);
+     |                  ^
+  36 |     const upNext = await info.getUpNext();
+  37 |
+  38 |     const tracks = (upNext.contents as YTMusicVideo[]) {
+  [cause]: Error [ConnectTimeoutError]: Connect Timeout Error (attempted addresses: 142.250.143.91:443, 2404:6800:4000:1025::5d:443, 192.178.193.91:443, 2404:6800:4000:1025::5b:443, 142.250.143.136:443, 2404:6800:4000:1017::88:443, 142.250.143.190:443, 2404:6800:4000:1017::5d:443, 142.250.146.91:443, 192.178.193.136:443, 142.250.134.93:443, 192.178.211.136:443, 192.178.211.190:443, 192.178.193.190:443, 142.250.143.93:443, 142.250.146.93:443, 192.178.193.93:443, 142.250.146.136:443, 142.250.146.190:443, 142.250.77.46:443, timeout: 10000ms)
+      at ignore-listed frames {
+    code: 'UND_ERR_CONNECT_TIMEOUT'
+  }
+}
+ GET /api/music/upnext?videoId=-4uMRboJesI 500 in 10.8s (next.js: 11ms, application-code: 10.8s)
+ GET / 200 in 224ms (next.js: 96ms, application-code: 128ms)
+ GET / 200 in 144ms (next.js: 14ms, application-code: 130ms)
+ GET / 200 in 118ms (next.js: 11ms, application-code: 107ms)
+ GET / 200 in 120ms (next.js: 5ms, application-code: 115ms)
+ GET / 200 in 115ms (next.js: 6ms, application-code: 108ms)
+ GET / 200 in 117ms (next.js: 7ms, application-code: 111ms)
+ GET / 200 in 108ms (next.js: 6ms, application-code: 102ms)
+ GET / 200 in 126ms (next.js: 6ms, application-code: 120ms)
+ GET / 200 in 97ms (next.js: 6ms, application-code: 91ms)
+ GET / 200 in 90ms (next.js: 6ms, application-code: 84ms)
+ GET / 200 in 97ms (next.js: 5ms, application-code: 92ms)
+ GET / 200 in 137ms (next.js: 6ms, application-code: 131ms)
+ GET / 200 in 113ms (next.js: 6ms, application-code: 107ms)
+ GET / 200 in 116ms (next.js: 8ms, application-code: 108ms)
+ GET / 200 in 115ms (next.js: 6ms, application-code: 110ms)
+ GET / 200 in 196ms (next.js: 9ms, application-code: 188ms)
+ GET / 200 in 179ms (next.js: 8ms, application-code: 171ms)
+ GET / 200 in 199ms (next.js: 8ms, application-code: 191ms)
+ GET / 200 in 208ms (next.js: 17ms, application-code: 191ms)
+ GET / 200 in 148ms (next.js: 20ms, application-code: 128ms)
+ GET / 200 in 127ms (next.js: 12ms, application-code: 115ms)
+ GET / 200 in 101ms (next.js: 5ms, application-code: 96ms)
+ GET / 200 in 95ms (next.js: 7ms, application-code: 89ms)
+ GET / 200 in 90ms (next.js: 6ms, application-code: 85ms)
+ GET / 200 in 96ms (next.js: 5ms, application-code: 91ms)
+ GET / 200 in 110ms (next.js: 10ms, application-code: 100ms)
+ GET / 200 in 79ms (next.js: 8ms, application-code: 71ms)
+ GET / 200 in 47ms (next.js: 6ms, application-code: 41ms)
+✓ Compiled in 32ms
+ GET /api/lyrics?title=Agar+Tum+Kaho+Toh&artist=Gunda&videoId=-4uMRboJesI&durationMs=230000 200 in 3.3s (next.js: 169ms, application-code: 3.1s)
+✓ Compiled in 42ms
+[browser] Error: Failed to fetch Up Next tracks
+    at useSimilarTracks.useEffect (src/hooks/useSimilarTracks.ts:39:28)
+  37 |         const res = await fetch(`/api/music/upnext?videoId=${currentTrack.videoId}`);
+  38 |
+> 39 |         if (!res.ok) throw new Error("Failed to fetch Up Next tracks");
+     |                            ^
+  40 |         
+  41 |         const data = await res.json();
+  42 |         if (isMounted) setTracks(data.tracks || []); (src/hooks/useSimilarTracks.ts:45:17)
+ GET /api/lyrics?title=Ruswai&artist=Gunda+%26+Encore+ABJ&videoId=JSx3PnXzMCE&durationMs=264000 200 in 2.5s (next.js: 3ms, application-code: 2.5s)
+ GET /api/music/upnext?videoId=JSx3PnXzMCE 200 in 2.9s (next.js: 234ms, application-code: 2.7s)
+ GET /api/music/upnext?videoId=JSx3PnXzMCE 200 in 771ms (next.js: 5ms, application-code: 765ms)
+ GET /api/lyrics?title=Agar+Tum+Kaho+Toh&artist=Gunda&videoId=-4uMRboJesI&durationMs=230000 200 in 19ms (next.js: 5ms, application-code: 14ms)
+ GET /api/music/upnext?videoId=-4uMRboJesI 200 in 1118ms (next.js: 4ms, application-code: 1113ms)
+ GET /api/music/upnext?videoId=vBh4EPi2o9g 200 in 1123ms (next.js: 3ms, application-code: 1119ms)
+ GET /api/lyrics?title=Magan&artist=Rawal%2C+Bharg%2C+%26+Encore+ABJ&videoId=vBh4EPi2o9g&durationMs=185000 200 in 3.3s (next.js: 8ms, application-code: 3.3s)
+✓ Compiled in 14ms
+ GET / 200 in 296ms (next.js: 129ms, application-code: 167ms)
+ GET / 200 in 163ms (next.js: 7ms, application-code: 156ms)
+ GET / 200 in 144ms (next.js: 9ms, application-code: 135ms)
+ GET / 200 in 146ms (next.js: 10ms, application-code: 136ms)
+ GET / 200 in 175ms (next.js: 8ms, application-code: 167ms)
+ GET / 200 in 140ms (next.js: 6ms, application-code: 133ms)
+ GET / 200 in 137ms (next.js: 11ms, application-code: 126ms)
+ GET / 200 in 130ms (next.js: 6ms, application-code: 124ms)
+ GET / 200 in 113ms (next.js: 10ms, application-code: 103ms)
+ GET / 200 in 96ms (next.js: 7ms, application-code: 89ms)
+ GET / 200 in 91ms (next.js: 4ms, application-code: 87ms)
+ GET / 200 in 92ms (next.js: 5ms, application-code: 87ms)
+ GET / 200 in 90ms (next.js: 5ms, application-code: 85ms)
+ GET / 200 in 95ms (next.js: 4ms, application-code: 90ms)
+ GET / 200 in 130ms (next.js: 5ms, application-code: 125ms)
+ GET / 200 in 105ms (next.js: 5ms, application-code: 100ms)
+ GET / 200 in 108ms (next.js: 6ms, application-code: 102ms)
+ GET / 200 in 106ms (next.js: 6ms, application-code: 100ms)
+ GET / 200 in 136ms (next.js: 6ms, application-code: 130ms)
+ GET / 200 in 108ms (next.js: 8ms, application-code: 99ms)
+ GET / 200 in 93ms (next.js: 8ms, application-code: 85ms)
+ GET / 200 in 85ms (next.js: 5ms, application-code: 80ms)
+ GET / 200 in 74ms (next.js: 5ms, application-code: 69ms)
+ GET / 200 in 84ms (next.js: 4ms, application-code: 80ms)
+ GET / 200 in 66ms (next.js: 6ms, application-code: 60ms)
+ GET / 200 in 94ms (next.js: 9ms, application-code: 85ms)
+ GET / 200 in 88ms (next.js: 6ms, application-code: 82ms)
+ GET / 200 in 72ms (next.js: 4ms, application-code: 68ms)
+ GET / 200 in 49ms (next.js: 4ms, application-code: 46ms)
+ GET / 200 in 27ms (next.js: 4ms, application-code: 23ms)
+ GET / 200 in 319ms (next.js: 5ms, application-code: 314ms)
+ GET /api/search?q=Top%20Pop%20Hits%202024 200 in 4.3s (next.js: 219ms, application-code: 4.1s)
+ GET /api/home/hitlist?artists=Gunda%20%26%20Encore%20ABJ%2CUnknown%20Artist 200 in 6.7s (next.js: 262ms, application-code: 6.4s)
+ GET /api/music/upnext?videoId=vBh4EPi2o9g 200 in 3.2s (next.js: 34ms, application-code: 3.2s)
+ GET /api/music/upnext?videoId=EBLlZVXE8mU 200 in 951ms (next.js: 6ms, application-code: 945ms)
+ GET /api/music/upnext?videoId=EBLlZVXE8mU 200 in 833ms (next.js: 4ms, application-code: 830ms)
+ GET /api/search?q=Top%20Pop%20Hits%202024 200 in 578ms (next.js: 4ms, application-code: 574ms)
+ GET /api/search?q=Top%20Pop%20Hits%202024 200 in 405ms (next.js: 4ms, application-code: 401ms)
+ GET /api/home/hitlist?artists=Gunda%2CGunda%20%26%20Encore%20ABJ 200 in 1982ms (next.js: 14ms, application-code: 1968ms)
+ GET /api/home/hitlist?artists=Gunda%2CGunda%20%26%20Encore%20ABJ 200 in 1669ms (next.js: 5ms, application-code: 1664ms)
+ GET / 200 in 118ms (next.js: 6ms, application-code: 111ms)
+ GET /api/search?q=Top%20Pop%20Hits%202024 200 in 874ms (next.js: 5ms, application-code: 869ms)
+ GET /api/home/hitlist?artists=Gunda%2CGunda%20%26%20Encore%20ABJ 200 in 4.7s (next.js: 17ms, application-code: 4.7s)
+ GET /api/music/upnext?videoId=EBLlZVXE8mU 200 in 2.7s (next.js: 4ms, application-code: 2.6s)
+ GET /api/music/upnext?videoId=kIft-LUHHVA 200 in 1057ms (next.js: 3ms, application-code: 1054ms)
+ GET /api/music/upnext?videoId=kIft-LUHHVA 200 in 919ms (next.js: 6ms, application-code: 913ms)
+ GET /api/search?q=espre&type=artist 200 in 494ms (next.js: 11ms, application-code: 483ms)
+ GET /api/search?q=espre&type=song 200 in 540ms (next.js: 3ms, application-code: 537ms)
+ GET /api/search?q=espresso&type=artist 200 in 321ms (next.js: 10ms, application-code: 311ms)
+ GET /api/search?q=espresso&type=song 200 in 391ms (next.js: 4ms, application-code: 387ms)
+ GET / 200 in 81ms (next.js: 5ms, application-code: 77ms)
+ GET /api/search?q=Top%20Pop%20Hits%202024 200 in 787ms (next.js: 5ms, application-code: 783ms)
+ GET /api/home/hitlist?artists=Sabrina%20Carpenter%2CGunda 200 in 2.1s (next.js: 15ms, application-code: 2.0s)
+ GET /api/music/upnext?videoId=kIft-LUHHVA 200 in 853ms (next.js: 10ms, application-code: 843ms)
+ GET /api/search?q=es&type=song 200 in 453ms (next.js: 4ms, application-code: 449ms)
+ GET /api/search?q=es&type=artist 200 in 464ms (next.js: 12ms, application-code: 452ms)
+ GET /api/search?q=espresso&type=song 200 in 335ms (next.js: 4ms, application-code: 331ms)
+ GET /api/search?q=espresso&type=artist 200 in 340ms (next.js: 11ms, application-code: 329ms)

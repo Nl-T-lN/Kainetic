@@ -12,8 +12,6 @@ const fadeSlideIn = keyframes`
 `;
 
 const ViewContainer = styled.div`
-  max-width: 960px;
-  margin: 0 auto;
   width: 100%;
   animation: ${fadeSlideIn} 0.4s ease-out;
 `;
@@ -43,19 +41,32 @@ const Header = styled.h2`
 const ClearButton = styled.button`
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  justify-content: center;
   background: rgba(255, 100, 100, 0.1);
   color: #ff6b6b;
   border: 1px solid rgba(255, 100, 100, 0.2);
-  border-radius: 99px;
-  padding: 0.5rem 1rem;
-  font-size: 0.85rem;
-  font-weight: 600;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
   cursor: pointer;
   transition: all 0.2s ease;
 
   &:hover {
     background: rgba(255, 100, 100, 0.2);
+    transform: scale(1.05);
+  }
+`;
+
+const DateHeader = styled.h3`
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.8);
+  margin: 2rem 0 1rem 0;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  
+  &:first-of-type {
+    margin-top: 0;
   }
 `;
 
@@ -97,6 +108,33 @@ export function RecentView({
 }: RecentViewProps) {
   const { recentTracks, clearRecent } = useRecentTracks();
 
+  const groupedTracks: { label: string, tracks: Track[] }[] = [];
+  
+  recentTracks.forEach(track => {
+    let label = "Earlier";
+    if (track.playedAt) {
+      const date = new Date(track.playedAt);
+      const today = new Date();
+      const yesterday = new Date(today);
+      yesterday.setDate(yesterday.getDate() - 1);
+      
+      if (date.toDateString() === today.toDateString()) {
+        label = "Today";
+      } else if (date.toDateString() === yesterday.toDateString()) {
+        label = "Yesterday";
+      } else {
+        label = date.toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' });
+      }
+    }
+    
+    const lastGroup = groupedTracks[groupedTracks.length - 1];
+    if (lastGroup && lastGroup.label === label) {
+      lastGroup.tracks.push(track);
+    } else {
+      groupedTracks.push({ label, tracks: [track] });
+    }
+  });
+
   return (
     <ViewContainer>
       <HeaderRow>
@@ -105,22 +143,28 @@ export function RecentView({
           Recently Played
         </Header>
         {recentTracks.length > 0 && (
-          <ClearButton onClick={clearRecent}>
-            <Trash2 size={16} />
-            Clear History
+          <ClearButton onClick={clearRecent} title="Clear History">
+            <Trash2 size={20} />
           </ClearButton>
         )}
       </HeaderRow>
       
-      {recentTracks.length > 0 ? (
-        <TrackList 
-          tracks={recentTracks} 
-          onTrackSelect={onPlay} 
-          onPlayNext={onPlayNext}
-          onAddToQueue={onAddToQueue}
-          onStartRadio={onStartRadio}
-          currentTrackId={undefined} 
-        />
+      {groupedTracks.length > 0 ? (
+        <div>
+          {groupedTracks.map((group, idx) => (
+            <div key={idx}>
+              <DateHeader>{group.label}</DateHeader>
+              <TrackList 
+                tracks={group.tracks} 
+                onTrackSelect={onPlay} 
+                onPlayNext={onPlayNext}
+                onAddToQueue={onAddToQueue}
+                onStartRadio={onStartRadio}
+                currentTrackId={undefined} 
+              />
+            </div>
+          ))}
+        </div>
       ) : (
         <EmptyState>
           <History size={48} />

@@ -22,7 +22,8 @@ export function useRecentTracks() {
     setRecentTracks(prev => {
       // Remove track if it already exists to move it to the top
       const filtered = prev.filter(t => t.videoId !== track.videoId);
-      const updated = [track, ...filtered].slice(0, MAX_RECENT_TRACKS);
+      const trackWithDate = { ...track, playedAt: Date.now() };
+      const updated = [trackWithDate, ...filtered].slice(0, MAX_RECENT_TRACKS);
       
       try {
         localStorage.setItem(RECENT_TRACKS_KEY, JSON.stringify(updated));

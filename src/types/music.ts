@@ -7,6 +7,7 @@ export interface Track {
   album?: string;        // Optional, YouTube doesn't always have this
   thumbnailUrl: string;
   durationMs: number;
+  playedAt?: number;     // Timestamp for history grouping
 }
 
 export interface SearchResult {
