@@ -58,12 +58,14 @@ export const ArtistCircle = styled.div<{ $index: number }>`
   }
 `;
 
+import { useRouter } from "next/navigation";
+
 interface ArtistGridProps {
   artists: any[];
-  onArtistClick: (artistId: string) => void;
 }
 
-export function ArtistGrid({ artists, onArtistClick }: ArtistGridProps) {
+export function ArtistGrid({ artists }: ArtistGridProps) {
+  const router = useRouter();
   if (!artists || artists.length === 0) return null;
 
   return (
@@ -74,7 +76,7 @@ export function ArtistGrid({ artists, onArtistClick }: ArtistGridProps) {
           $index={index}
           onClick={() => {
             if (artist.id) {
-              onArtistClick(artist.id);
+              router.push('/artist/' + artist.id);
             }
           }}
         >

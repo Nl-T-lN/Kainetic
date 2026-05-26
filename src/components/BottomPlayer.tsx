@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import type { Track } from "@/types/music";
 import { ProgressBar } from "./ProgressBar";
+import { useRouter } from 'next/navigation';
 import { useLyrics } from "@/hooks/useLyrics";
 
 /* ── Animations ── */
@@ -450,7 +451,7 @@ interface BottomPlayerProps {
   queue?: Track[];
   queueIndex?: number;
   onPlayPause: () => void;
-  onSkip: () => void;
+  onSkip?: (direction: "forward" | "backward") => void;
   onSeek: (ms: number) => void;
   onNext?: () => void;
   onPrev?: () => void;
@@ -458,7 +459,10 @@ interface BottomPlayerProps {
   roomCode?: string | null;
   listenerCount?: number;
   isHost?: boolean;
-  onArtistClick?: (artistId: string) => void;
+  isShuffle?: boolean;
+  toggleShuffle?: () => void;
+  isRepeat?: boolean;
+  toggleRepeat?: () => void;
 }
 
 export function BottomPlayer({
@@ -477,8 +481,12 @@ export function BottomPlayer({
   roomCode,
   listenerCount = 0,
   isHost = true,
-  onArtistClick,
+  isShuffle = false,
+  toggleShuffle,
+  isRepeat = false,
+  toggleRepeat
 }: BottomPlayerProps) {
+  const router = useRouter();
   const [isExpanded, setIsExpanded] = useState(false);
   const [volume, setVolume] = useState(70);
   const { lyrics, plainLyrics, isLoading: lyricsLoading } = useLyrics(currentTrack);
@@ -530,19 +538,19 @@ export function BottomPlayer({
                     <div 
                       className="artist"
                       onClick={(e) => {
-                        if (onArtistClick && currentTrack.artistId) {
-                          e.stopPropagation();
+                        if (currentTrack.artistId) {
+                          router.push('/artist/' + currentTrack.artistId);
                           setIsExpanded(false);
-                          onArtistClick(currentTrack.artistId);
                         }
                       }}
                       style={{ 
-                        cursor: (onArtistClick && currentTrack.artistId) ? 'pointer' : 'default',
+                        cursor: (currentTrack.artistId) ? 'pointer' : 'default',
                         pointerEvents: 'auto'
                       }}
                       onMouseEnter={(e) => {
-                        if (onArtistClick && currentTrack.artistId) {
+                        if (currentTrack.artistId) {
                           e.currentTarget.style.textDecoration = 'underline';
+                          e.currentTarget.style.color = '#fff';
                         }
                       }}
                       onMouseLeave={(e) => {
@@ -575,13 +583,23 @@ export function BottomPlayer({
 
             <ControlsContainer $isExpanded={false}>
               <ButtonsRow $isExpanded={false}>
-                <button><Shuffle size={18} fill="currentColor" /></button>
+                <button 
+                  onClick={(e) => { e.stopPropagation(); if (toggleShuffle) toggleShuffle(); }}
+                  style={{ color: isShuffle ? 'var(--accent)' : 'inherit' }}
+                >
+                  <Shuffle size={18} fill="currentColor" />
+                </button>
                 <button onClick={(e) => { e.stopPropagation(); if(onPrev) onPrev(); }}><SkipBack size={22} fill="currentColor" /></button>
                 <button className="play-btn" onClick={(e) => { e.stopPropagation(); onPlayPause(); }}>
                   {isPlaying ? <Pause size={20} fill="currentColor" /> : <Play size={20} fill="currentColor" style={{ marginLeft: "2px" }} />}
                 </button>
                 <button onClick={(e) => { e.stopPropagation(); if(onNext) onNext(); }}><SkipForward size={22} fill="currentColor" /></button>
-                <button><Repeat size={18} fill="currentColor" /></button>
+                <button 
+                  onClick={(e) => { e.stopPropagation(); if (toggleRepeat) toggleRepeat(); }}
+                  style={{ color: isRepeat ? 'var(--accent)' : 'inherit' }}
+                >
+                  <Repeat size={18} fill="currentColor" />
+                </button>
               </ButtonsRow>
               <ProgressBar positionMs={positionMs} durationMs={durationMs} onSeek={onSeek} />
             </ControlsContainer>
@@ -617,19 +635,20 @@ export function BottomPlayer({
                   <div 
                     className="artist"
                     onClick={(e) => {
-                      if (onArtistClick && currentTrack.artistId) {
-                        e.stopPropagation();
+                      e.stopPropagation();
+                      if (currentTrack.artistId) {
                         setIsExpanded(false);
-                        onArtistClick(currentTrack.artistId);
+                        router.push('/artist/' + currentTrack.artistId);
                       }
                     }}
                     style={{ 
-                      cursor: (onArtistClick && currentTrack.artistId) ? 'pointer' : 'default',
+                      cursor: (currentTrack.artistId) ? 'pointer' : 'default',
                       pointerEvents: 'auto'
                     }}
                     onMouseEnter={(e) => {
-                      if (onArtistClick && currentTrack.artistId) {
+                      if (currentTrack.artistId) {
                         e.currentTarget.style.textDecoration = 'underline';
+                        e.currentTarget.style.color = '#fff';
                       }
                     }}
                     onMouseLeave={(e) => {
@@ -648,13 +667,23 @@ export function BottomPlayer({
             <ProgressBar positionMs={positionMs} durationMs={durationMs} onSeek={onSeek} />
             <div style={{ height: "2rem" }} />
             <ButtonsRow $isExpanded={true}>
-              <button><Shuffle size={24} /></button>
+              <button 
+                onClick={(e) => { e.stopPropagation(); if (toggleShuffle) toggleShuffle(); }}
+                style={{ color: isShuffle ? 'var(--accent)' : 'inherit' }}
+              >
+                <Shuffle size={24} />
+              </button>
               <button onClick={onPrev}><SkipBack size={36} fill="currentColor" /></button>
               <button className="play-btn" onClick={onPlayPause} style={{ width: "80px", height: "80px" }}>
                 {isPlaying ? <Pause size={36} fill="currentColor" /> : <Play size={36} fill="currentColor" style={{ marginLeft: "6px" }} />}
               </button>
               <button onClick={onNext}><SkipForward size={36} fill="currentColor" /></button>
-              <button onClick={(e) => { e.stopPropagation(); if (onToggleQueue) onToggleQueue(); }}><ListMusic size={24} /></button>
+              <button 
+                onClick={(e) => { e.stopPropagation(); if (toggleRepeat) toggleRepeat(); }}
+                style={{ color: isRepeat ? 'var(--accent)' : 'inherit' }}
+              >
+                <Repeat size={24} />
+              </button>
             </ButtonsRow>
             {roomCode && (
               <div style={{ marginTop: "2rem" }}>

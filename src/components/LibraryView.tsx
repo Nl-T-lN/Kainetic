@@ -13,8 +13,6 @@ const fadeSlideIn = keyframes`
 `;
 
 const ViewContainer = styled.div`
-  max-width: 960px;
-  margin: 0 auto;
   width: 100%;
   animation: ${fadeSlideIn} 0.4s ease-out;
 `;
@@ -151,19 +149,10 @@ const PlaylistCount = styled.div`
   color: var(--muted);
 `;
 
-interface LibraryViewProps {
-  onPlay: (track: Track) => void;
-  onPlayNext?: (track: Track) => void;
-  onAddToQueue?: (track: Track) => void;
-  onStartRadio?: (track: Track) => void;
-}
+import { usePlayer } from "@/contexts/PlayerContext";
 
-export function LibraryView({ 
-  onPlay,
-  onPlayNext,
-  onAddToQueue,
-  onStartRadio
-}: LibraryViewProps) {
+export function LibraryView() {
+  const { onPlay, onPlayNext, onAddToQueue, onStartRadio } = usePlayer();
   const [activeTab, setActiveTab] = useState("Liked Songs");
   const { likedTracks } = useLikedTracks();
   const [playlists] = useState<{ id: string; name: string; count: number }[]>([]);

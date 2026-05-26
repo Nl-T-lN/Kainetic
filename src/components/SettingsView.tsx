@@ -6,17 +6,33 @@ import { useState } from "react";
 import { PlaylistGenerator } from "./PlaylistGenerator";
 import { useRecentTracks } from "@/hooks/useRecentTracks";
 
+import { Settings } from "lucide-react";
+
 const SettingsContainer = styled.div`
   width: 100%;
-  max-width: 800px;
-  margin: 0 auto;
   color: ${({ theme }) => theme.colors.cream};
 `;
 
-const Header = styled.h2`
-  font-size: 2rem;
-  font-weight: 800;
+const HeaderRow = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   margin-bottom: 2rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  padding-bottom: 1rem;
+`;
+
+const Header = styled.h2`
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+
+  svg {
+    color: var(--accent);
+  }
 `;
 
 const Tabs = styled.div`
@@ -210,7 +226,12 @@ export function SettingsView() {
 
   return (
     <SettingsContainer>
-      <Header>Settings</Header>
+      <HeaderRow>
+        <Header>
+          <Settings size={28} />
+          Settings
+        </Header>
+      </HeaderRow>
       
       <Tabs>
         <Tab $active={activeTab === 'appearance'} onClick={() => setActiveTab('appearance')}>Appearance</Tab>

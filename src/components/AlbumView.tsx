@@ -5,6 +5,7 @@ import styled from "styled-components";
 import type { Track } from "@/types/music";
 import { Play, Shuffle, Heart, MoreHorizontal, BookmarkPlus } from "lucide-react";
 import { TrackList } from "./TrackList";
+import { usePlayer } from "@/contexts/PlayerContext";
 
 const ViewWrapper = styled.div`
   position: relative;
@@ -164,12 +165,10 @@ const RightPane = styled.div`
 
 interface AlbumViewProps {
   albumId: string;
-  onPlay: (track: Track) => void;
-  onPlayNext: (track: Track) => void;
-  onAddToQueue: (track: Track) => void;
 }
 
-export function AlbumView({ albumId, onPlay, onPlayNext, onAddToQueue }: AlbumViewProps) {
+export function AlbumView({ albumId }: AlbumViewProps) {
+  const { onPlay, onPlayNext, onAddToQueue } = usePlayer();
   const [albumData, setAlbumData] = useState<{
     title: string;
     author: string;
@@ -195,14 +194,14 @@ export function AlbumView({ albumId, onPlay, onPlayNext, onAddToQueue }: AlbumVi
         setLoading(false);
       }
     };
-    
+
     if (albumId) {
       fetchAlbum();
     }
   }, [albumId]);
 
-  if (loading) return <ViewWrapper><ContentContainer style={{color: 'white', padding: '2rem'}}>Loading...</ContentContainer></ViewWrapper>;
-  if (!albumData) return <ViewWrapper><ContentContainer style={{color: 'white', padding: '2rem'}}>Album not found.</ContentContainer></ViewWrapper>;
+  if (loading) return <ViewWrapper><ContentContainer style={{ color: 'white', padding: '2rem' }}>Loading...</ContentContainer></ViewWrapper>;
+  if (!albumData) return <ViewWrapper><ContentContainer style={{ color: 'white', padding: '2rem' }}>Album not found.</ContentContainer></ViewWrapper>;
 
   const totalDurationMs = albumData.tracks.reduce((acc, curr) => acc + (curr.durationMs || 0), 0);
   const durationMins = Math.floor(totalDurationMs / 60000);
@@ -210,11 +209,11 @@ export function AlbumView({ albumId, onPlay, onPlayNext, onAddToQueue }: AlbumVi
   return (
     <ViewWrapper>
       {albumData.thumbnailUrl && <BackgroundBlur $bgImg={albumData.thumbnailUrl} />}
-      
+
       <ContentContainer>
         <LeftPane>
           <CoverImage src={albumData.thumbnailUrl} alt={albumData.title} />
-          
+
           <AlbumMeta>
             <h1>{albumData.title}</h1>
             <div className="subtitle">
@@ -224,12 +223,12 @@ export function AlbumView({ albumId, onPlay, onPlayNext, onAddToQueue }: AlbumVi
               {albumData.tracks.length} songs • {durationMins} minutes
             </div>
           </AlbumMeta>
-          
+
           <ActionsRow>
             <IconButton><BookmarkPlus size={20} /></IconButton>
             <PlayFab onClick={() => {
               if (albumData.tracks.length > 0) {
-                onPlay(albumData.tracks[0]);
+                onPlay(albumData.tracks[0], albumData.tracks);
               }
             }}>
               <Play fill="currentColor" size={28} style={{ marginLeft: '4px' }} />
@@ -237,9 +236,9 @@ export function AlbumView({ albumId, onPlay, onPlayNext, onAddToQueue }: AlbumVi
             <IconButton><MoreHorizontal size={20} /></IconButton>
           </ActionsRow>
         </LeftPane>
-        
+
         <RightPane>
-          <TrackList 
+          <TrackList
             tracks={albumData.tracks}
             onTrackSelect={onPlay}
             onPlayNext={onPlayNext}

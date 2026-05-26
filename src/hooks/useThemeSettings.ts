@@ -54,10 +54,22 @@ export function useThemeSettings() {
 
     const root = document.documentElement;
 
-    root.style.setProperty("--accent", settings.accentColor);
-    root.style.setProperty("--accent-rgb", hexToRgb(settings.accentColor));
-    root.style.setProperty("--bg", settings.bgColor);
-    root.style.setProperty("--bg-rgb", hexToRgb(settings.bgColor));
+    const applyColors = () => {
+      const hasDynamic = typeof window !== 'undefined' && (window as any).__vintifyHasDynamicColor;
+      if (!hasDynamic) {
+        root.style.setProperty("--accent", settings.accentColor);
+        root.style.setProperty("--accent-rgb", hexToRgb(settings.accentColor));
+        root.style.setProperty("--bg", settings.bgColor);
+        root.style.setProperty("--bg-rgb", hexToRgb(settings.bgColor));
+      }
+    };
+
+    applyColors();
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('storage', applyColors);
+    }
+
     root.style.setProperty("--radius", `${settings.radius}px`);
     root.style.setProperty("--glass-opacity", `${settings.opacity / 100}`);
     root.style.setProperty("--sidebar-width", `${settings.sidebarWidth}px`);
@@ -70,6 +82,12 @@ export function useThemeSettings() {
     }
 
     localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
+
+    return () => {
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('storage', applyColors);
+      }
+    };
   }, [settings, isLoaded]);
 
   const updateSetting = <K extends keyof ThemeSettings>(key: K, value: ThemeSettings[K]) => {

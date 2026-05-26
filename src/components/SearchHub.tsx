@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import styled, { keyframes } from "styled-components";
 import { Search, Sparkles, Wand2 } from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
 
 const HubContainer = styled.div`
   width: 100%;
@@ -86,25 +87,48 @@ export function SearchHub({
   onCategoryChange,
   isLoading,
 }: SearchHubProps) {
-  const [query, setQuery] = useState("");
+  const searchParams = useSearchParams();
+  const initialQuery = searchParams.get("q") || searchParams.get("vibe") || searchParams.get("magic") || "";
+  const [query, setQuery] = useState(initialQuery);
   const [mode, setMode] = useState<SearchMode>("STANDARD");
   const [category, setCategory] = useState("All");
   const [isFocused, setIsFocused] = useState(false);
+  const router = useRouter();
+  const searchTimeout = useRef<NodeJS.Timeout | null>(null);
+
+  const navigateToSearch = (searchQuery: string) => {
+    if (searchQuery.trim()) {
+      if (mode === "STANDARD") {
+        router.push(`/search?q=${encodeURIComponent(searchQuery)}`);
+      } else if (mode === "VIBE") {
+        router.push(`/search?vibe=${encodeURIComponent(searchQuery)}`);
+      } else if (mode === "MAGIC") {
+        router.push(`/search?magic=${encodeURIComponent(searchQuery)}`);
+      }
+    }
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setQuery(e.target.value);
-    if (mode === "STANDARD") {
-      onSearch(e.target.value);
+    const val = e.target.value;
+    setQuery(val);
+    
+    // Clear previous timeout
+    if (searchTimeout.current) {
+      clearTimeout(searchTimeout.current);
+    }
+
+    // Set new timeout for 1 second
+    if (val.trim()) {
+      searchTimeout.current = setTimeout(() => {
+        navigateToSearch(val);
+      }, 1000);
     }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && query.trim()) {
-      if (mode === "VIBE") {
-        onMoodSearch(query);
-      } else if (mode === "MAGIC") {
-        onPlaylistGenerate(query);
-      }
+      if (searchTimeout.current) clearTimeout(searchTimeout.current);
+      navigateToSearch(query);
     }
   };
 

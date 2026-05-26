@@ -5,6 +5,7 @@ import { TrackList } from "./TrackList";
 import type { Track } from "@/types/music";
 import { useRecentTracks } from "@/hooks/useRecentTracks";
 import { History, Trash2 } from "lucide-react";
+import { usePlayer } from "@/contexts/PlayerContext";
 
 const fadeSlideIn = keyframes`
   from { opacity: 0; transform: translateY(12px); }
@@ -93,31 +94,20 @@ const EmptyState = styled.div`
   }
 `;
 
-interface RecentViewProps {
-  onPlay: (track: Track) => void;
-  onPlayNext?: (track: Track) => void;
-  onAddToQueue?: (track: Track) => void;
-  onStartRadio?: (track: Track) => void;
-}
-
-export function RecentView({ 
-  onPlay,
-  onPlayNext,
-  onAddToQueue,
-  onStartRadio
-}: RecentViewProps) {
+export function RecentView() {
+  const { onPlay, onPlayNext, onAddToQueue, onStartRadio } = usePlayer();
   const { recentTracks, clearRecent } = useRecentTracks();
 
   const groupedTracks: { label: string, tracks: Track[] }[] = [];
-  
+
   recentTracks.forEach(track => {
     let label = "Earlier";
-    if (track.playedAt) {
-      const date = new Date(track.playedAt);
+    if ((track as any).playedAt) {
+      const date = new Date((track as any).playedAt);
       const today = new Date();
       const yesterday = new Date(today);
       yesterday.setDate(yesterday.getDate() - 1);
-      
+
       if (date.toDateString() === today.toDateString()) {
         label = "Today";
       } else if (date.toDateString() === yesterday.toDateString()) {
@@ -126,7 +116,7 @@ export function RecentView({
         label = date.toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' });
       }
     }
-    
+
     const lastGroup = groupedTracks[groupedTracks.length - 1];
     if (lastGroup && lastGroup.label === label) {
       lastGroup.tracks.push(track);
@@ -148,19 +138,19 @@ export function RecentView({
           </ClearButton>
         )}
       </HeaderRow>
-      
+
       {groupedTracks.length > 0 ? (
         <div>
           {groupedTracks.map((group, idx) => (
             <div key={idx}>
               <DateHeader>{group.label}</DateHeader>
-              <TrackList 
-                tracks={group.tracks} 
-                onTrackSelect={onPlay} 
+              <TrackList
+                tracks={group.tracks}
+                onTrackSelect={onPlay}
                 onPlayNext={onPlayNext}
                 onAddToQueue={onAddToQueue}
                 onStartRadio={onStartRadio}
-                currentTrackId={undefined} 
+                currentTrackId={undefined}
               />
             </div>
           ))}

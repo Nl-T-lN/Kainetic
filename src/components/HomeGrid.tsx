@@ -410,27 +410,15 @@ function getGreeting(): string {
   return "Good evening";
 }
 
-interface HomeGridProps {
-  onPlay: (track: Track) => void;
-  onPlayNext?: (track: Track) => void;
-  onAddToQueue?: (track: Track) => void;
-  onStartRadio?: (track: Track) => void;
-  onArtistClick?: (artistId: string) => void;
-  onAlbumClick?: (albumId: string) => void;
-}
-
 import { useRecentTracks } from "@/hooks/useRecentTracks";
 import { TrackContextMenu } from "./TrackContextMenu";
 import { MoreVertical } from "lucide-react";
+import { usePlayer } from "@/contexts/PlayerContext";
+import { useRouter } from "next/navigation";
 
-export function HomeGrid({
-  onPlay,
-  onPlayNext,
-  onAddToQueue,
-  onStartRadio,
-  onArtistClick,
-  onAlbumClick
-}: HomeGridProps) {
+export function HomeGrid() {
+  const { onPlay, onPlayNext, onAddToQueue, onStartRadio } = usePlayer();
+  const router = useRouter();
   const [menuTrack, setMenuTrack] = useState<{ track: Track, x: number, y: number } | null>(null);
 
   const handleContextMenuClick = (e: React.MouseEvent, track: Track) => {
@@ -446,6 +434,16 @@ export function HomeGrid({
 
   useEffect(() => {
     const fetchHomeData = async () => {
+      const { getHomeCache, setHomeCache } = await import('@/lib/cache');
+      const cached = getHomeCache();
+      
+      // If we have cache, use it immediately
+      if (cached.tracks && cached.hitlists) {
+        setTracks(cached.tracks);
+        setHitlists(cached.hitlists);
+        setLoading(false);
+        return;
+      }
       try {
         let recentArtistsStr = "";
         try {
@@ -464,15 +462,22 @@ export function HomeGrid({
           fetch(hitlistUrl)
         ]);
 
+        let finalTracks: Track[] = [];
+        let finalHitlists: any[] = [];
+
         if (searchRes.ok) {
           const data = await searchRes.json();
-          setTracks(data.tracks || []);
+          finalTracks = data.tracks || [];
+          setTracks(finalTracks);
         }
 
         if (hitlistRes.ok) {
           const data = await hitlistRes.json();
-          setHitlists(data.hitlists || []);
+          finalHitlists = data.hitlists || [];
+          setHitlists(finalHitlists);
         }
+        
+        setHomeCache(finalTracks, finalHitlists);
       } catch (error) {
         console.error("Error fetching home data", error);
       } finally {
@@ -516,7 +521,7 @@ export function HomeGrid({
           </SectionHeaderRow>
           <ShelfContainer>
             {recentTracks.map((track, index) => (
-              <Card key={`recent-${track.videoId}`} $index={index} onClick={() => onPlay(track)} onContextMenu={(e) => handleContextMenuClick(e, track)}>
+              <Card key={`recent-${track.videoId}`} $index={index} onClick={() => onPlay(track, recentTracks)} onContextMenu={(e) => handleContextMenuClick(e, track)}>
                 <ImageContainer>
                   <img src={track.thumbnailUrl} alt={track.title} loading="lazy" />
                   <PlayOverlay className="play-overlay">
@@ -555,7 +560,7 @@ export function HomeGrid({
           </SectionHeaderRow>
           <RecommendedContainer>
             {hits.map((track, index) => (
-              <RecommendedTrack key={`hit-${track.videoId}`} $index={index} onClick={() => onPlay(track)} onContextMenu={(e) => handleContextMenuClick(e, track)}>
+              <RecommendedTrack key={`hit-${track.videoId}`} $index={index} onClick={() => onPlay(track, hits)} onContextMenu={(e) => handleContextMenuClick(e, track)}>
                 <img src={track.thumbnailUrl} alt={track.title} loading="lazy" />
                 <div className="info">
                   <div className="title">{track.title}</div>
@@ -590,12 +595,12 @@ export function HomeGrid({
           </SectionHeaderRow>
           <ShelfContainer>
             {hitlist.items.map((item: any, i: number) => (
-              <Card 
-                key={`hl-${item.id}-${i}`} 
+              <Card
+                key={`hl-${item.id}-${i}`}
                 $index={i}
                 onClick={() => {
-                  if (onAlbumClick && item.id) {
-                    onAlbumClick(item.id);
+                  if (item.id) {
+                    router.push('/album/' + item.id);
                   }
                 }}
               >
@@ -627,8 +632,8 @@ export function HomeGrid({
                 key={`artist-${track.videoId}`}
                 $index={index}
                 onClick={() => {
-                  if (track.artistId && onArtistClick) {
-                    onArtistClick(track.artistId);
+                  if (track.artistId) {
+                    router.push('/artist/' + track.artistId);
                   }
                 }}
               >

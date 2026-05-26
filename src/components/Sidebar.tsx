@@ -1,7 +1,7 @@
 "use client";
 
 import styled, { keyframes } from "styled-components";
-import { Home, Compass, Library, Radio, Settings, Clock, Menu } from "lucide-react";
+import { Home, Compass, Library, Radio, Settings, Clock, Menu, Disc3 } from "lucide-react";
 import { useState } from "react";
 
 const pulse = keyframes`
@@ -93,17 +93,19 @@ const Logo = styled.div`
 const NavSection = styled.div`
   padding: 0 0.75rem;
   flex: 1;
+  display: flex;
+  flex-direction: column;
 `;
 
-const NavList = styled.ul`
-  list-style: none;
+const NavList = styled.div`
   display: flex;
   flex-direction: column;
   gap: 4px;
 `;
 
-const NavItem = styled.li<{ $active?: boolean }>`
+const NavItem = styled(Link)<{ $active?: boolean }>`
   display: flex;
+  text-decoration: none;
   align-items: center;
   color: ${({ theme, $active }) =>
     $active ? theme.colors.cream : theme.colors.muted};
@@ -177,78 +179,56 @@ const RoomBadge = styled.div`
   }
 `;
 
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+
 interface SidebarProps {
-  activeView: string;
-  setActiveView: (v: string) => void;
   roomCode?: string | null;
-  onLogoClick?: () => void;
   isCollapsed: boolean;
   onToggleCollapse: () => void;
 }
 
-export function Sidebar({ activeView, setActiveView, roomCode, onLogoClick, isCollapsed, onToggleCollapse }: SidebarProps) {
+export function Sidebar({ roomCode, isCollapsed, onToggleCollapse }: SidebarProps) {
+  const pathname = usePathname();
+  
   return (
     <SidebarContainer className={isCollapsed ? "collapsed" : ""}>
       <HeaderSection>
         <MenuButton onClick={onToggleCollapse}>
           <Menu size={24} />
         </MenuButton>
-        <Logo 
-          onClick={onLogoClick || (() => setActiveView("HOME"))}
-          style={{ cursor: 'pointer' }}
-        >
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
-            <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2"/>
-            <circle cx="12" cy="12" r="3" fill="currentColor"/>
-            <path d="M12 2 C12 2 14 8 18 12 C14 16 12 22 12 22" stroke="currentColor" strokeWidth="1.5" fill="none"/>
-          </svg>
-          <span>Ventify</span>
-        </Logo>
+        <Link href="/">
+          <Logo style={{ cursor: 'pointer' }}>
+            <Disc3 size={28} strokeWidth={2.5} />
+            <span>Ventify</span>
+          </Logo>
+        </Link>
       </HeaderSection>
 
       <NavSection>
         <NavList>
-          <NavItem
-            $active={activeView === "HOME"}
-            onClick={() => setActiveView("HOME")}
-          >
+          <NavItem href="/" $active={pathname === "/"}>
             <Home />
             <span>Home</span>
           </NavItem>
-          <NavItem
-            $active={activeView === "EXPLORE"}
-            onClick={() => setActiveView("EXPLORE")}
-          >
+          <NavItem href="/explore" $active={pathname.startsWith("/explore")}>
             <Compass />
             <span>Explore</span>
           </NavItem>
-          <NavItem
-            $active={activeView === "LIBRARY"}
-            onClick={() => setActiveView("LIBRARY")}
-          >
+          <NavItem href="/library" $active={pathname.startsWith("/library")}>
             <Library />
             <span>Library</span>
           </NavItem>
-          <NavItem
-            $active={activeView === "RECENT"}
-            onClick={() => setActiveView("RECENT")}
-          >
+          <NavItem href="/recent" $active={pathname.startsWith("/recent")}>
             <Clock />
             <span>Recent</span>
           </NavItem>
-          <NavItem
-            $active={activeView === "PARTIES"}
-            onClick={() => setActiveView("PARTIES")}
-          >
+          <NavItem href="/parties" $active={pathname.startsWith("/parties")}>
             <Radio />
             <span>Parties</span>
             {roomCode && <RoomBadge>LIVE</RoomBadge>}
           </NavItem>
-          <div style={{ height: '2rem' }} />
-          <NavItem
-            $active={activeView === "SETTINGS"}
-            onClick={() => setActiveView("SETTINGS")}
-          >
+          <NavItem href="/settings" $active={pathname.startsWith("/settings")}>
             <Settings />
             <span>Settings</span>
           </NavItem>

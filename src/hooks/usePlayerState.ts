@@ -24,6 +24,10 @@ export interface UsePlayerStateReturn extends PlayerState {
   insertNext: (track: Track) => void;
   addToQueue: (track: Track) => void;
   reorderQueue: (startIndex: number, endIndex: number) => void;
+  isShuffle: boolean;
+  toggleShuffle: () => void;
+  isRepeat: boolean;
+  toggleRepeat: () => void;
 }
 
 export function usePlayerState(
@@ -37,7 +41,13 @@ export function usePlayerState(
   const [queue, setQueueState] = useState<Track[]>([]);
   const [queueIndex, setQueueIndex] = useState(0);
 
+  const [isShuffle, setIsShuffle] = useState(false);
+  const [isRepeat, setIsRepeat] = useState(false);
+
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  const toggleShuffle = () => setIsShuffle(prev => !prev);
+  const toggleRepeat = () => setIsRepeat(prev => !prev);
 
   // Load state from localStorage on initial mount
   useEffect(() => {
@@ -108,10 +118,34 @@ export function usePlayerState(
   };
 
   const playNext = () => {
-    if (queue.length > 0 && queueIndex < queue.length - 1) {
+    if (queue.length === 0) return;
+
+    if (isRepeat) {
+      if (playerRef.current) {
+        playerRef.current.seekTo(0, true);
+        playerRef.current.playVideo();
+      }
+      return;
+    }
+
+    if (isShuffle && queue.length > 1) {
+      let nextIndex = queueIndex;
+      while (nextIndex === queueIndex) {
+        nextIndex = Math.floor(Math.random() * queue.length);
+      }
+      setQueueIndex(nextIndex);
+      handleSetTrack(queue[nextIndex]);
+      return;
+    }
+
+    if (queueIndex < queue.length - 1) {
       const nextIndex = queueIndex + 1;
       setQueueIndex(nextIndex);
       handleSetTrack(queue[nextIndex]);
+    } else {
+      // Loop back to start if at the end of the queue (optional, but good UX)
+      setQueueIndex(0);
+      handleSetTrack(queue[0]);
     }
   };
 
@@ -184,6 +218,10 @@ export function usePlayerState(
     playPrev,
     insertNext,
     addToQueue,
-    reorderQueue
+    reorderQueue,
+    isShuffle,
+    toggleShuffle,
+    isRepeat,
+    toggleRepeat
   };
 }

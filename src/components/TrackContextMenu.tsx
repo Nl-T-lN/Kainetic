@@ -5,6 +5,7 @@ import styled, { keyframes } from "styled-components";
 import { Play, Plus, ListPlus, Heart, Download, User, Mic2, Share2, Disc } from "lucide-react";
 import type { Track } from "@/types/music";
 import { useLikedTracks } from "@/hooks/useLikedTracks";
+import { useRouter } from "next/navigation";
 
 const fadeIn = keyframes`
   from { opacity: 0; transform: scale(0.95); }
@@ -85,6 +86,7 @@ export function TrackContextMenu({
 }: TrackContextMenuProps) {
   const menuRef = useRef<HTMLDivElement>(null);
   const { toggleLike, isLiked } = useLikedTracks();
+  const router = useRouter();
   const liked = isLiked(track.videoId);
 
   useEffect(() => {
@@ -143,11 +145,24 @@ export function TrackContextMenu({
       
       <Divider />
       
-      <MenuItem onClick={() => onClose()}>
+      <MenuItem onClick={() => {
+        onClose();
+        if ((track as any).albumId) {
+          router.push('/album/' + (track as any).albumId);
+        } else if (track.album) {
+          // If we only have the name, we might not be able to link properly,
+          // but we can try to search or just disable this option. For now, doing nothing.
+        }
+      }}>
         <Disc size={18} /> Go to album
       </MenuItem>
       
-      <MenuItem onClick={() => onClose()}>
+      <MenuItem onClick={() => {
+        onClose();
+        if (track.artistId) {
+          router.push('/artist/' + track.artistId);
+        }
+      }}>
         <User size={18} /> Go to artist
       </MenuItem>
       

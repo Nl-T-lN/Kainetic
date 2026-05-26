@@ -1,39 +1,18 @@
 "use client";
 
 import styled from "styled-components";
-
-// ============================================================
-// 📚 LEARN: page.tsx (You Code)
-// ============================================================
-// Welcome to your first page in Next.js! 
-// This is the root route (`/`).
-//
-// We are using `styled.div` to create a styled component.
-// Notice how we use `${({ theme }) => theme.colors.gold}` to avoid 
-// hardcoding `#f7bd48`.
-// ============================================================
-
-import { Player } from "@/components/Player";
-
-// ============================================================
-// 📚 LEARN: page.tsx (You Code)
-// ============================================================
-// The root page of Ventify now renders the massive
-// Master Player component which manages all state.
-// ============================================================
+import { HomeGrid } from "@/components/HomeGrid";
 
 const MainContainer = styled.main`
   display: flex;
   flex-direction: column;
-  height: 100vh;
-  width: 100vw;
-  overflow: hidden;
+  width: 100%;
 `;
 
 export default function Home() {
   return (
     <MainContainer>
-      <Player />
+      <HomeGrid />
     </MainContainer>
   );
 }

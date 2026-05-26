@@ -140,7 +140,7 @@ function formatDuration(ms: number) {
 
 interface TrackListProps {
   tracks: Track[];
-  onTrackSelect: (track: Track) => void;
+  onTrackSelect: (track: Track, contextQueue?: Track[]) => void;
   currentTrackId?: string;
   isLoading?: boolean;
   onPlayNext?: (track: Track) => void;
@@ -191,7 +191,7 @@ export function TrackList({
             <TrackItem
               key={`${track.videoId}-${index}`}
               $isPlaying={isActive}
-              onClick={() => onTrackSelect(track)}
+              onClick={() => onTrackSelect(track, tracks)}
               onContextMenu={(e) => handleContextMenuClick(e, track)}
             >
               <RowIndex>

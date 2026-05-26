@@ -15,40 +15,47 @@ const fadeSlideIn = keyframes`
   to { opacity: 1; transform: translateY(0); }
 `;
 
-const Container = styled.div`
-  max-width: 600px;
-  margin: 0 auto;
+const ViewContainer = styled.div`
   width: 100%;
   animation: ${fadeSlideIn} 0.4s ease-out;
 `;
 
+const Container = styled.div`
+  max-width: 600px;
+  margin: 2rem auto;
+  width: 100%;
+`;
+
 const ActiveRoomContainer = styled.div`
   max-width: 1000px;
-  margin: 0 auto;
+  margin: 2rem auto;
   width: 100%;
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 2rem;
-  animation: ${fadeSlideIn} 0.4s ease-out;
   
   @media (max-width: 800px) {
     grid-template-columns: 1fr;
   }
 `;
 
-const Header = styled.div`
-  text-align: center;
-  margin-bottom: 2.5rem;
+const HeaderRow = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 2rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  padding-bottom: 1rem;
 `;
 
 const PageTitle = styled.h1`
-  font-size: 2rem;
+  font-size: 1.75rem;
   font-weight: 800;
-  margin-bottom: 0.5rem;
+  color: #fff;
   display: flex;
   align-items: center;
-  justify-content: center;
   gap: 0.75rem;
+  margin: 0;
 
   svg {
     color: var(--accent);
@@ -58,9 +65,8 @@ const PageTitle = styled.h1`
 const PageSubtitle = styled.p`
   font-size: 0.95rem;
   color: ${({ theme }) => theme.colors.muted};
-  max-width: 400px;
-  margin: 0 auto;
-  line-height: 1.5;
+  margin: 0;
+  margin-left: 1rem;
 `;
 
 const CardsGrid = styled.div`
@@ -471,8 +477,19 @@ export function ListenAlong({
   // ── Active Room View ──
   if (roomCode) {
     return (
-      <ActiveRoomContainer>
-        <RoomCard className="glass">
+      <ViewContainer>
+        <HeaderRow>
+          <div style={{ display: 'flex', alignItems: 'flex-end' }}>
+            <PageTitle>
+              <Radio size={28} />
+              Parties
+            </PageTitle>
+            <PageSubtitle>Listen together in real-time</PageSubtitle>
+          </div>
+        </HeaderRow>
+        
+        <ActiveRoomContainer>
+          <RoomCard className="glass">
           <RoomStatus>
             <LiveIndicator>
               <LiveDot />
@@ -559,23 +576,27 @@ export function ListenAlong({
           </ChatInputForm>
         </ChatCard>
       </ActiveRoomContainer>
+      </ViewContainer>
     );
   }
 
   // ── Idle View ──
   return (
-    <Container>
-      <Header>
-        <PageTitle>
-          <Radio size={28} />
-          Parties
-        </PageTitle>
-        <PageSubtitle>
-          Create a room and share the code, or join a friend&apos;s room to
-          listen together in perfect sync.
-        </PageSubtitle>
-      </Header>
-
+    <ViewContainer>
+      <HeaderRow>
+        <div style={{ display: 'flex', alignItems: 'flex-end' }}>
+          <PageTitle>
+            <Radio size={28} />
+            Parties
+          </PageTitle>
+          <PageSubtitle>
+            Create a room and share the code, or join a friend&apos;s room to
+            listen together in perfect sync.
+          </PageSubtitle>
+        </div>
+      </HeaderRow>
+      
+      <Container>
       <CardsGrid>
         <ActionCard onClick={onCreate}>
           <CardIcon $color="rgba(var(--accent-rgb), 0.2)">
@@ -631,5 +652,6 @@ export function ListenAlong({
         </JoinSection>
       )}
     </Container>
+    </ViewContainer>
   );
 }

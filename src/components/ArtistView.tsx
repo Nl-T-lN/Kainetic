@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import styled from "styled-components";
 import type { Track } from "@/types/music";
 import { TrackList } from "./TrackList";
+import { usePlayer } from "@/contexts/PlayerContext";
 import { Play } from "lucide-react";
 
 const Container = styled.div`
@@ -162,21 +163,90 @@ const CardSubtitle = styled.p`
   margin: 0;
 `;
 
-const LoadingSpinner = styled.div`
+const TapeContainer = styled.div`
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 200vw;
+  height: 100vh;
+  transform: translate(-50%, -50%);
   display: flex;
+  align-items: center;
   justify-content: center;
-  padding: 4rem;
-  color: var(--muted);
+  pointer-events: none;
 `;
+
+const Tape = styled.div<{ $rotate: number }>`
+  position: absolute;
+  width: 200vw;
+  height: 80px;
+  background-color: #dca514;
+  background-image: repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 40px,
+    #111 40px,
+    #111 80px
+  );
+  transform: rotate(${({ $rotate }) => $rotate}deg);
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  z-index: 10;
+`;
+
+const TapeText = styled.div`
+  color: #111;
+  font-weight: 900;
+  font-size: 2.2rem;
+  letter-spacing: 4px;
+  white-space: nowrap;
+  font-family: 'Arial Black', sans-serif;
+  text-transform: uppercase;
+  padding: 0 10px;
+  margin: 0 20px;
+  text-shadow: 
+    -2px -2px 0 #dca514,
+     2px -2px 0 #dca514,
+    -2px  2px 0 #dca514,
+     2px  2px 0 #dca514;
+`;
+
+const TapeTextContainer = styled.div`
+  display: flex;
+  white-space: nowrap;
+`;
+
+const LoadingSpinner = () => {
+  const textItems = Array(20).fill("UNDER CONSTRUCTION");
+  return (
+    <div style={{ position: 'relative', height: '60vh', overflow: 'hidden', background: 'var(--bg)' }}>
+      <TapeContainer>
+        <Tape $rotate={-15}>
+          <TapeTextContainer>
+            {textItems.map((text, i) => (
+              <TapeText key={`tape1-${i}`}>{text}</TapeText>
+            ))}
+          </TapeTextContainer>
+        </Tape>
+        <Tape $rotate={15} style={{ zIndex: 11 }}>
+          <TapeTextContainer>
+            {textItems.map((text, i) => (
+              <TapeText key={`tape2-${i}`}>{text}</TapeText>
+            ))}
+          </TapeTextContainer>
+        </Tape>
+      </TapeContainer>
+    </div>
+  );
+};
 
 interface ArtistViewProps {
   artistId: string;
-  onPlay: (track: Track) => void;
-  onPlayNext: (track: Track) => void;
-  onAddToQueue: (track: Track) => void;
 }
 
-export function ArtistView({ artistId, onPlay, onPlayNext, onAddToQueue }: ArtistViewProps) {
+export function ArtistView({ artistId }: ArtistViewProps) {
+  const { onPlay, onPlayNext, onAddToQueue } = usePlayer();
   const [artist, setArtist] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
@@ -202,7 +272,7 @@ export function ArtistView({ artistId, onPlay, onPlayNext, onAddToQueue }: Artis
   }, [artistId]);
 
   if (loading) {
-    return <LoadingSpinner>Loading Artist...</LoadingSpinner>;
+    return <LoadingSpinner />;
   }
 
   if (!artist || artist.error) {

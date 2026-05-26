@@ -16,12 +16,13 @@ import StyledComponentsRegistry from "@/styles/StyledRegistry";
 import { GlobalStyles } from "@/styles/GlobalStyles";
 import { theme } from "@/styles/theme";
 import { Providers } from "./Providers";
+import { GlobalShell } from "@/components/GlobalShell";
 
 // 🔵 WE CODE: Font Loading
 const pixelFont = Press_Start_2P({
   weight: "400",
   subsets: ["latin"],
-  variable: "--font-pixel", 
+  variable: "--font-pixel",
 });
 
 const interFont = Inter({
@@ -33,6 +34,9 @@ const interFont = Inter({
 export const metadata: Metadata = {
   title: "Ventify",
   description: "A modern glassmorphic music streaming platform.",
+  icons: {
+    icon: "/favicon.svg",
+  },
 };
 
 export default function RootLayout({
@@ -45,7 +49,11 @@ export default function RootLayout({
       <body>
         <StyledComponentsRegistry>
           <GlobalStyles theme={theme} />
-          <Providers>{children}</Providers>
+          <Providers>
+            <GlobalShell>
+              {children}
+            </GlobalShell>
+          </Providers>
         </StyledComponentsRegistry>
       </body>
     </html>

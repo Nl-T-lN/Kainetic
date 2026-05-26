@@ -5,6 +5,7 @@ import styled, { keyframes } from "styled-components";
 import { X, Heart, Trash2, Download, Edit3, GripVertical, MoreVertical } from "lucide-react";
 import type { Track } from "@/types/music";
 import { useLikedTracks } from "@/hooks/useLikedTracks";
+import { useRouter } from "next/navigation";
 import { TrackContextMenu } from "./TrackContextMenu";
 
 const slideIn = keyframes`
@@ -187,7 +188,6 @@ interface QueueSidebarProps {
   onAddToQueue?: (track: Track) => void;
   onStartRadio?: (track: Track) => void;
   onReorderQueue?: (startIndex: number, endIndex: number) => void;
-  onArtistClick?: (artistId: string) => void;
 }
 
 export function QueueSidebar({
@@ -201,8 +201,8 @@ export function QueueSidebar({
   onAddToQueue,
   onStartRadio,
   onReorderQueue,
-  onArtistClick
 }: QueueSidebarProps) {
+  const router = useRouter();
   const { toggleLike, isLiked } = useLikedTracks();
   const [menuTrack, setMenuTrack] = useState<{ track: Track, x: number, y: number } | null>(null);
   
@@ -318,19 +318,20 @@ export function QueueSidebar({
                 <div 
                   className="artist"
                   onClick={(e) => {
-                    if (onArtistClick && track.artistId) {
-                      e.stopPropagation();
-                      onClose(); // Optional: close queue when navigating
-                      onArtistClick(track.artistId);
+                    e.stopPropagation();
+                    if (track.artistId) {
+                      onClose();
+                      router.push('/artist/' + track.artistId);
                     }
                   }}
                   style={{ 
-                    cursor: (onArtistClick && track.artistId) ? 'pointer' : 'default',
+                    cursor: (track.artistId) ? 'pointer' : 'default',
                     pointerEvents: 'auto'
                   }}
                   onMouseEnter={(e) => {
-                    if (onArtistClick && track.artistId) {
+                    if (track.artistId) {
                       e.currentTarget.style.textDecoration = 'underline';
+                      e.currentTarget.style.color = '#fff';
                     }
                   }}
                   onMouseLeave={(e) => {
