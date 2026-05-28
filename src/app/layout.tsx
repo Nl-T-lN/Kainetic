@@ -39,6 +39,8 @@ export const metadata: Metadata = {
   },
 };
 
+import { Analytics } from '@vercel/analytics/react';
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -55,6 +57,7 @@ export default function RootLayout({
             </GlobalShell>
           </Providers>
         </StyledComponentsRegistry>
+        <Analytics />
       </body>
     </html>
   );
