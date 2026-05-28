@@ -106,7 +106,16 @@ export function usePlayerState(
   const handleSetTrack = (track: Track | null) => {
     setCurrentTrack(track);
     setPositionMs(0);
-    if (track) setDurationMs(track.durationMs);
+    if (track) {
+      setDurationMs(track.durationMs);
+      if (playerRef.current && typeof (playerRef.current as any).loadVideoById === "function") {
+        (playerRef.current as any).loadVideoById(track.videoId);
+      }
+    } else {
+      if (playerRef.current && typeof (playerRef.current as any).stopVideo === "function") {
+        (playerRef.current as any).stopVideo();
+      }
+    }
   };
 
   const setQueue = (tracks: Track[], index: number = 0) => {

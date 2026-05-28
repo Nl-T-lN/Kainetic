@@ -492,6 +492,8 @@ export function BottomPlayer({
   const { lyrics, plainLyrics, isLoading: lyricsLoading } = useLyrics(currentTrack);
   const { toggleLike, isLiked } = useLikedTracks();
   const scrollRef = useRef<HTMLDivElement>(null);
+  
+  const isGuest = !!roomCode && !isHost;
 
   const activeLyricIndex = lyrics.findIndex((line, index) => {
     const nextLine = lyrics[index + 1];
@@ -584,24 +586,43 @@ export function BottomPlayer({
             <ControlsContainer $isExpanded={false}>
               <ButtonsRow $isExpanded={false}>
                 <button 
+                  disabled={isGuest}
                   onClick={(e) => { e.stopPropagation(); if (toggleShuffle) toggleShuffle(); }}
-                  style={{ color: isShuffle ? 'var(--accent)' : 'inherit' }}
+                  style={{ color: isShuffle ? 'var(--accent)' : 'inherit', opacity: isGuest ? 0.3 : 1, cursor: isGuest ? 'not-allowed' : 'pointer' }}
                 >
                   <Shuffle size={18} fill="currentColor" />
                 </button>
-                <button onClick={(e) => { e.stopPropagation(); if(onPrev) onPrev(); }}><SkipBack size={22} fill="currentColor" /></button>
-                <button className="play-btn" onClick={(e) => { e.stopPropagation(); onPlayPause(); }}>
+                <button 
+                  disabled={isGuest} 
+                  style={{ opacity: isGuest ? 0.3 : 1, cursor: isGuest ? 'not-allowed' : 'pointer' }} 
+                  onClick={(e) => { e.stopPropagation(); if(onPrev) onPrev(); }}
+                >
+                  <SkipBack size={22} fill="currentColor" />
+                </button>
+                <button 
+                  className="play-btn" 
+                  disabled={isGuest} 
+                  style={{ opacity: isGuest ? 0.5 : 1, cursor: isGuest ? 'not-allowed' : 'pointer', background: isGuest ? 'rgba(255,255,255,0.1)' : 'var(--accent)', color: isGuest ? '#fff' : '#000' }} 
+                  onClick={(e) => { e.stopPropagation(); onPlayPause(); }}
+                >
                   {isPlaying ? <Pause size={20} fill="currentColor" /> : <Play size={20} fill="currentColor" style={{ marginLeft: "2px" }} />}
                 </button>
-                <button onClick={(e) => { e.stopPropagation(); if(onNext) onNext(); }}><SkipForward size={22} fill="currentColor" /></button>
                 <button 
+                  disabled={isGuest} 
+                  style={{ opacity: isGuest ? 0.3 : 1, cursor: isGuest ? 'not-allowed' : 'pointer' }} 
+                  onClick={(e) => { e.stopPropagation(); if(onNext) onNext(); }}
+                >
+                  <SkipForward size={22} fill="currentColor" />
+                </button>
+                <button 
+                  disabled={isGuest}
                   onClick={(e) => { e.stopPropagation(); if (toggleRepeat) toggleRepeat(); }}
-                  style={{ color: isRepeat ? 'var(--accent)' : 'inherit' }}
+                  style={{ color: isRepeat ? 'var(--accent)' : 'inherit', opacity: isGuest ? 0.3 : 1, cursor: isGuest ? 'not-allowed' : 'pointer' }}
                 >
                   <Repeat size={18} fill="currentColor" />
                 </button>
               </ButtonsRow>
-              <ProgressBar positionMs={positionMs} durationMs={durationMs} onSeek={onSeek} />
+              <ProgressBar positionMs={positionMs} durationMs={durationMs} onSeek={(ms) => { if (!isGuest) onSeek(ms); }} />
             </ControlsContainer>
 
             <ExtraControls>
@@ -668,19 +689,38 @@ export function BottomPlayer({
             <div style={{ height: "2rem" }} />
             <ButtonsRow $isExpanded={true}>
               <button 
+                disabled={isGuest}
                 onClick={(e) => { e.stopPropagation(); if (toggleShuffle) toggleShuffle(); }}
-                style={{ color: isShuffle ? 'var(--accent)' : 'inherit' }}
+                style={{ color: isShuffle ? 'var(--accent)' : 'inherit', opacity: isGuest ? 0.3 : 1, cursor: isGuest ? 'not-allowed' : 'pointer' }}
               >
                 <Shuffle size={24} />
               </button>
-              <button onClick={onPrev}><SkipBack size={36} fill="currentColor" /></button>
-              <button className="play-btn" onClick={onPlayPause} style={{ width: "80px", height: "80px" }}>
+              <button 
+                disabled={isGuest} 
+                style={{ opacity: isGuest ? 0.3 : 1, cursor: isGuest ? 'not-allowed' : 'pointer' }} 
+                onClick={onPrev}
+              >
+                <SkipBack size={36} fill="currentColor" />
+              </button>
+              <button 
+                className="play-btn" 
+                disabled={isGuest} 
+                style={{ width: "80px", height: "80px", opacity: isGuest ? 0.5 : 1, cursor: isGuest ? 'not-allowed' : 'pointer', background: isGuest ? 'rgba(255,255,255,0.1)' : 'var(--accent)', color: isGuest ? '#fff' : '#000' }} 
+                onClick={onPlayPause}
+              >
                 {isPlaying ? <Pause size={36} fill="currentColor" /> : <Play size={36} fill="currentColor" style={{ marginLeft: "6px" }} />}
               </button>
-              <button onClick={onNext}><SkipForward size={36} fill="currentColor" /></button>
               <button 
+                disabled={isGuest} 
+                style={{ opacity: isGuest ? 0.3 : 1, cursor: isGuest ? 'not-allowed' : 'pointer' }} 
+                onClick={onNext}
+              >
+                <SkipForward size={36} fill="currentColor" />
+              </button>
+              <button 
+                disabled={isGuest}
                 onClick={(e) => { e.stopPropagation(); if (toggleRepeat) toggleRepeat(); }}
-                style={{ color: isRepeat ? 'var(--accent)' : 'inherit' }}
+                style={{ color: isRepeat ? 'var(--accent)' : 'inherit', opacity: isGuest ? 0.3 : 1, cursor: isGuest ? 'not-allowed' : 'pointer' }}
               >
                 <Repeat size={24} />
               </button>

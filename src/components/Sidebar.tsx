@@ -225,7 +225,7 @@ export function Sidebar({ roomCode, isCollapsed, onToggleCollapse }: SidebarProp
           </NavItem>
           <NavItem href="/parties" $active={pathname.startsWith("/parties")}>
             <Radio />
-            <span>Parties</span>
+            <span>Play Sync</span>
             {roomCode && <RoomBadge>LIVE</RoomBadge>}
           </NavItem>
           <NavItem href="/settings" $active={pathname.startsWith("/settings")}>

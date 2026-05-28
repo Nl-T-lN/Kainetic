@@ -2,166 +2,136 @@
 
 import { useEffect, useState, useRef, useCallback } from "react";
 import Ably from "ably";
-import type { PlayerState, Track } from "@/types/music";
-
-export interface PartyRoom {
-  currentTrack: Track | null;
-  isPlaying: boolean;
-  positionMs: number;
-  timestamp: number;
-}
-
-export interface PartyEvent {
-  type: "sync" | "chat";
-  payload?: Partial<PartyRoom>;
-  chatMessage?: ChatMessage;
-}
-
-export interface ChatMessage {
-  id: string;
-  text: string;
-  sender: string;
-  timestamp: number;
-}
+import type { 
+  Track, 
+  PartyProfile, 
+  PartyMember, 
+  PartyPermissions,
+  PartyEvent,
+  SyncPayload,
+  ChatMessage 
+} from "@/types/music";
+import type { UsePlayerStateReturn } from "./usePlayerState";
 
 export type ConnectionStatus = 'idle' | 'connecting' | 'connected' | 'error';
 
 export interface UsePartyRoomReturn {
   isHost: boolean;
   roomCode: string | null;
-  listenerCount: number;
-  partyPlayerState: PlayerState | null;
+  members: PartyMember[];
+  permissions: PartyPermissions;
+  
+  partyQueue: Track[];
+  partyQueueIndex: number;
+  partyPlayerState: SyncPayload | null;
+  
   messages: ChatMessage[];
   connectionStatus: ConnectionStatus;
-  createRoom: () => void;
-  joinRoom: (code: string) => void;
+  
+  createRoom: (forceProfile?: PartyProfile) => void;
+  joinRoom: (code: string, forceProfile?: PartyProfile) => Promise<boolean>;
   leaveRoom: () => void;
   sendMessage: (text: string) => void;
+  
+  requestAddTrack: (track: Track, action: "ADD_TRACK" | "PLAY_NEXT" | "PLAY_NOW") => void;
+  
+  toggleGuestAdditions: (allow: boolean) => void;
+  kickUser: (clientId: string) => void;
+  
+  profile: PartyProfile | null;
+  saveProfile: (name: string) => PartyProfile;
 }
 
-export function usePartyRoom(localPlayerState: PlayerState): UsePartyRoomReturn {
-  const [isHost, setIsHost] = useState(true);
+const getRandomAvatarColor = () => {
+  const colors = ["#ff6b6b", "#4ecdc4", "#45b7d1", "#f9ca24", "#6c5ce7", "#a8e6cf"];
+  return colors[Math.floor(Math.random() * colors.length)];
+};
+
+export function usePartyRoom(localState: UsePlayerStateReturn): UsePartyRoomReturn {
+  const [isHost, setIsHost] = useState(false);
   const [roomCode, setRoomCode] = useState<string | null>(null);
-  const [listenerCount, setListenerCount] = useState(0);
-  const [partyPlayerState, setPartyPlayerState] = useState<PlayerState | null>(null);
+  const [members, setMembers] = useState<PartyMember[]>([]);
+  const [permissions, setPermissions] = useState<PartyPermissions>({ allowGuestAdditions: true });
+  
+  const [partyQueue, setPartyQueue] = useState<Track[]>([]);
+  const [partyQueueIndex, setPartyQueueIndex] = useState(0);
+  const [partyPlayerState, setPartyPlayerState] = useState<SyncPayload | null>(null);
+  
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>('idle');
+  const [profile, setProfile] = useState<PartyProfile | null>(null);
   
   const ablyRef = useRef<Ably.Realtime | null>(null);
   const channelRef = useRef<Ably.RealtimeChannel | null>(null);
   const lastSyncTime = useRef<number>(0);
+  const myClientId = useRef<string>("");
+  
+  const prevIsPlaying = useRef<boolean>(false);
+  const prevTrackId = useRef<string | undefined>(undefined);
+  
+  if (!myClientId.current) {
+    myClientId.current = Math.random().toString(36).substring(2, 10);
+  }
+
+  // 1. Profile Management
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("vintify_party_profile");
+      if (saved) {
+        setProfile(JSON.parse(saved));
+      }
+    } catch (e) {}
+  }, []);
+
+  const saveProfile = useCallback((name: string) => {
+    const p: PartyProfile = { name, avatarId: getRandomAvatarColor() };
+    setProfile(p);
+    localStorage.setItem("vintify_party_profile", JSON.stringify(p));
+    return p;
+  }, []);
 
   // Clean up connection
   useEffect(() => {
-    return () => {
-      if (ablyRef.current) {
-        ablyRef.current.close();
-      }
-    };
+    return () => ablyRef.current?.close();
   }, []);
 
-  // Host Broadcast Loop (Throttled to 2000ms unless major state change like play/pause/track)
+  // 2. Host Broadcast Engine
+  // Broadcast SYNC every 2s, or immediately if major state changes
   useEffect(() => {
     if (isHost && roomCode && channelRef.current) {
       const now = Date.now();
-      // Throttle position updates to every 2 seconds to save Ably messages
-      // Note: In a real production app, we would only broadcast when play/pause or track changes,
-      // and let the client extrapolate position.
-      if (now - lastSyncTime.current > 2000) {
-        const payload: Partial<PartyRoom> = {
-          currentTrack: localPlayerState.currentTrack,
-          isPlaying: localPlayerState.isPlaying,
-          positionMs: localPlayerState.positionMs,
-          timestamp: now,
-        };
-        
-        const event: PartyEvent = { type: "sync", payload };
-        channelRef.current.publish("sync", event);
+      
+      const payload: SyncPayload = {
+        currentTrack: localState.currentTrack,
+        isPlaying: localState.isPlaying,
+        positionMs: localState.positionMs,
+        timestamp: now,
+        queue: localState.queue,
+        currentIndex: localState.queueIndex
+      };
+      
+      // Update local party queue for Host UI
+      setPartyQueue(localState.queue);
+      setPartyQueueIndex(localState.queueIndex);
+
+      const isMajorChange = 
+        prevIsPlaying.current !== localState.isPlaying || 
+        prevTrackId.current !== localState.currentTrack?.videoId;
+
+      if (isMajorChange || (now - lastSyncTime.current > 2000)) {
+        channelRef.current.publish("party_events", { type: "SYNC", syncPayload: payload } as PartyEvent);
         lastSyncTime.current = now;
+        prevIsPlaying.current = localState.isPlaying;
+        prevTrackId.current = localState.currentTrack?.videoId;
       }
     }
-  }, [isHost, roomCode, localPlayerState.isPlaying, localPlayerState.currentTrack, localPlayerState.positionMs]);
+  }, [
+    isHost, roomCode, 
+    localState.isPlaying, localState.currentTrack, localState.positionMs, 
+    localState.queue, localState.queueIndex
+  ]);
 
-  const handleConnectionState = (ably: Ably.Realtime) => {
-    ably.connection.on('connecting', () => setConnectionStatus('connecting'));
-    ably.connection.on('connected', () => setConnectionStatus('connected'));
-    ably.connection.on('failed', () => setConnectionStatus('error'));
-    ably.connection.on('disconnected', () => setConnectionStatus('error'));
-  };
-
-  const createRoom = useCallback(() => {
-    const code = Math.random().toString(36).substring(2, 6).toUpperCase();
-    
-    const ably = new Ably.Realtime({ authUrl: "/api/party/token" });
-    ablyRef.current = ably;
-    handleConnectionState(ably);
-    
-    const channel = ably.channels.get(`party:${code}`);
-    channelRef.current = channel;
-    
-    setIsHost(true);
-    setRoomCode(code);
-    setMessages([]);
-    
-    channel.presence.enter();
-    channel.presence.subscribe(async () => {
-      try {
-        const members = await channel.presence.get();
-        if (members) setListenerCount(members.length > 0 ? members.length - 1 : 0);
-      } catch (err) {
-        console.error(err);
-      }
-    });
-
-    // Subscribe to chat events
-    channel.subscribe("chat", (message) => {
-      const eventData = message.data as PartyEvent;
-      if (eventData.chatMessage) {
-        setMessages(prev => [...prev, eventData.chatMessage!]);
-      }
-    });
-  }, []);
-
-  const joinRoom = useCallback((code: string) => {
-    const formattedCode = code.toUpperCase();
-    
-    const ably = new Ably.Realtime({ authUrl: "/api/party/token" });
-    ablyRef.current = ably;
-    handleConnectionState(ably);
-    
-    const channel = ably.channels.get(`party:${formattedCode}`);
-    channelRef.current = channel;
-    
-    setIsHost(false);
-    setRoomCode(formattedCode);
-    setMessages([]);
-    
-    channel.presence.enter();
-    
-    channel.subscribe("sync", (message) => {
-      const eventData = message.data as PartyEvent;
-      const { payload } = eventData;
-      
-      if (payload) {
-        const latency = Date.now() - (payload.timestamp || Date.now());
-        
-        setPartyPlayerState({
-          currentTrack: payload.currentTrack || null,
-          isPlaying: payload.isPlaying || false,
-          positionMs: (payload.positionMs || 0) + latency,
-          durationMs: payload.currentTrack?.durationMs || 0,
-        });
-      }
-    });
-
-    channel.subscribe("chat", (message) => {
-      const eventData = message.data as PartyEvent;
-      if (eventData.chatMessage) {
-        setMessages(prev => [...prev, eventData.chatMessage!]);
-      }
-    });
-  }, []);
-
+  // We need to properly wrap leaveRoom in useCallback to avoid dependency cycles
   const leaveRoom = useCallback(() => {
     if (channelRef.current) {
       channelRef.current.presence.leave();
@@ -169,36 +139,204 @@ export function usePartyRoom(localPlayerState: PlayerState): UsePartyRoomReturn 
     }
     setRoomCode(null);
     setPartyPlayerState(null);
-    setIsHost(true);
-    setListenerCount(0);
+    setIsHost(false);
+    setMembers([]);
     setConnectionStatus('idle');
     setMessages([]);
   }, []);
 
-  const sendMessage = useCallback((text: string) => {
-    if (!channelRef.current || !roomCode) return;
+  // 3. Event Handling Setup
+  const setupChannel = useCallback((channel: Ably.RealtimeChannel, amIHost: boolean) => {
+    channel.subscribe("party_events", (message) => {
+      const event = message.data as PartyEvent;
+      
+      // GUESTS processing SYNC
+      if (event.type === "SYNC" && event.syncPayload && !amIHost) {
+        const p = event.syncPayload;
+        const latency = Date.now() - p.timestamp;
+        
+        setPartyQueue(p.queue);
+        setPartyQueueIndex(p.currentIndex);
+        
+        setPartyPlayerState({
+          ...p,
+          positionMs: p.positionMs + latency
+        });
+      }
+      
+      // ALL processing CHAT
+      if (event.type === "CHAT" && event.chatMessage) {
+        setMessages(prev => [...prev, event.chatMessage!]);
+      }
+      
+      // HOST processing COMMANDS
+      if (event.type === "COMMAND" && event.commandPayload && amIHost) {
+        const { action, track } = event.commandPayload;
+        if (permissions.allowGuestAdditions) {
+          if (action === "ADD_TRACK") localState.addToQueue(track);
+          else if (action === "PLAY_NEXT") localState.insertNext(track);
+          else if (action === "PLAY_NOW") {
+            localState.setCurrentTrack(track);
+            // This is a simplification; GlobalShell actually calls YT play
+            // But modifying state here will force GlobalShell to play it.
+            // A more robust way is to just set queue and index
+            localState.setQueue([track, ...localState.queue], 0);
+          }
+        }
+      }
+      
+      // GUESTS processing ADMIN Actions
+      if (event.type === "ADMIN" && event.adminPayload && !amIHost) {
+        const { action, targetClientId } = event.adminPayload;
+        if (targetClientId === myClientId.current) {
+          if (action === "KICK") {
+            alert("You have been kicked from the party.");
+            leaveRoom();
+          }
+        }
+      }
+    });
+
+    channel.presence.subscribe('enter', updateMembers);
+    channel.presence.subscribe('leave', updateMembers);
+    channel.presence.subscribe('update', updateMembers);
+    channel.presence.subscribe('present', updateMembers);
     
-    const chatMessage: ChatMessage = {
+    async function updateMembers() {
+      if (channel.state !== 'attached') return;
+      try {
+        const membersList = await channel.presence.get();
+        const parsedMembers = membersList.map(m => ({
+          clientId: m.clientId,
+          profile: m.data as PartyProfile,
+          isHost: m.data?.isHost || false,
+          joinedAt: m.timestamp
+        }));
+        setMembers(parsedMembers);
+      } catch (err) {
+        console.error("Presence get error:", err);
+      }
+    }
+    
+    // Call it immediately to populate initial list
+    updateMembers();
+  }, [localState, permissions, leaveRoom]);
+
+  const connectAbly = useCallback(async (code: string, asHost: boolean, forceProfile?: PartyProfile) => {
+    const activeProfile = forceProfile || profile;
+    if (!activeProfile) return false;
+    
+    // Pass clientId explicitly and prevent browser caching
+    const ably = new Ably.Realtime({ 
+      authUrl: `/api/party/token?clientId=${myClientId.current}&t=${Date.now()}`, 
+      clientId: myClientId.current 
+    });
+    ablyRef.current = ably;
+    
+    ably.connection.on('connecting', () => setConnectionStatus('connecting'));
+    ably.connection.on('connected', () => setConnectionStatus('connected'));
+    ably.connection.on('failed', () => setConnectionStatus('error'));
+    ably.connection.on('disconnected', () => setConnectionStatus('error'));
+
+    const channel = ably.channels.get(`party:${code}`);
+    channelRef.current = channel;
+    
+    setIsHost(asHost);
+    setRoomCode(code);
+    setMessages([]);
+    setupChannel(channel, asHost);
+    
+    // Explicitly attach before entering presence to avoid race conditions
+    channel.attach().then(() => {
+      channel.presence.enter({ ...activeProfile, isHost: asHost })
+        .then(async () => {
+          const membersList = await channel.presence.get();
+          const parsedMembers = membersList.map(m => ({
+            clientId: m.clientId,
+            profile: m.data as PartyProfile,
+            isHost: m.data?.isHost || false,
+            joinedAt: m.timestamp
+          }));
+          setMembers(parsedMembers);
+        })
+        .catch((err) => {
+          console.error("Presence Enter Error:", err);
+        });
+    }).catch(err => console.error("Attach error:", err));
+    return true;
+  }, [profile, setupChannel]);
+
+  const createRoom = useCallback((forceProfile?: PartyProfile) => {
+    const code = Math.random().toString(36).substring(2, 6).toUpperCase();
+    connectAbly(code, true, forceProfile);
+  }, [connectAbly]);
+
+  const joinRoom = useCallback(async (code: string, forceProfile?: PartyProfile) => {
+    return connectAbly(code.toUpperCase(), false, forceProfile);
+  }, [connectAbly]);
+
+
+
+  const sendMessage = useCallback((text: string) => {
+    if (!channelRef.current || !profile) return;
+    const msg: ChatMessage = {
       id: Math.random().toString(36).substr(2, 9),
       text,
-      sender: isHost ? "Host" : "Listener",
+      senderId: myClientId.current,
+      senderName: profile.name,
       timestamp: Date.now(),
     };
-    
-    const event: PartyEvent = { type: "chat", chatMessage };
-    channelRef.current.publish("chat", event);
-  }, [isHost, roomCode]);
+    channelRef.current.publish("party_events", { type: "CHAT", chatMessage: msg } as PartyEvent);
+  }, [profile]);
 
-  return { 
-    isHost, 
-    roomCode, 
-    listenerCount, 
-    partyPlayerState, 
+  const requestAddTrack = useCallback((track: Track, action: "ADD_TRACK" | "PLAY_NEXT" | "PLAY_NOW") => {
+    if (isHost) {
+      if (action === "ADD_TRACK") localState.addToQueue(track);
+      else if (action === "PLAY_NEXT") localState.insertNext(track);
+      else if (action === "PLAY_NOW") {
+        localState.setQueue([track, ...localState.queue], 0);
+      }
+    } else if (channelRef.current && permissions.allowGuestAdditions) {
+      channelRef.current.publish("party_events", {
+        type: "COMMAND",
+        commandPayload: { action, track, senderId: myClientId.current }
+      } as PartyEvent);
+    }
+  }, [isHost, localState, permissions.allowGuestAdditions]);
+
+  const toggleGuestAdditions = useCallback((allow: boolean) => {
+    if (isHost) setPermissions({ allowGuestAdditions: allow });
+  }, [isHost]);
+
+  const kickUser = useCallback((clientId: string) => {
+    if (isHost && channelRef.current) {
+      channelRef.current.publish("party_events", {
+        type: "ADMIN",
+        adminPayload: { action: "KICK", targetClientId: clientId }
+      } as PartyEvent);
+    }
+  }, [isHost]);
+
+
+
+  return {
+    isHost,
+    roomCode,
+    members,
+    permissions,
+    partyQueue,
+    partyQueueIndex,
+    partyPlayerState,
     messages,
     connectionStatus,
-    createRoom, 
-    joinRoom, 
+    createRoom,
+    joinRoom,
     leaveRoom,
-    sendMessage
+    sendMessage,
+    requestAddTrack,
+    toggleGuestAdditions,
+    kickUser,
+    profile,
+    saveProfile
   };
 }

@@ -2,18 +2,29 @@
 
 import { usePlayer } from "@/contexts/PlayerContext";
 import { ListenAlong } from "@/components/ListenAlong";
+import { useSearchParams } from "next/navigation";
+import { useEffect, Suspense } from "react";
 
-export default function PartiesPage() {
+function PartiesContent() {
   const { party } = usePlayer();
+  const searchParams = useSearchParams();
+  const autoJoinCode = searchParams.get("join") || null;
+
+  useEffect(() => {
+    if (autoJoinCode && party.joinRoom && !party.roomCode) {
+      party.joinRoom(autoJoinCode);
+    }
+  }, [autoJoinCode, party]);
 
   return (
-    <ListenAlong 
-      roomCode={party.roomCode}
-      listenerCount={party.listenerCount}
-      isHost={party.isHost}
-      onCreate={party.createRoom}
-      onJoin={party.joinRoom}
-      onLeave={party.leaveRoom}
-    />
+    <ListenAlong party={party} />
+  );
+}
+
+export default function PartiesPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <PartiesContent />
+    </Suspense>
   );
 }

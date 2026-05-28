@@ -43,9 +43,9 @@ const ClearButton = styled.button`
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(255, 100, 100, 0.1);
-  color: #ff6b6b;
-  border: 1px solid rgba(255, 100, 100, 0.2);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--muted);
+  border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 50%;
   width: 40px;
   height: 40px;
@@ -53,7 +53,8 @@ const ClearButton = styled.button`
   transition: all 0.2s ease;
 
   &:hover {
-    background: rgba(255, 100, 100, 0.2);
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff;
     transform: scale(1.05);
   }
 `;

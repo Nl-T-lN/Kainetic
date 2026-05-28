@@ -24,3 +24,63 @@ export interface PlayerState {
   positionMs: number;
   durationMs: number;
 }
+
+// ── Party / Listen Along ──
+
+// ── Party / Listen Along ──
+
+export interface PartyProfile {
+  name: string;
+  avatarId: string;
+}
+
+export interface PartyMember {
+  clientId: string;
+  profile: PartyProfile;
+  isHost: boolean;
+  joinedAt: number;
+}
+
+export interface PartyPermissions {
+  allowGuestAdditions: boolean;
+}
+
+export interface PartyQueueState {
+  queue: Track[];
+  currentIndex: number;
+}
+
+export type PartyCommandAction = "ADD_TRACK" | "PLAY_NEXT" | "PLAY_NOW";
+export type PartyAdminAction = "KICK" | "TRANSFER_HOST";
+
+export interface SyncPayload {
+  currentTrack: Track | null;
+  isPlaying: boolean;
+  positionMs: number;
+  timestamp: number;
+  queue: Track[];
+  currentIndex: number;
+}
+
+export interface ChatMessage {
+  id: string;
+  text: string;
+  senderId: string;
+  senderName: string;
+  timestamp: number;
+}
+
+export interface PartyEvent {
+  type: "SYNC" | "CHAT" | "COMMAND" | "ADMIN";
+  syncPayload?: SyncPayload;
+  chatMessage?: ChatMessage;
+  commandPayload?: {
+    action: PartyCommandAction;
+    track: Track;
+    senderId: string;
+  };
+  adminPayload?: {
+    action: PartyAdminAction;
+    targetClientId: string;
+  };
+}

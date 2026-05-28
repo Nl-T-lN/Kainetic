@@ -2,8 +2,11 @@
 
 import { useState, useRef, useEffect } from "react";
 import styled, { keyframes } from "styled-components";
-import { Radio, Users, Copy, Check, LogOut, Headphones, Wifi, Send } from "lucide-react";
-import type { ChatMessage } from "@/hooks/usePartyRoom";
+import { Radio, Users, Copy, Check, LogOut, Headphones, Wifi, Send, Crown, Play, Search, Plus, ShieldAlert, Key } from "lucide-react";
+import type { UsePartyRoomReturn } from "@/hooks/usePartyRoom";
+import type { Track } from "@/types/music";
+
+const DEFAULT_ART = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Crect width='100' height='100' fill='%23333'/%3E%3Ctext x='50' y='54' font-family='sans-serif' font-size='40' fill='%23666' text-anchor='middle' dominant-baseline='middle'%3E%E2%99%AA%3C/text%3E%3C/svg%3E";
 
 const livePulse = keyframes`
   0%, 100% { opacity: 1; }
@@ -26,14 +29,17 @@ const Container = styled.div`
   width: 100%;
 `;
 
-const ActiveRoomContainer = styled.div`
-  max-width: 1000px;
+const ActiveRoomGrid = styled.div`
+  max-width: 1400px;
   margin: 2rem auto;
   width: 100%;
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 2rem;
+  grid-template-columns: 280px 1fr 300px;
+  gap: 1.5rem;
   
+  @media (max-width: 1100px) {
+    grid-template-columns: 250px 1fr;
+  }
   @media (max-width: 800px) {
     grid-template-columns: 1fr;
   }
@@ -213,135 +219,15 @@ const SecondaryBtn = styled.button`
   }
 `;
 
-/* ── Active Room ── */
-const RoomCard = styled.div`
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: var(--radius);
-  padding: 2rem;
-  text-align: center;
-  height: fit-content;
-  
-  &.glass {
-    background: rgba(var(--bg-rgb), var(--glass-opacity));
-    backdrop-filter: blur(12px);
-  }
-`;
-
-const RoomStatus = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  margin-bottom: 1rem;
-`;
-
-const LiveIndicator = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
-  background: rgba(var(--accent-rgb), 0.12);
-  border: 1px solid rgba(var(--accent-rgb), 0.2);
-  border-radius: 99px;
-  padding: 0.25rem 0.75rem;
-  font-size: 0.75rem;
-  font-weight: 700;
-  color: var(--accent);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-`;
-
-const LiveDot = styled.div`
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--accent);
-  animation: ${livePulse} 1.5s ease-in-out infinite;
-`;
-
-const RoomCodeDisplay = styled.div`
-  font-family: ${({ theme }) => theme.fonts.mono};
-  font-size: 3rem;
-  font-weight: 800;
-  letter-spacing: 0.5rem;
-  color: ${({ theme }) => theme.colors.cream};
-  margin: 1rem 0;
-`;
-
-const RoomLabel = styled.div`
-  font-size: 0.8rem;
-  color: ${({ theme }) => theme.colors.muted};
-  margin-bottom: 0.5rem;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  font-weight: 600;
-`;
-
-const ListenerCount = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  color: ${({ theme }) => theme.colors.muted};
-  font-size: 0.9rem;
-  margin-bottom: 1.5rem;
-
-  svg {
-    color: var(--accent);
-  }
-`;
-
-const CopyButton = styled.button<{ $copied: boolean }>`
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  background: ${({ $copied }) =>
-    $copied ? "rgba(var(--accent-rgb), 0.15)" : "rgba(255, 255, 255, 0.06)"};
-  border: 1px solid ${({ $copied }) =>
-    $copied ? "rgba(var(--accent-rgb), 0.3)" : "rgba(255, 255, 255, 0.1)"};
-  border-radius: 99px;
-  padding: 0.35rem 0.85rem;
-  font-size: 0.78rem;
-  color: ${({ $copied, theme }) =>
-    $copied ? "var(--accent)" : theme.colors.muted};
-  cursor: pointer;
-  transition: all ${({ theme }) => theme.transitions.fast};
-  margin-bottom: 1.25rem;
-
-  &:hover {
-    background: rgba(255, 255, 255, 0.1);
-    color: ${({ theme }) => theme.colors.cream};
-  }
-`;
-
-const LeaveBtn = styled.button`
-  background: rgba(255, 100, 100, 0.08);
-  border: 1px solid rgba(255, 100, 100, 0.15);
-  border-radius: 99px;
-  padding: 0.55rem 1.5rem;
-  color: #ff6b6b;
-  font-size: 0.85rem;
-  font-weight: 600;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  margin: 0 auto;
-  transition: all ${({ theme }) => theme.transitions.fast};
-
-  &:hover {
-    background: rgba(255, 100, 100, 0.15);
-  }
-`;
-
-/* ── Chat UI ── */
-const ChatCard = styled.div`
+/* ── Active Room Panels ── */
+const Panel = styled.div`
   background: rgba(255, 255, 255, 0.02);
   border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: var(--radius);
   display: flex;
   flex-direction: column;
-  height: 500px;
+  height: 600px;
+  overflow: hidden;
   
   &.glass {
     background: rgba(var(--bg-rgb), var(--glass-opacity));
@@ -349,13 +235,220 @@ const ChatCard = styled.div`
   }
 `;
 
-const ChatHeader = styled.div`
-  padding: 1rem 1.25rem;
+const PanelHeader = styled.div`
+  padding: 1.25rem;
   border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-  font-weight: 600;
+  font-weight: 700;
   font-size: 1.1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 `;
 
+/* ── Panel 1: Members ── */
+const MemberList = styled.div`
+  flex: 1;
+  overflow-y: auto;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+`;
+
+const MemberItem = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem;
+  border-radius: var(--radius);
+  background: rgba(255, 255, 255, 0.03);
+  position: relative;
+  
+  .info {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+  
+  .avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    color: #fff;
+    font-size: 0.8rem;
+  }
+  
+  .name {
+    font-size: 0.95rem;
+    font-weight: 500;
+  }
+`;
+
+const AdminMenu = styled.div`
+  position: absolute;
+  right: 0;
+  top: 100%;
+  background: #2a2a2a;
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 8px;
+  z-index: 10;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+  
+  button {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    width: 100%;
+    padding: 0.75rem 1rem;
+    background: transparent;
+    border: none;
+    color: #fff;
+    cursor: pointer;
+    text-align: left;
+    font-size: 0.85rem;
+    
+    &:hover {
+      background: rgba(255,255,255,0.1);
+    }
+  }
+`;
+
+/* ── Panel 2: Queue ── */
+const QueueContainer = styled.div`
+  flex: 1;
+  overflow-y: auto;
+  padding: 1rem;
+`;
+
+const SearchContainer = styled.div`
+  padding: 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+`;
+
+const SearchInputBox = styled.div`
+  display: flex;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 99px;
+  padding: 0.5rem 1rem;
+  gap: 0.5rem;
+  
+  input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    color: white;
+    outline: none;
+    font-size: 0.9rem;
+  }
+`;
+
+const ToggleContainer = styled.label`
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+  color: var(--muted);
+  cursor: pointer;
+  
+  input {
+    accent-color: var(--accent);
+  }
+`;
+
+const SearchResults = styled.div`
+  position: absolute;
+  bottom: 80px;
+  left: 1rem;
+  right: 1rem;
+  background: #1a1a1a;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  max-height: 200px;
+  overflow-y: auto;
+  z-index: 20;
+`;
+
+const ResultItem = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  
+  &:hover {
+    background: rgba(255, 255, 255, 0.1);
+  }
+  
+  img {
+    width: 40px;
+    height: 40px;
+    border-radius: 4px;
+    object-fit: cover;
+  }
+  
+  .details {
+    flex: 1;
+    overflow: hidden;
+  }
+  
+  .title {
+    font-size: 0.9rem;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  
+  .artist {
+    font-size: 0.75rem;
+    color: var(--muted);
+  }
+`;
+
+const QueueItem = styled.div<{ $isActive?: boolean }>`
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem;
+  border-radius: 8px;
+  background: ${({ $isActive }) => $isActive ? 'rgba(var(--accent-rgb), 0.1)' : 'transparent'};
+  border-left: 3px solid ${({ $isActive }) => $isActive ? 'var(--accent)' : 'transparent'};
+  
+  img {
+    width: 48px;
+    height: 48px;
+    border-radius: 4px;
+    object-fit: cover;
+  }
+  
+  .details {
+    flex: 1;
+    overflow: hidden;
+  }
+  
+  .title {
+    font-size: 0.9rem;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: ${({ $isActive }) => $isActive ? 'var(--accent)' : '#fff'};
+  }
+  
+  .artist {
+    font-size: 0.8rem;
+    color: var(--muted);
+  }
+`;
+
+/* ── Panel 3: Chat ── */
 const MessageList = styled.div`
   flex: 1;
   overflow-y: auto;
@@ -426,41 +519,56 @@ const SendButton = styled.button`
   }
 `;
 
-/* ── Props ── */
+/* ── Modal ── */
+const ModalOverlay = styled.div`
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.8);
+  backdrop-filter: blur(5px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+`;
+
+const ModalCard = styled.div`
+  background: #1a1a1a;
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 12px;
+  padding: 2rem;
+  width: 90%;
+  max-width: 400px;
+  text-align: center;
+`;
+
 interface ListenAlongProps {
-  isHost: boolean;
-  roomCode: string | null;
-  listenerCount: number;
-  messages?: ChatMessage[];
-  onCreate: () => void;
-  onJoin: (code: string) => void;
-  onLeave: () => void;
-  onSendMessage?: (text: string) => void;
+  party: UsePartyRoomReturn;
 }
 
-export function ListenAlong({
-  isHost,
-  roomCode,
-  listenerCount,
-  messages = [],
-  onCreate,
-  onJoin,
-  onLeave,
-  onSendMessage,
-}: ListenAlongProps) {
+export function ListenAlong({ party }: ListenAlongProps) {
   const [joinCode, setJoinCode] = useState("");
   const [showJoin, setShowJoin] = useState(false);
   const [copied, setCopied] = useState(false);
   const [chatInput, setChatInput] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<Track[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
+
+  const [showProfileModal, setShowProfileModal] = useState(false);
+  const [tempProfileName, setTempProfileName] = useState("");
+  const [pendingAction, setPendingAction] = useState<"host" | "join" | null>(null);
+  const [pendingJoinCode, setPendingJoinCode] = useState("");
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+  }, [party.messages]);
 
   const handleCopy = () => {
-    if (roomCode) {
-      navigator.clipboard.writeText(roomCode).catch(() => {});
+    if (party.roomCode) {
+      navigator.clipboard.writeText(party.roomCode).catch(() => {});
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     }
@@ -468,14 +576,78 @@ export function ListenAlong({
 
   const handleSendChat = (e: React.FormEvent) => {
     e.preventDefault();
-    if (chatInput.trim() && onSendMessage) {
-      onSendMessage(chatInput.trim());
+    if (chatInput.trim()) {
+      party.sendMessage(chatInput.trim());
       setChatInput("");
     }
   };
 
+  const handleSearch = async (query: string) => {
+    setSearchQuery(query);
+    if (!query.trim()) {
+      setSearchResults([]);
+      return;
+    }
+    setIsSearching(true);
+    try {
+      const res = await fetch(`/api/search?q=${encodeURIComponent(query)}&type=song`);
+      const data = await res.json();
+      setSearchResults(data.tracks || []);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  const handleAddTrack = (track: Track) => {
+    party.requestAddTrack(track, "ADD_TRACK");
+    setSearchQuery("");
+    setSearchResults([]);
+  };
+
+  const executePendingAction = async (newProfile?: any) => {
+    if (pendingAction === "host") {
+      party.createRoom(newProfile);
+    } else if (pendingAction === "join") {
+      const success = await party.joinRoom(pendingJoinCode, newProfile);
+      if (!success) alert("Room not found or empty.");
+    }
+    setPendingAction(null);
+  };
+
+  const initiateHost = () => {
+    if (!party.profile) {
+      setPendingAction("host");
+      setShowProfileModal(true);
+    } else {
+      party.createRoom();
+    }
+  };
+
+  const initiateJoin = (code: string) => {
+    if (!party.profile) {
+      setPendingAction("join");
+      setPendingJoinCode(code);
+      setShowProfileModal(true);
+    } else {
+      party.joinRoom(code).then(success => {
+        if (!success) alert("Room not found or empty.");
+      });
+    }
+  };
+
+  const saveProfileAndContinue = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (tempProfileName.trim()) {
+      const p = party.saveProfile(tempProfileName.trim());
+      setShowProfileModal(false);
+      executePendingAction(p);
+    }
+  };
+
   // ── Active Room View ──
-  if (roomCode) {
+  if (party.roomCode) {
     return (
       <ViewContainer>
         <HeaderRow>
@@ -486,96 +658,173 @@ export function ListenAlong({
             </PageTitle>
             <PageSubtitle>Listen together in real-time</PageSubtitle>
           </div>
+          <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+            <div style={{ fontFamily: 'monospace', fontSize: '1.2rem', letterSpacing: '2px', fontWeight: 'bold' }}>
+              {party.roomCode}
+            </div>
+            <CopyButton $copied={copied} onClick={handleCopy} style={{ margin: 0 }}>
+              {copied ? <Check size={14} /> : <Copy size={14} />}
+              {copied ? "Copied" : "Copy"}
+            </CopyButton>
+            <SecondaryBtn onClick={party.leaveRoom} style={{ color: '#ff6b6b', borderColor: 'rgba(255,100,100,0.3)' }}>
+              Leave
+            </SecondaryBtn>
+          </div>
         </HeaderRow>
         
-        <ActiveRoomContainer>
-          <RoomCard className="glass">
-          <RoomStatus>
-            <LiveIndicator>
-              <LiveDot />
-              {isHost ? "Hosting" : "Connected"}
-            </LiveIndicator>
-          </RoomStatus>
-
-          <RoomLabel>Room Code</RoomLabel>
-          <RoomCodeDisplay>{roomCode}</RoomCodeDisplay>
-
-          <CopyButton $copied={copied} onClick={handleCopy}>
-            {copied ? <Check size={14} /> : <Copy size={14} />}
-            {copied ? "Copied!" : "Copy Code"}
-          </CopyButton>
-
-          <ListenerCount>
-            <Users size={18} />
-            {listenerCount} {listenerCount === 1 ? "listener" : "listeners"}{" "}
-            connected
-          </ListenerCount>
-
-          {isHost ? (
-            <div
-              style={{
-                fontSize: "0.8rem",
-                color: "var(--muted)",
-                marginBottom: "1.25rem",
-                lineHeight: 1.5,
-              }}
-            >
-              Share this code with friends. They&apos;ll hear exactly what
-              you&apos;re playing, perfectly in sync.
-            </div>
-          ) : (
-            <div
-              style={{
-                fontSize: "0.8rem",
-                color: "var(--muted)",
-                marginBottom: "1.25rem",
-                lineHeight: 1.5,
-              }}
-            >
-              You&apos;re synced with the host. Playback is controlled by them.
-            </div>
-          )}
-
-          <LeaveBtn onClick={onLeave}>
-            <LogOut size={16} />
-            Leave Room
-          </LeaveBtn>
-        </RoomCard>
-
-        <ChatCard className="glass">
-          <ChatHeader>Party Chat</ChatHeader>
-          <MessageList>
-            {messages.length === 0 ? (
-              <div style={{ textAlign: 'center', color: 'var(--muted)', marginTop: '2rem', fontSize: '0.9rem' }}>
-                No messages yet. Say hi!
+        <ActiveRoomGrid>
+          {/* PANEL 1: MEMBERS */}
+          <Panel className="glass">
+            <PanelHeader>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <Users size={18} /> Members ({party.members.length})
               </div>
-            ) : (
-              messages.map(msg => {
-                const isSelf = (isHost && msg.sender === "Host") || (!isHost && msg.sender === "Listener"); // Basic check, better with actual user IDs
-                // In a real app we'd use a UUID for the current user to accurately determine $isSelf.
-                // For now, we'll assume any message matching our role is self (if we're host and it says host).
-                return (
-                  <MessageBubble key={msg.id} $isSelf={isSelf}>
-                    {!isSelf && <div className="sender">{msg.sender}</div>}
-                    {msg.text}
-                  </MessageBubble>
-                )
-              })
-            )}
-            <div ref={messagesEndRef} />
-          </MessageList>
-          <ChatInputForm onSubmit={handleSendChat}>
-            <ChatInput 
-              placeholder="Send a message..." 
-              value={chatInput}
-              onChange={e => setChatInput(e.target.value)}
-            />
-            <SendButton type="submit" disabled={!chatInput.trim()}>
-              <Send size={16} />
-            </SendButton>
-          </ChatInputForm>
-        </ChatCard>
-      </ActiveRoomContainer>
+            </PanelHeader>
+            <MemberList>
+              {party.members.map(m => (
+                <MemberItem key={m.clientId}>
+                  <div className="info">
+                    <div className="avatar" style={{ background: m.profile?.avatarId || '#333' }}>
+                      {m.profile?.name?.charAt(0).toUpperCase() || '?'}
+                    </div>
+                    <div className="name">
+                      {m.profile?.name || 'Unknown'} 
+                      {m.clientId === party.profile?.name && " (You)"}
+                    </div>
+                  </div>
+                  {m.isHost && <Crown size={16} color="#f9ca24" />}
+                  
+                  {party.isHost && !m.isHost && (
+                    <div style={{ position: 'relative' }}>
+                      <button 
+                        style={{ background: 'transparent', border: 'none', color: '#fff', cursor: 'pointer', opacity: 0.5 }}
+                        onClick={() => setActiveMenuId(activeMenuId === m.clientId ? null : m.clientId)}
+                      >
+                        ⋮
+                      </button>
+                      {activeMenuId === m.clientId && (
+                        <AdminMenu>
+                          <button onClick={() => { party.kickUser(m.clientId); setActiveMenuId(null); }} style={{ color: '#ff6b6b' }}>
+                            <LogOut size={14} /> Kick User
+                          </button>
+                        </AdminMenu>
+                      )}
+                    </div>
+                  )}
+                </MemberItem>
+              ))}
+            </MemberList>
+          </Panel>
+
+          {/* PANEL 2: QUEUE */}
+          <Panel className="glass" style={{ position: 'relative' }}>
+            <PanelHeader>
+              <div>Master Queue</div>
+              {party.isHost && (
+                <ToggleContainer>
+                  Allow Guests to Add
+                  <input 
+                    type="checkbox" 
+                    checked={party.permissions.allowGuestAdditions}
+                    onChange={(e) => party.toggleGuestAdditions(e.target.checked)}
+                  />
+                </ToggleContainer>
+              )}
+            </PanelHeader>
+            <QueueContainer>
+              {party.partyQueue.length === 0 ? (
+                <div style={{ textAlign: 'center', color: 'var(--muted)', marginTop: '2rem' }}>Queue is empty.</div>
+              ) : (
+                party.partyQueue.map((track, i) => (
+                  <QueueItem key={`${track.videoId}-${i}`} $isActive={i === party.partyQueueIndex}>
+                    <img 
+                      src={track.thumbnailUrl || DEFAULT_ART} 
+                      onError={(e) => { 
+                        if (e.currentTarget.src !== DEFAULT_ART) e.currentTarget.src = DEFAULT_ART; 
+                      }}
+                      alt={track.title} 
+                    />
+                    <div className="details">
+                      <div className="title">{track.title}</div>
+                      <div className="artist">{track.artist}</div>
+                    </div>
+                    {i === party.partyQueueIndex && <Play size={16} color="var(--accent)" />}
+                  </QueueItem>
+                ))
+              )}
+            </QueueContainer>
+            
+            <SearchContainer>
+              <SearchInputBox>
+                <Search size={16} color="var(--muted)" />
+                <input 
+                  placeholder={
+                    party.isHost || party.permissions.allowGuestAdditions 
+                      ? "Search to add a song..." 
+                      : "Host has locked the queue"
+                  }
+                  value={searchQuery}
+                  onChange={(e) => handleSearch(e.target.value)}
+                  disabled={!party.isHost && !party.permissions.allowGuestAdditions}
+                />
+              </SearchInputBox>
+              
+              {searchQuery && searchResults.length > 0 && (
+                <SearchResults>
+                  {searchResults.map(track => (
+                    <ResultItem key={track.videoId} onClick={() => handleAddTrack(track)}>
+                      <img 
+                        src={track.thumbnailUrl || DEFAULT_ART} 
+                        onError={(e) => { 
+                          if (e.currentTarget.src !== DEFAULT_ART) e.currentTarget.src = DEFAULT_ART; 
+                        }}
+                        alt="" 
+                      />
+                      <div className="details">
+                        <div className="title">{track.title}</div>
+                        <div className="artist">{track.artist}</div>
+                      </div>
+                      <Plus size={16} color="var(--muted)" />
+                    </ResultItem>
+                  ))}
+                </SearchResults>
+              )}
+            </SearchContainer>
+          </Panel>
+
+          {/* PANEL 3: CHAT */}
+          <Panel className="glass">
+            <PanelHeader>Party Chat</PanelHeader>
+            <MessageList>
+              {party.messages.length === 0 ? (
+                <div style={{ textAlign: 'center', color: 'var(--muted)', marginTop: '2rem', fontSize: '0.9rem' }}>
+                  No messages yet. Say hi!
+                </div>
+              ) : (
+                party.messages.map(msg => {
+                  const isSelf = msg.senderName === party.profile?.name;
+                  return (
+                    <MessageBubble key={msg.id} $isSelf={isSelf}>
+                      {!isSelf && <div className="sender">{msg.senderName}</div>}
+                      {msg.text}
+                    </MessageBubble>
+                  )
+                })
+              )}
+              <div ref={messagesEndRef} />
+            </MessageList>
+            <ChatInputForm onSubmit={handleSendChat}>
+              <ChatInput 
+                placeholder="Send a message..." 
+                value={chatInput}
+                onChange={e => setChatInput(e.target.value)}
+              />
+              <SendButton type="submit" disabled={!chatInput.trim()}>
+                <Send size={16} />
+              </SendButton>
+            </ChatInputForm>
+          </Panel>
+        </ActiveRoomGrid>
       </ViewContainer>
     );
   }
@@ -583,6 +832,30 @@ export function ListenAlong({
   // ── Idle View ──
   return (
     <ViewContainer>
+      {showProfileModal && (
+        <ModalOverlay>
+          <ModalCard>
+            <h3 style={{ marginBottom: '1rem' }}>Welcome to Parties</h3>
+            <p style={{ fontSize: '0.9rem', color: 'var(--muted)', marginBottom: '1.5rem' }}>
+              Enter a display name so your friends know who you are.
+            </p>
+            <form onSubmit={saveProfileAndContinue}>
+              <CodeInput 
+                style={{ width: '100%', maxWidth: 'none', letterSpacing: 'normal', fontSize: '1.2rem', marginBottom: '1rem', textTransform: 'none' }}
+                placeholder="Your Name"
+                value={tempProfileName}
+                onChange={e => setTempProfileName(e.target.value)}
+                autoFocus
+              />
+              <ButtonRow>
+                <SecondaryBtn type="button" onClick={() => setShowProfileModal(false)}>Cancel</SecondaryBtn>
+                <PrimaryBtn type="submit" disabled={!tempProfileName.trim()}>Continue</PrimaryBtn>
+              </ButtonRow>
+            </form>
+          </ModalCard>
+        </ModalOverlay>
+      )}
+
       <HeaderRow>
         <div style={{ display: 'flex', alignItems: 'flex-end' }}>
           <PageTitle>
@@ -598,7 +871,7 @@ export function ListenAlong({
       
       <Container>
       <CardsGrid>
-        <ActionCard onClick={onCreate}>
+        <ActionCard onClick={initiateHost}>
           <CardIcon $color="rgba(var(--accent-rgb), 0.2)">
             <Wifi size={26} color="var(--accent)" />
           </CardIcon>
@@ -619,6 +892,21 @@ export function ListenAlong({
         </ActionCard>
       </CardsGrid>
 
+      {party.profile && !showJoin && (
+        <div style={{ marginTop: '2rem', textAlign: 'center', fontSize: '0.9rem', color: 'var(--muted)' }}>
+          Logged in as <strong style={{ color: '#fff' }}>{party.profile.name}</strong> ·{" "}
+          <button 
+            style={{ background: 'none', border: 'none', color: 'var(--accent)', cursor: 'pointer', textDecoration: 'underline' }}
+            onClick={() => {
+              setTempProfileName(party.profile?.name || "");
+              setShowProfileModal(true);
+            }}
+          >
+            Edit Profile
+          </button>
+        </div>
+      )}
+
       {showJoin && (
         <JoinSection>
           <JoinCard className="glass">
@@ -626,7 +914,7 @@ export function ListenAlong({
             <form
               onSubmit={(e) => {
                 e.preventDefault();
-                if (joinCode.length === 4) onJoin(joinCode);
+                if (joinCode.length === 4) initiateJoin(joinCode);
               }}
             >
               <CodeInput
@@ -655,3 +943,25 @@ export function ListenAlong({
     </ViewContainer>
   );
 }
+
+const CopyButton = styled.button<{ $copied: boolean }>`
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: ${({ $copied }) =>
+    $copied ? "rgba(var(--accent-rgb), 0.15)" : "rgba(255, 255, 255, 0.06)"};
+  border: 1px solid ${({ $copied }) =>
+    $copied ? "rgba(var(--accent-rgb), 0.3)" : "rgba(255, 255, 255, 0.1)"};
+  border-radius: 99px;
+  padding: 0.35rem 0.85rem;
+  font-size: 0.78rem;
+  color: ${({ $copied, theme }) =>
+    $copied ? "var(--accent)" : theme.colors.muted};
+  cursor: pointer;
+  transition: all ${({ theme }) => theme.transitions.fast};
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: ${({ theme }) => theme.colors.cream};
+  }
+`;

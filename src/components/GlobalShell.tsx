@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, Suspense } from "react";
+import { useState, useEffect, Suspense, useRef } from "react";
 import styled from "styled-components";
 import type { Track } from "@/types/music";
 import YouTube from "react-youtube";
@@ -17,12 +17,85 @@ import { Sidebar } from "./Sidebar";
 import { BottomPlayer } from "./BottomPlayer";
 import { QueueSidebar } from "./QueueSidebar";
 import { SearchHub } from "./SearchHub";
-import { ListenAlong } from "./ListenAlong";
 import { useSearch } from "@/hooks/useSearch";
 import { useMoodSearch } from "@/hooks/useMoodSearch";
 import { usePlaylistGen } from "@/hooks/usePlaylistGen";
 import { useSimilarTracks } from "@/hooks/useSimilarTracks";
 import { usePathname, useRouter } from "next/navigation";
+import { AlertTriangle } from "lucide-react";
+
+const ModalOverlay = styled.div`
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.8);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  animation: fadeIn 0.2s ease-out;
+`;
+
+const ModalCard = styled.div`
+  background: rgba(20, 20, 20, 0.95);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 16px;
+  padding: 2.5rem 2rem;
+  width: 90%;
+  max-width: 420px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+`;
+
+const ModalTitle = styled.h3`
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: #fff;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+`;
+
+const ModalText = styled.p`
+  font-size: 0.95rem;
+  color: rgba(255, 255, 255, 0.7);
+  margin: 0;
+  line-height: 1.5;
+`;
+
+const ModalButtons = styled.div`
+  display: flex;
+  gap: 1rem;
+  width: 100%;
+  
+  button {
+    flex: 1;
+    padding: 0.85rem;
+    border-radius: 99px;
+    font-weight: 700;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s;
+  }
+  
+  .cancel {
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff;
+    border: 1px solid rgba(255,255,255,0.1);
+    &:hover { background: rgba(255, 255, 255, 0.15); }
+  }
+  
+  .leave {
+    background: var(--accent);
+    color: #000;
+    &:hover { filter: brightness(1.1); transform: scale(1.02); }
+  }
+`;
 
 const AppLayout = styled.div`
   display: flex;
@@ -68,17 +141,13 @@ export function GlobalShell({ children }: { children: React.ReactNode }) {
   const similar = useSimilarTracks(playerState.currentTrack);
 
   // Party room (Listen Along)
-  const party = usePartyRoom({
-    currentTrack: playerState.currentTrack,
-    isPlaying: playerState.isPlaying,
-    positionMs: playerState.positionMs,
-    durationMs: playerState.durationMs,
-  });
+  const party = usePartyRoom(playerState);
 
   const [isQueueOpen, setIsQueueOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const { addTrack } = useRecentTracks();
   const pathname = usePathname();
+  const [pendingTrackAction, setPendingTrackAction] = useState<{track: Track, contextQueue?: Track[]} | null>(null);
 
   // When in listener mode, sync to party state
   useEffect(() => {
@@ -95,7 +164,7 @@ export function GlobalShell({ children }: { children: React.ReactNode }) {
         addTrack(ps.currentTrack);
       }
 
-      // Sync play/pause
+      // Sync play/pause based on host's state
       if (ps.isPlaying && !playerState.isPlaying) {
         player.resume();
       } else if (!ps.isPlaying && playerState.isPlaying) {
@@ -137,7 +206,7 @@ export function GlobalShell({ children }: { children: React.ReactNode }) {
             document.documentElement.style.setProperty('--bg', `rgb(${bgR}, ${bgG}, ${bgB})`);
             document.documentElement.style.setProperty('--bg-rgb', `${bgR}, ${bgG}, ${bgB}`);
           })
-          .catch(err => console.error("Failed to extract color", err));
+          .catch(() => {});
       });
     } else {
       if (typeof window !== 'undefined') (window as any).__vintifyHasDynamicColor = false;
@@ -186,6 +255,9 @@ export function GlobalShell({ children }: { children: React.ReactNode }) {
   };
 
   const togglePlay = () => {
+    // Prevent guests from controlling playback directly
+    if (party.roomCode && !party.isHost) return;
+    
     if (!playerState.currentTrack) return;
     if (playerState.isPlaying) {
       player.pause();
@@ -193,6 +265,45 @@ export function GlobalShell({ children }: { children: React.ReactNode }) {
       player.resume();
     }
   };
+
+  const interceptedOnPlay = async (track: Track, contextQueue?: Track[]) => {
+    if (party.roomCode) {
+      if (party.isHost) {
+        party.requestAddTrack(track, "PLAY_NOW");
+      } else {
+        setPendingTrackAction({ track, contextQueue });
+      }
+    } else {
+      handlePlayTrack(track, contextQueue);
+    }
+  };
+
+  const confirmLeaveParty = () => {
+    party.leaveRoom();
+    if (pendingTrackAction) {
+      handlePlayTrack(pendingTrackAction.track, pendingTrackAction.contextQueue);
+    }
+    setPendingTrackAction(null);
+  };
+
+  const interceptedOnPlayNext = (track: Track) => {
+    if (party.roomCode) {
+      party.requestAddTrack(track, "PLAY_NEXT");
+    } else {
+      playerState.insertNext(track);
+    }
+  };
+
+  const interceptedOnAddToQueue = (track: Track) => {
+    if (party.roomCode) {
+      party.requestAddTrack(track, "ADD_TRACK");
+    } else {
+      playerState.addToQueue(track);
+    }
+  };
+
+  const activeQueue = party.roomCode ? party.partyQueue : playerState.queue;
+  const activeQueueIndex = party.roomCode ? party.partyQueueIndex : playerState.queueIndex;
 
   const handleSkip = (direction: "forward" | "backward") => {
     const skipAmount = 10000; // 10 seconds
@@ -205,10 +316,10 @@ export function GlobalShell({ children }: { children: React.ReactNode }) {
 
   return (
     <PlayerContext.Provider value={{
-      onPlay: handlePlayTrack,
-      onPlayNext: playerState.insertNext,
-      onAddToQueue: playerState.addToQueue,
-      onStartRadio: handlePlayTrack,
+      onPlay: interceptedOnPlay,
+      onPlayNext: interceptedOnPlayNext,
+      onAddToQueue: interceptedOnAddToQueue,
+      onStartRadio: interceptedOnPlay,
       party,
       currentTrack: playerState.currentTrack || null,
     }}>
@@ -247,7 +358,10 @@ export function GlobalShell({ children }: { children: React.ReactNode }) {
             },
           }}
           onReady={player.onReady}
-          onEnd={playerState.playNext}
+          onEnd={() => {
+            if (party.roomCode && !party.isHost) return;
+            playerState.playNext();
+          }}
           className="yt-player-hidden"
           style={{
             position: "absolute",
@@ -263,8 +377,8 @@ export function GlobalShell({ children }: { children: React.ReactNode }) {
           isPlaying={playerState.isPlaying}
           positionMs={playerState.positionMs}
           durationMs={playerState.durationMs}
-          queue={playerState.queue}
-          queueIndex={playerState.queueIndex}
+          queue={activeQueue}
+          queueIndex={activeQueueIndex}
           onPlayPause={togglePlay}
           onSkip={handleSkip}
           onSeek={player.seek}
@@ -272,7 +386,7 @@ export function GlobalShell({ children }: { children: React.ReactNode }) {
           onPrev={playerState.playPrev}
           onToggleQueue={() => setIsQueueOpen(!isQueueOpen)}
           roomCode={party.roomCode}
-          listenerCount={party.listenerCount}
+          listenerCount={party.members.length}
           isHost={party.isHost}
           isShuffle={playerState.isShuffle}
           toggleShuffle={playerState.toggleShuffle}
@@ -283,8 +397,8 @@ export function GlobalShell({ children }: { children: React.ReactNode }) {
         <QueueSidebar 
           isOpen={isQueueOpen} 
           onClose={() => setIsQueueOpen(false)}
-          queue={playerState.queue}
-          queueIndex={playerState.queueIndex}
+          queue={activeQueue}
+          queueIndex={activeQueueIndex}
           onPlayTrack={(idx) => {
             playerState.setQueue(playerState.queue, idx);
           }}
@@ -308,6 +422,23 @@ export function GlobalShell({ children }: { children: React.ReactNode }) {
             }
           }}
         />
+
+        {pendingTrackAction && (
+          <ModalOverlay>
+            <ModalCard>
+              <ModalTitle>
+                <AlertTriangle color="var(--accent)" /> Leave Party?
+              </ModalTitle>
+              <ModalText>
+                You are currently in a Listen Along session. Playing a song will disconnect you from the party room. Do you want to proceed?
+              </ModalText>
+              <ModalButtons>
+                <button className="cancel" onClick={() => setPendingTrackAction(null)}>Cancel</button>
+                <button className="leave" onClick={confirmLeaveParty}>Leave Party</button>
+              </ModalButtons>
+            </ModalCard>
+          </ModalOverlay>
+        )}
       </AppLayout>
     </PlayerContext.Provider>
   );
