@@ -2,11 +2,8 @@
 
 import styled, { css, keyframes } from "styled-components";
 
-// ============================================================
-// 📚 LEARN: DJPanel.tsx 
-// ============================================================
-// AI DJ Display panel. Modern glassmorphic design.
-// ============================================================
+
+// AI DJ Display panel.
 
 const PanelContainer = styled.div`
   background: rgba(255, 255, 255, 0.03);
@@ -46,7 +43,7 @@ const StatusIndicator = styled.div<{ $isLoading: boolean }>`
     $isLoading ? theme.colors.accent : "#2ECC71"};
   box-shadow: 0 0 8px
     ${({ $isLoading, theme }) =>
-      $isLoading ? theme.colors.accent : "#2ECC71"};
+    $isLoading ? theme.colors.accent : "#2ECC71"};
   ${({ $isLoading }) =>
     $isLoading &&
     css`

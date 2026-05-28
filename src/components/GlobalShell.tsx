@@ -148,6 +148,7 @@ export function GlobalShell({ children }: { children: React.ReactNode }) {
   const { addTrack } = useRecentTracks();
   const pathname = usePathname();
   const [pendingTrackAction, setPendingTrackAction] = useState<{track: Track, contextQueue?: Track[]} | null>(null);
+  const lastTrackChangeRef = useRef(0);
 
   // When in listener mode, sync to party state
   useEffect(() => {
@@ -159,9 +160,16 @@ export function GlobalShell({ children }: { children: React.ReactNode }) {
         ps.currentTrack &&
         ps.currentTrack.videoId !== playerState.currentTrack?.videoId
       ) {
+        lastTrackChangeRef.current = Date.now();
         playerState.setCurrentTrack(ps.currentTrack);
-        player.play(ps.currentTrack);
         addTrack(ps.currentTrack);
+        return; // Return early to let react-youtube load the new video before issuing play/seek commands
+      }
+
+      // If we just changed the track less than 2 seconds ago, skip manual sync commands
+      // to avoid race conditions with react-youtube's internal loading logic.
+      if (Date.now() - lastTrackChangeRef.current < 2000) {
+        return;
       }
 
       // Sync play/pause based on host's state
@@ -224,7 +232,6 @@ export function GlobalShell({ children }: { children: React.ReactNode }) {
   const handlePlayTrack = async (track: Track, contextQueue?: Track[]) => {
     // 1. Play track immediately and clear old queue
     playerState.setCurrentTrack(track);
-    player.play(track);
     addTrack(track);
     
     if (contextQueue && contextQueue.length > 0) {
