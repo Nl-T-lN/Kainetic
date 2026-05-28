@@ -227,22 +227,22 @@ const SecondaryBtn = styled.button`
 `;
 
 const LeaveButton = styled.button`
-  background: #e74c3c;
+  background: rgba(230, 126, 34, 0.9);
   color: #fff;
-  border: none;
+  border: 1px solid rgba(230, 126, 34, 1);
   border-radius: var(--radius);
-  padding: 0.6rem 1.1rem;
-  font-size: 0.85rem;
-  font-weight: 600;
-  cursor: pointer;
+  padding: 0.5rem 1rem;
   display: flex;
   align-items: center;
-  gap: 0.4rem;
+  justify-content: center;
+  gap: 0.5rem;
+  font-weight: 600;
+  cursor: pointer;
   transition: all ${({ theme }) => theme.transitions.fast};
 
   &:hover {
-    background: #c0392b;
-    transform: scale(1.03);
+    background: rgba(230, 126, 34, 1);
+    transform: scale(1.05);
   }
 `;
 
@@ -362,8 +362,8 @@ const SearchInputBox = styled.div`
   align-items: center;
   background: rgba(0, 0, 0, 0.3);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 99px;
-  padding: 0.5rem 1rem;
+  border-radius: var(--radius);
+  padding: 0.85rem 1rem;
   gap: 0.5rem;
   
   input {
@@ -372,20 +372,38 @@ const SearchInputBox = styled.div`
     border: none;
     color: white;
     outline: none;
-    font-size: 0.9rem;
+    font-size: 1rem;
   }
 `;
 
 const ToggleContainer = styled.label`
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  font-size: 0.8rem;
-  color: var(--muted);
+  gap: 0.75rem;
+  font-size: inherit;
+  font-weight: 700;
+  color: #fff;
   cursor: pointer;
-  
-  input {
-    accent-color: var(--accent);
+`;
+
+const ToggleSwitch = styled.div<{ $checked: boolean }>`
+  width: 36px;
+  height: 20px;
+  background: ${({ $checked }) => $checked ? 'var(--accent)' : 'rgba(255, 255, 255, 0.2)'};
+  border-radius: 99px;
+  position: relative;
+  transition: all 0.2s;
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: ${({ $checked }) => $checked ? '18px' : '2px'};
+    width: 16px;
+    height: 16px;
+    background: #fff;
+    border-radius: 50%;
+    transition: all 0.2s;
   }
 `;
 
@@ -443,10 +461,14 @@ const QueueItem = styled.div<{ $isActive?: boolean }>`
   display: flex;
   align-items: center;
   gap: 1rem;
-  padding: 0.75rem;
-  border-radius: 8px;
-  background: ${({ $isActive }) => $isActive ? 'rgba(var(--accent-rgb), 0.1)' : 'transparent'};
-  border-left: 3px solid ${({ $isActive }) => $isActive ? 'var(--accent)' : 'transparent'};
+  padding: 0.5rem 1.5rem;
+  background: ${({ $isActive }) => ($isActive ? "rgba(255, 255, 255, 0.08)" : "transparent")};
+  border-left: 2px solid ${({ $isActive }) => ($isActive ? "var(--accent)" : "transparent")};
+  transition: background 0.2s;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.05);
+  }
   
   img {
     width: 48px;
@@ -471,12 +493,27 @@ const QueueItem = styled.div<{ $isActive?: boolean }>`
   
   .artist {
     font-size: 0.8rem;
-    color: var(--muted);
+    color: rgba(255, 255, 255, 0.5);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    margin-top: 2px;
+  }
+  
+  .duration {
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 0.8rem;
+    font-variant-numeric: tabular-nums;
   }
 `;
+
+function formatDuration(ms?: number) {
+  if (!ms) return "--:--";
+  const seconds = Math.floor(ms / 1000);
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+  return `${m}:${s.toString().padStart(2, "0")}`;
+}
 
 const DragHandle = styled.div`
   cursor: grab;
@@ -518,7 +555,9 @@ function SortableQueueItem(props: { track: Track; index: number; isActive: boole
         <div className="title">{props.track.title}</div>
         <div className="artist">{props.track.artist}</div>
       </div>
-      {props.isActive && <Play size={16} color="var(--accent)" />}
+      <div className="duration">
+        {formatDuration(props.track.durationMs)}
+      </div>
     </QueueItem>
   );
 }
@@ -566,11 +605,11 @@ const ChatInput = styled.input`
   flex: 1;
   background: rgba(0, 0, 0, 0.3);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 99px;
-  padding: 0.5rem 1rem;
+  border-radius: var(--radius);
+  padding: 0.85rem 1rem;
   color: white;
   outline: none;
-  font-size: 0.9rem;
+  font-size: 1rem;
   
   &:focus {
     border-color: var(--accent);
@@ -581,9 +620,8 @@ const SendButton = styled.button`
   background: var(--accent);
   color: #000;
   border: none;
-  border-radius: 50%;
-  width: 36px;
-  height: 36px;
+  border-radius: var(--radius);
+  width: 50px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -775,20 +813,17 @@ export function ListenAlong({ party }: ListenAlongProps) {
             </PageTitle>
           </div>
           <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
-            <div style={{ fontFamily: 'monospace', fontSize: '1.2rem', letterSpacing: '2px', fontWeight: 'bold', marginRight: '0.5rem' }}>
+            <div style={{ fontFamily: 'monospace', fontSize: '1.2rem', letterSpacing: '2px', fontWeight: 'bold', marginRight: '0.5rem', display: 'flex', alignItems: 'center', height: '100%' }}>
               {party.roomCode}
             </div>
-            <CopyButton $copied={copied} onClick={handleCopy} title="Copy Room Code">
-              {copied ? <Check size={16} /> : <Copy size={16} />}
-              {copied ? "Copied" : "Code"}
-            </CopyButton>
-            <CopyButton $copied={linkCopied} onClick={handleCopyLink} title="Copy Sharable Link">
-              {linkCopied ? <Check size={16} /> : <LinkIcon size={16} />}
-              {linkCopied ? "Copied" : "Link"}
-            </CopyButton>
-            <LeaveButton onClick={party.leaveRoom}>
-              <X size={16} />
-              Leave
+            <IconButton $copied={copied} onClick={handleCopy} title="Copy Room Code">
+              {copied ? <Check size={20} /> : <Copy size={20} />}
+            </IconButton>
+            <IconButton $copied={linkCopied} onClick={handleCopyLink} title="Copy Sharable Link">
+              {linkCopied ? <Check size={20} /> : <LinkIcon size={20} />}
+            </IconButton>
+            <LeaveButton onClick={party.leaveRoom} title="Leave PlaySync">
+              Leave <LogOut size={18} />
             </LeaveButton>
           </div>
         </HeaderRow>
@@ -840,15 +875,14 @@ export function ListenAlong({ party }: ListenAlongProps) {
           {/* PANEL 2: QUEUE */}
           <Panel className="glass" style={{ position: 'relative' }}>
             <PanelHeader>
-              <div>Master Queue</div>
+              <div>Sync Queue</div>
               {party.isHost && (
-                <ToggleContainer>
-                  Allow Guests to Add
-                  <input 
-                    type="checkbox" 
-                    checked={party.permissions.allowGuestAdditions}
-                    onChange={(e) => party.toggleGuestAdditions(e.target.checked)}
-                  />
+                <ToggleContainer onClick={(e) => {
+                  e.preventDefault();
+                  party.toggleGuestAdditions(!party.permissions.allowGuestAdditions);
+                }}>
+                  Allow Guests
+                  <ToggleSwitch $checked={party.permissions.allowGuestAdditions} />
                 </ToggleContainer>
               )}
             </PanelHeader>
@@ -920,7 +954,7 @@ export function ListenAlong({ party }: ListenAlongProps) {
 
           {/* PANEL 3: CHAT */}
           <Panel className="glass">
-            <PanelHeader>Party Chat</PanelHeader>
+            <PanelHeader>Chat</PanelHeader>
             <MessageList>
               {party.messages.length === 0 ? (
                 <div style={{ textAlign: 'center', color: 'var(--muted)', marginTop: '2rem', fontSize: '0.9rem' }}>
@@ -1070,24 +1104,19 @@ export function ListenAlong({ party }: ListenAlongProps) {
   );
 }
 
-const CopyButton = styled.button<{ $copied: boolean }>`
-  display: inline-flex;
+const IconButton = styled.button<{ $copied: boolean }>`
+  background: transparent;
+  color: ${({ $copied }) => $copied ? '#2ecc71' : 'rgba(255, 255, 255, 0.5)'};
+  border: none;
+  padding: 0.5rem;
+  display: flex;
   align-items: center;
-  gap: 0.4rem;
-  background: ${({ $copied }) =>
-    $copied ? "rgba(var(--accent-rgb), 0.15)" : "rgba(255, 255, 255, 0.06)"};
-  border: 1px solid ${({ $copied }) =>
-    $copied ? "rgba(var(--accent-rgb), 0.3)" : "rgba(255, 255, 255, 0.1)"};
-  border-radius: 99px;
-  padding: 0.35rem 0.85rem;
-  font-size: 0.78rem;
-  color: ${({ $copied, theme }) =>
-    $copied ? "var(--accent)" : theme.colors.muted};
+  justify-content: center;
   cursor: pointer;
   transition: all ${({ theme }) => theme.transitions.fast};
 
   &:hover {
-    background: rgba(255, 255, 255, 0.1);
-    color: ${({ theme }) => theme.colors.cream};
+    color: ${({ $copied }) => $copied ? '#2ecc71' : '#fff'};
+    transform: scale(1.1);
   }
 `;
