@@ -28,6 +28,7 @@ export interface UsePlayerStateReturn extends PlayerState {
   toggleShuffle: () => void;
   isRepeat: boolean;
   toggleRepeat: () => void;
+  getExactPosition: () => number;
 }
 
 export function usePlayerState(
@@ -103,6 +104,13 @@ export function usePlayerState(
     };
   }, [playerRef, durationMs]);
 
+  const getExactPosition = () => {
+    if (playerRef.current && typeof (playerRef.current as any).getCurrentTime === 'function') {
+      return (playerRef.current as any).getCurrentTime() * 1000;
+    }
+    return positionMs;
+  };
+
   const handleSetTrack = (track: Track | null) => {
     setCurrentTrack(track);
     setPositionMs(0);
@@ -122,7 +130,10 @@ export function usePlayerState(
     setQueueState(tracks);
     setQueueIndex(index);
     if (tracks[index]) {
-      handleSetTrack(tracks[index]);
+      // Only reload the video if the track actually changed!
+      if (tracks[index].videoId !== currentTrack?.videoId) {
+        handleSetTrack(tracks[index]);
+      }
     }
   };
 
@@ -231,6 +242,7 @@ export function usePlayerState(
     isShuffle,
     toggleShuffle,
     isRepeat,
-    toggleRepeat
+    toggleRepeat,
+    getExactPosition
   };
 }

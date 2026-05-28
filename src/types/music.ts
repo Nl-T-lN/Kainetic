@@ -71,7 +71,7 @@ export interface ChatMessage {
 }
 
 export interface PartyEvent {
-  type: "SYNC" | "CHAT" | "COMMAND" | "ADMIN";
+  type: "SYNC" | "CHAT" | "COMMAND" | "ADMIN" | "NTP_REQUEST" | "NTP_RESPONSE" | "QUEUE_REORDER";
   syncPayload?: SyncPayload;
   chatMessage?: ChatMessage;
   commandPayload?: {
@@ -82,5 +82,15 @@ export interface PartyEvent {
   adminPayload?: {
     action: PartyAdminAction;
     targetClientId: string;
+  };
+  ntpPayload?: {
+    clientId: string;
+    t0: number;
+    t1?: number;
+    t2?: number;
+  };
+  queuePayload?: {
+    queue: Track[];
+    currentIndex: number;
   };
 }

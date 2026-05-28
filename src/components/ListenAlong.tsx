@@ -2,7 +2,10 @@
 
 import { useState, useRef, useEffect } from "react";
 import styled, { keyframes } from "styled-components";
-import { Radio, Users, Copy, Check, LogOut, Headphones, Wifi, Send, Crown, Play, Search, Plus, ShieldAlert, Key } from "lucide-react";
+import { Radio, Users, Copy, Check, LogOut, Headphones, Wifi, Send, Crown, Play, Search, Plus, ShieldAlert, Key, GripVertical, Link as LinkIcon, X } from "lucide-react";
+import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
+import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import type { UsePartyRoomReturn } from "@/hooks/usePartyRoom";
 import type { Track } from "@/types/music";
 
@@ -21,6 +24,10 @@ const fadeSlideIn = keyframes`
 const ViewContainer = styled.div`
   width: 100%;
   animation: ${fadeSlideIn} 0.4s ease-out;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
 `;
 
 const Container = styled.div`
@@ -30,12 +37,12 @@ const Container = styled.div`
 `;
 
 const ActiveRoomGrid = styled.div`
-  max-width: 1400px;
-  margin: 2rem auto;
   width: 100%;
   display: grid;
-  grid-template-columns: 280px 1fr 300px;
+  grid-template-columns: 300px 1fr 350px;
   gap: 1.5rem;
+  flex: 1;
+  min-height: 0;
   
   @media (max-width: 1100px) {
     grid-template-columns: 250px 1fr;
@@ -219,6 +226,26 @@ const SecondaryBtn = styled.button`
   }
 `;
 
+const LeaveButton = styled.button`
+  background: #e74c3c;
+  color: #fff;
+  border: none;
+  border-radius: var(--radius);
+  padding: 0.6rem 1.1rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  transition: all ${({ theme }) => theme.transitions.fast};
+
+  &:hover {
+    background: #c0392b;
+    transform: scale(1.03);
+  }
+`;
+
 /* ── Active Room Panels ── */
 const Panel = styled.div`
   background: rgba(255, 255, 255, 0.02);
@@ -226,7 +253,7 @@ const Panel = styled.div`
   border-radius: var(--radius);
   display: flex;
   flex-direction: column;
-  height: 600px;
+  height: 100%;
   overflow: hidden;
   
   &.glass {
@@ -445,8 +472,57 @@ const QueueItem = styled.div<{ $isActive?: boolean }>`
   .artist {
     font-size: 0.8rem;
     color: var(--muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 `;
+
+const DragHandle = styled.div`
+  cursor: grab;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
+  
+  &:active {
+    cursor: grabbing;
+  }
+`;
+
+function SortableQueueItem(props: { track: Track; index: number; isActive: boolean; isHost: boolean; id: string }) {
+  const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: props.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    zIndex: transform ? 1 : 0,
+    position: transform ? 'relative' as const : 'static' as const,
+  };
+
+  return (
+    <QueueItem ref={setNodeRef} style={style} $isActive={props.isActive} {...attributes}>
+      {props.isHost && (
+        <DragHandle {...listeners}>
+          <GripVertical size={18} />
+        </DragHandle>
+      )}
+      <img 
+        src={props.track.thumbnailUrl || DEFAULT_ART} 
+        onError={(e) => { 
+          if (e.currentTarget.src !== DEFAULT_ART) e.currentTarget.src = DEFAULT_ART; 
+        }}
+        alt={props.track.title} 
+      />
+      <div className="details">
+        <div className="title">{props.track.title}</div>
+        <div className="artist">{props.track.artist}</div>
+      </div>
+      {props.isActive && <Play size={16} color="var(--accent)" />}
+    </QueueItem>
+  );
+}
+
 
 /* ── Panel 3: Chat ── */
 const MessageList = styled.div`
@@ -549,6 +625,7 @@ export function ListenAlong({ party }: ListenAlongProps) {
   const [joinCode, setJoinCode] = useState("");
   const [showJoin, setShowJoin] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [linkCopied, setLinkCopied] = useState(false);
   const [chatInput, setChatInput] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
@@ -562,6 +639,37 @@ export function ListenAlong({ party }: ListenAlongProps) {
   const [pendingAction, setPendingAction] = useState<"host" | "join" | null>(null);
   const [pendingJoinCode, setPendingJoinCode] = useState("");
 
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  function handleDragEnd(event: DragEndEvent) {
+    const { active, over } = event;
+    
+    if (over && active.id !== over.id) {
+      const oldIndex = party.partyQueue.findIndex(t => t.videoId === active.id);
+      const newIndex = party.partyQueue.findIndex(t => t.videoId === over.id);
+      
+      const newQueue = arrayMove(party.partyQueue, oldIndex, newIndex);
+      
+      // Calculate new active index if the currently playing song moved
+      let newPartyQueueIndex = party.partyQueueIndex;
+      if (oldIndex === party.partyQueueIndex) {
+        newPartyQueueIndex = newIndex;
+      } else if (oldIndex < party.partyQueueIndex && newIndex >= party.partyQueueIndex) {
+        newPartyQueueIndex--;
+      } else if (oldIndex > party.partyQueueIndex && newIndex <= party.partyQueueIndex) {
+        newPartyQueueIndex++;
+      }
+      
+      // Broadcast the update instantly
+      party.broadcastQueueReorder(newQueue, newPartyQueueIndex);
+    }
+  }
+
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [party.messages]);
@@ -571,6 +679,15 @@ export function ListenAlong({ party }: ListenAlongProps) {
       navigator.clipboard.writeText(party.roomCode).catch(() => {});
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
+    }
+  };
+
+  const handleCopyLink = () => {
+    if (party.roomCode) {
+      const joinUrl = `${window.location.origin}/parties?join=${party.roomCode}`;
+      navigator.clipboard.writeText(joinUrl).catch(() => {});
+      setLinkCopied(true);
+      setTimeout(() => setLinkCopied(false), 2000);
     }
   };
 
@@ -651,24 +768,28 @@ export function ListenAlong({ party }: ListenAlongProps) {
     return (
       <ViewContainer>
         <HeaderRow>
-          <div style={{ display: 'flex', alignItems: 'flex-end' }}>
+          <div style={{ display: 'flex', alignItems: 'flex-end', gap: '1rem' }}>
             <PageTitle>
               <Radio size={28} />
-              Parties
+              PlaySync
             </PageTitle>
-            <PageSubtitle>Listen together in real-time</PageSubtitle>
           </div>
-          <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-            <div style={{ fontFamily: 'monospace', fontSize: '1.2rem', letterSpacing: '2px', fontWeight: 'bold' }}>
+          <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+            <div style={{ fontFamily: 'monospace', fontSize: '1.2rem', letterSpacing: '2px', fontWeight: 'bold', marginRight: '0.5rem' }}>
               {party.roomCode}
             </div>
-            <CopyButton $copied={copied} onClick={handleCopy} style={{ margin: 0 }}>
-              {copied ? <Check size={14} /> : <Copy size={14} />}
-              {copied ? "Copied" : "Copy"}
+            <CopyButton $copied={copied} onClick={handleCopy} title="Copy Room Code">
+              {copied ? <Check size={16} /> : <Copy size={16} />}
+              {copied ? "Copied" : "Code"}
             </CopyButton>
-            <SecondaryBtn onClick={party.leaveRoom} style={{ color: '#ff6b6b', borderColor: 'rgba(255,100,100,0.3)' }}>
+            <CopyButton $copied={linkCopied} onClick={handleCopyLink} title="Copy Sharable Link">
+              {linkCopied ? <Check size={16} /> : <LinkIcon size={16} />}
+              {linkCopied ? "Copied" : "Link"}
+            </CopyButton>
+            <LeaveButton onClick={party.leaveRoom}>
+              <X size={16} />
               Leave
-            </SecondaryBtn>
+            </LeaveButton>
           </div>
         </HeaderRow>
         
@@ -735,22 +856,27 @@ export function ListenAlong({ party }: ListenAlongProps) {
               {party.partyQueue.length === 0 ? (
                 <div style={{ textAlign: 'center', color: 'var(--muted)', marginTop: '2rem' }}>Queue is empty.</div>
               ) : (
-                party.partyQueue.map((track, i) => (
-                  <QueueItem key={`${track.videoId}-${i}`} $isActive={i === party.partyQueueIndex}>
-                    <img 
-                      src={track.thumbnailUrl || DEFAULT_ART} 
-                      onError={(e) => { 
-                        if (e.currentTarget.src !== DEFAULT_ART) e.currentTarget.src = DEFAULT_ART; 
-                      }}
-                      alt={track.title} 
-                    />
-                    <div className="details">
-                      <div className="title">{track.title}</div>
-                      <div className="artist">{track.artist}</div>
-                    </div>
-                    {i === party.partyQueueIndex && <Play size={16} color="var(--accent)" />}
-                  </QueueItem>
-                ))
+                <DndContext 
+                  sensors={sensors}
+                  collisionDetection={closestCenter}
+                  onDragEnd={handleDragEnd}
+                >
+                  <SortableContext 
+                    items={party.partyQueue.map(t => t.videoId)}
+                    strategy={verticalListSortingStrategy}
+                  >
+                    {party.partyQueue.map((track, i) => (
+                      <SortableQueueItem 
+                        key={track.videoId}
+                        id={track.videoId}
+                        track={track}
+                        index={i}
+                        isActive={i === party.partyQueueIndex}
+                        isHost={party.isHost}
+                      />
+                    ))}
+                  </SortableContext>
+                </DndContext>
               )}
             </QueueContainer>
             
@@ -835,7 +961,7 @@ export function ListenAlong({ party }: ListenAlongProps) {
       {showProfileModal && (
         <ModalOverlay>
           <ModalCard>
-            <h3 style={{ marginBottom: '1rem' }}>Welcome to Parties</h3>
+            <h3 style={{ marginBottom: '1rem' }}>Welcome to PlaySync</h3>
             <p style={{ fontSize: '0.9rem', color: 'var(--muted)', marginBottom: '1.5rem' }}>
               Enter a display name so your friends know who you are.
             </p>
@@ -860,7 +986,7 @@ export function ListenAlong({ party }: ListenAlongProps) {
         <div style={{ display: 'flex', alignItems: 'flex-end' }}>
           <PageTitle>
             <Radio size={28} />
-            Parties
+            PlaySync
           </PageTitle>
           <PageSubtitle>
             Create a room and share the code, or join a friend&apos;s room to

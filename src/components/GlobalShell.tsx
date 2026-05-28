@@ -179,10 +179,10 @@ export function GlobalShell({ children }: { children: React.ReactNode }) {
         player.pause();
       }
 
-      // Sync position (only if drift > 2s to avoid constant seeking)
+      // Sync position (only if drift > 3s to avoid constant seeking)
       if (
         ps.isPlaying &&
-        Math.abs(ps.positionMs - playerState.positionMs) > 2000
+        Math.abs(ps.positionMs - playerState.getExactPosition()) > 3000
       ) {
         player.seek(ps.positionMs);
       }

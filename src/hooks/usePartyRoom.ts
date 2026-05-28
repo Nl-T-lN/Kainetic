@@ -12,7 +12,8 @@ import type {
   ChatMessage 
 } from "@/types/music";
 import type { UsePlayerStateReturn } from "./usePlayerState";
-
+import { PartyEventSchema } from "@/lib/party-schema";
+import { createMeasurement, calculateOffsetEstimate, NTPMeasurement } from "@/lib/ntp";
 export type ConnectionStatus = 'idle' | 'connecting' | 'connected' | 'error';
 
 export interface UsePartyRoomReturn {
@@ -34,6 +35,7 @@ export interface UsePartyRoomReturn {
   sendMessage: (text: string) => void;
   
   requestAddTrack: (track: Track, action: "ADD_TRACK" | "PLAY_NEXT" | "PLAY_NOW") => void;
+  broadcastQueueReorder: (newQueue: Track[], newIndex: number) => void;
   
   toggleGuestAdditions: (allow: boolean) => void;
   kickUser: (clientId: string) => void;
@@ -69,6 +71,15 @@ export function usePartyRoom(localState: UsePlayerStateReturn): UsePartyRoomRetu
   const prevIsPlaying = useRef<boolean>(false);
   const prevTrackId = useRef<string | undefined>(undefined);
   
+  const clockOffsetRef = useRef<number>(0);
+  const ntpMeasurementsRef = useRef<NTPMeasurement[]>([]);
+  
+  // Use a ref for localState to prevent stale closures inside Ably subscriptions
+  const localStateRef = useRef(localState);
+  useEffect(() => {
+    localStateRef.current = localState;
+  }, [localState]);
+
   if (!myClientId.current) {
     myClientId.current = Math.random().toString(36).substring(2, 10);
   }
@@ -104,7 +115,7 @@ export function usePartyRoom(localState: UsePlayerStateReturn): UsePartyRoomRetu
       const payload: SyncPayload = {
         currentTrack: localState.currentTrack,
         isPlaying: localState.isPlaying,
-        positionMs: localState.positionMs,
+        positionMs: localState.getExactPosition(),
         timestamp: now,
         queue: localState.queue,
         currentIndex: localState.queueIndex
@@ -148,19 +159,61 @@ export function usePartyRoom(localState: UsePlayerStateReturn): UsePartyRoomRetu
   // 3. Event Handling Setup
   const setupChannel = useCallback((channel: Ably.RealtimeChannel, amIHost: boolean) => {
     channel.subscribe("party_events", (message) => {
-      const event = message.data as PartyEvent;
+      // 1. Zod Security Validation
+      const parsed = PartyEventSchema.safeParse(message.data);
+      if (!parsed.success) {
+        console.error("[Zod Validation Failed] Dropped malicious or malformed party event:", parsed.error.errors, "Raw data:", message.data);
+        return;
+      }
+      const event = parsed.data;
       
+      // NTP Handling
+      if (event.type === "NTP_REQUEST" && amIHost) {
+        const payload = event.ntpPayload;
+        // Host replies immediately with t1 (receive) and t2 (send)
+        channel.publish("party_events", {
+          type: "NTP_RESPONSE",
+          ntpPayload: {
+            clientId: payload.clientId,
+            t0: payload.t0,
+            t1: Date.now(),
+            t2: Date.now()
+          }
+        });
+      }
+      
+      if (event.type === "NTP_RESPONSE" && !amIHost) {
+        const payload = event.ntpPayload;
+        if (payload.clientId === myClientId.current && payload.t1 && payload.t2) {
+          const t3 = Date.now();
+          const measurement = createMeasurement(payload.t0, payload.t1, payload.t2, t3);
+          
+          ntpMeasurementsRef.current.push(measurement);
+          
+          // Keep only the last 10 measurements
+          if (ntpMeasurementsRef.current.length > 10) {
+            ntpMeasurementsRef.current.shift();
+          }
+          
+          const estimate = calculateOffsetEstimate(ntpMeasurementsRef.current);
+          clockOffsetRef.current = estimate.averageOffset;
+          // console.log(`[NTP] Estimated clock offset to host: ${estimate.averageOffset}ms | RTT: ${estimate.minRTT}ms`);
+        }
+      }
+
       // GUESTS processing SYNC
       if (event.type === "SYNC" && event.syncPayload && !amIHost) {
         const p = event.syncPayload;
-        const latency = Date.now() - p.timestamp;
+        // NTP-adjusted latency calculation
+        const estimatedHostTimeNow = Date.now() + clockOffsetRef.current;
+        const timeElapsedSinceHostSent = estimatedHostTimeNow - p.timestamp;
         
         setPartyQueue(p.queue);
         setPartyQueueIndex(p.currentIndex);
         
         setPartyPlayerState({
           ...p,
-          positionMs: p.positionMs + latency
+          positionMs: p.positionMs + timeElapsedSinceHostSent
         });
       }
       
@@ -173,16 +226,20 @@ export function usePartyRoom(localState: UsePlayerStateReturn): UsePartyRoomRetu
       if (event.type === "COMMAND" && event.commandPayload && amIHost) {
         const { action, track } = event.commandPayload;
         if (permissions.allowGuestAdditions) {
-          if (action === "ADD_TRACK") localState.addToQueue(track);
-          else if (action === "PLAY_NEXT") localState.insertNext(track);
+          const latestState = localStateRef.current;
+          if (action === "ADD_TRACK") latestState.addToQueue(track);
+          else if (action === "PLAY_NEXT") latestState.insertNext(track);
           else if (action === "PLAY_NOW") {
-            localState.setCurrentTrack(track);
-            // This is a simplification; GlobalShell actually calls YT play
-            // But modifying state here will force GlobalShell to play it.
-            // A more robust way is to just set queue and index
-            localState.setQueue([track, ...localState.queue], 0);
+            latestState.setCurrentTrack(track);
+            latestState.setQueue([track, ...latestState.queue], 0);
           }
         }
+      }
+
+      // GUEST processing QUEUE_REORDER
+      if (event.type === "QUEUE_REORDER" && event.queuePayload && !amIHost) {
+        setPartyQueue(event.queuePayload.queue);
+        setPartyQueueIndex(event.queuePayload.currentIndex);
       }
       
       // GUESTS processing ADMIN Actions
@@ -220,7 +277,7 @@ export function usePartyRoom(localState: UsePlayerStateReturn): UsePartyRoomRetu
     
     // Call it immediately to populate initial list
     updateMembers();
-  }, [localState, permissions, leaveRoom]);
+  }, [permissions, leaveRoom]);
 
   const connectAbly = useCallback(async (code: string, asHost: boolean, forceProfile?: PartyProfile) => {
     const activeProfile = forceProfile || profile;
@@ -248,20 +305,26 @@ export function usePartyRoom(localState: UsePlayerStateReturn): UsePartyRoomRetu
     
     // Explicitly attach before entering presence to avoid race conditions
     channel.attach().then(() => {
-      channel.presence.enter({ ...activeProfile, isHost: asHost })
-        .then(async () => {
-          const membersList = await channel.presence.get();
-          const parsedMembers = membersList.map(m => ({
-            clientId: m.clientId,
-            profile: m.data as PartyProfile,
-            isHost: m.data?.isHost || false,
-            joinedAt: m.timestamp
-          }));
-          setMembers(parsedMembers);
-        })
-        .catch((err) => {
-          console.error("Presence Enter Error:", err);
-        });
+      channel.presence.enter({ ...activeProfile, isHost: asHost });
+      
+      if (!asHost) {
+        // Run initial NTP probes to establish clock offset
+        let pings = 0;
+        const interval = setInterval(() => {
+          if (pings >= 5) {
+            clearInterval(interval);
+            return;
+          }
+          channel.publish("party_events", {
+            type: "NTP_REQUEST",
+            ntpPayload: {
+              clientId: myClientId.current,
+              t0: Date.now()
+            }
+          });
+          pings++;
+        }, 300);
+      }
     }).catch(err => console.error("Attach error:", err));
     return true;
   }, [profile, setupChannel]);
@@ -317,7 +380,19 @@ export function usePartyRoom(localState: UsePlayerStateReturn): UsePartyRoomRetu
     }
   }, [isHost]);
 
-
+  const broadcastQueueReorder = useCallback((newQueue: Track[], newIndex: number) => {
+    if (isHost && channelRef.current) {
+      channelRef.current.publish("party_events", {
+        type: "QUEUE_REORDER",
+        queuePayload: {
+          queue: newQueue,
+          currentIndex: newIndex
+        }
+      });
+      // Also update local host state immediately without waiting for player loop
+      localState.setQueue(newQueue, newIndex);
+    }
+  }, [isHost, localState]);
 
   return {
     isHost,
@@ -329,14 +404,15 @@ export function usePartyRoom(localState: UsePlayerStateReturn): UsePartyRoomRetu
     partyPlayerState,
     messages,
     connectionStatus,
+    profile,
     createRoom,
     joinRoom,
     leaveRoom,
     sendMessage,
     requestAddTrack,
+    broadcastQueueReorder,
     toggleGuestAdditions,
     kickUser,
-    profile,
     saveProfile
   };
 }
