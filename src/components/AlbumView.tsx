@@ -244,6 +244,7 @@ export function AlbumView({ albumId }: AlbumViewProps) {
             onPlayNext={onPlayNext}
             onAddToQueue={onAddToQueue}
             onStartRadio={onPlay}
+            isContextQueueEnabled={true}
           />
         </RightPane>
       </ContentContainer>

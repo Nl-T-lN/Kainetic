@@ -243,11 +243,7 @@ export function GlobalShell({ children }: { children: React.ReactNode }) {
       playerState.setQueue([track], 0);
 
       // 2. Start fetching similar tracks
-      const res = await fetch('/api/ai/similar', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ track })
-      });
+      const res = await fetch(`/api/music/upnext?videoId=${track.videoId}`);
       
       if (res.ok) {
         const data = await res.json();

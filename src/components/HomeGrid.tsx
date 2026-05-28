@@ -521,7 +521,7 @@ export function HomeGrid() {
           </SectionHeaderRow>
           <ShelfContainer>
             {recentTracks.map((track, index) => (
-              <Card key={`recent-${track.videoId}`} $index={index} onClick={() => onPlay(track, recentTracks)} onContextMenu={(e) => handleContextMenuClick(e, track)}>
+              <Card key={`recent-${track.videoId}`} $index={index} onClick={() => onPlay(track)} onContextMenu={(e) => handleContextMenuClick(e, track)}>
                 <ImageContainer>
                   <img src={track.thumbnailUrl} alt={track.title} loading="lazy" />
                   <PlayOverlay className="play-overlay">
@@ -560,7 +560,7 @@ export function HomeGrid() {
           </SectionHeaderRow>
           <RecommendedContainer>
             {hits.map((track, index) => (
-              <RecommendedTrack key={`hit-${track.videoId}`} $index={index} onClick={() => onPlay(track, hits)} onContextMenu={(e) => handleContextMenuClick(e, track)}>
+              <RecommendedTrack key={`hit-${track.videoId}`} $index={index} onClick={() => onPlay(track)} onContextMenu={(e) => handleContextMenuClick(e, track)}>
                 <img src={track.thumbnailUrl} alt={track.title} loading="lazy" />
                 <div className="info">
                   <div className="title">{track.title}</div>

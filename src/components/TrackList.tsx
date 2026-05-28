@@ -148,6 +148,7 @@ interface TrackListProps {
   onStartRadio?: (track: Track) => void;
   onArtistClick?: (artistId: string) => void;
   hideThumbnails?: boolean;
+  isContextQueueEnabled?: boolean;
 }
 
 export function TrackList({
@@ -159,8 +160,8 @@ export function TrackList({
   onAddToQueue,
   onStartRadio,
   onArtistClick,
-  hideThumbnails
-
+  hideThumbnails,
+  isContextQueueEnabled = false
 }: TrackListProps) {
   const [menuTrack, setMenuTrack] = useState<{ track: Track, x: number, y: number } | null>(null);
 
@@ -191,7 +192,7 @@ export function TrackList({
             <TrackItem
               key={`${track.videoId}-${index}`}
               $isPlaying={isActive}
-              onClick={() => onTrackSelect(track, tracks)}
+              onClick={() => onTrackSelect(track, isContextQueueEnabled ? tracks : undefined)}
               onContextMenu={(e) => handleContextMenuClick(e, track)}
             >
               <RowIndex>
