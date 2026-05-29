@@ -66,6 +66,7 @@ const RecommendedTrack = styled.div<{ $index: number }>`
     height: 64px;
     border-radius: calc(var(--radius) * 0.75);
     object-fit: cover;
+    pointer-events: none;
   }
 
   .info {
@@ -346,6 +347,7 @@ const ImageContainer = styled.div`
     height: 100%;
     object-fit: cover;
     transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    pointer-events: none;
   }
 `;
 

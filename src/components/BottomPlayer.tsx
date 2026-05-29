@@ -63,7 +63,7 @@ const MiniPlayerContainer = styled.div`
   height: 100%;
   align-items: center;
   justify-content: space-between;
-  padding: 0 1.5rem;
+  padding: 0 0.75rem;
   flex-shrink: 0;
   position: relative;
 `;
@@ -77,11 +77,15 @@ const TrackInfo = styled.div`
   cursor: pointer;
 
   img.mini-thumb {
-    width: 48px;
-    height: 48px;
-    border-radius: var(--radius);
+    width: 64px;
+    height: 64px;
+    min-width: 64px;
+    min-height: 64px;
+    flex-shrink: 0;
+    border-radius: calc(var(--radius) * 0.6);
     object-fit: cover;
     box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    pointer-events: none;
   }
 `;
 
@@ -302,6 +306,7 @@ const ArtworkContainer = styled.div<{ $isPlaying: boolean }>`
     width: 100%;
     height: 100%;
     object-fit: cover;
+    pointer-events: none;
   }
 
   @media (max-width: 1000px) {

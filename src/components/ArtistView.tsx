@@ -36,6 +36,7 @@ const ArtistImage = styled.img`
   border-radius: 50%;
   object-fit: cover;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  pointer-events: none;
   
   @media (max-width: 768px) {
     width: 180px;
@@ -149,6 +150,7 @@ const ImageContainer = styled.div`
     height: 100%;
     object-fit: cover;
     transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    pointer-events: none;
   }
 `;
 
