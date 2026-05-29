@@ -272,10 +272,13 @@ const GridContainer = styled.div`
 const Card = styled.div<{ $index: number }>`
   flex: 0 0 auto;
   width: 200px;
-  background: rgba(255, 255, 255, 0.02);
-  border-radius: var(--radius);
-  padding: 1rem;
-  transition: all 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  background: transparent;
+  border-radius: calc(var(--radius) * 0.8);
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   cursor: pointer;
   position: relative;
   opacity: 0;
@@ -288,14 +291,22 @@ const Card = styled.div<{ $index: number }>`
   }
 
   &:hover {
+    transform: translateY(-8px);
     background: rgba(255, 255, 255, 0.06);
-
     .play-overlay {
       opacity: 1;
-      transform: translateY(0);
+      transform: translateY(0) scale(1);
     }
-
     .context-menu-btn {
+      opacity: 1;
+    }
+    img {
+      transform: scale(1.05);
+    }
+    .image-container {
+      box-shadow: 0 16px 32px rgba(0,0,0,0.5);
+    }
+    .image-container::after {
       opacity: 1;
     }
   }
@@ -306,18 +317,35 @@ const Card = styled.div<{ $index: number }>`
 `;
 
 const ImageContainer = styled.div`
-  width: 100%;
-  aspect-ratio: 1 / 1;
-  margin-bottom: 1rem;
   position: relative;
-  border-radius: calc(var(--radius) * 0.9);
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: calc(var(--radius) * 0.6);
   overflow: hidden;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s ease;
+  margin-bottom: 0.25rem;
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border-radius: inherit;
+    background: rgba(0, 0, 0, 0.4);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+    z-index: 1;
+  }
 
   img {
     width: 100%;
     height: 100%;
     object-fit: cover;
+    transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   }
 `;
 
@@ -334,12 +362,13 @@ const PlayOverlay = styled.div`
   justify-content: center;
   color: #000;
   opacity: 0;
-  transform: translateY(8px);
-  transition: all 0.2s ease;
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
+  transform: translateY(12px) scale(0.9);
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+  z-index: 2;
 
   &:hover {
-    transform: scale(1.08) translateY(0);
+    transform: translateY(0) scale(1.08) !important;
     filter: brightness(1.1);
   }
 
@@ -522,7 +551,7 @@ export function HomeGrid() {
           <ShelfContainer>
             {recentTracks.map((track, index) => (
               <Card key={`recent-${track.videoId}`} $index={index} onClick={() => onPlay(track)} onContextMenu={(e) => handleContextMenuClick(e, track)}>
-                <ImageContainer>
+                <ImageContainer className="image-container">
                   <img src={track.thumbnailUrl} alt={track.title} loading="lazy" />
                   <PlayOverlay className="play-overlay">
                     <Play fill="currentColor" size={24} />
@@ -639,7 +668,7 @@ export function HomeGrid() {
                   }
                 }}
               >
-                <ImageContainer>
+                <ImageContainer className="image-container">
                   <img src={item.thumbnailUrl} alt={item.title} loading="lazy" />
                   <PlayOverlay className="play-overlay">
                     <Play fill="currentColor" size={24} />

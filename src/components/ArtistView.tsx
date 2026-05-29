@@ -1,15 +1,10 @@
 import { useEffect, useState } from "react";
-import styled, { keyframes } from "styled-components";
+import styled from "styled-components";
 import type { Track } from "@/types/music";
 import { TrackList } from "./TrackList";
 import { usePlayer } from "@/contexts/PlayerContext";
 import { Play } from "lucide-react";
 import { useRouter } from "next/navigation";
-
-const slideUpFade = keyframes`
-  from { opacity: 0; transform: translateY(16px); }
-  to { opacity: 1; transform: translateY(0); }
-`;
 
 const Container = styled.div`
   padding-bottom: 4rem;
@@ -95,46 +90,65 @@ const ShelfContainer = styled.div`
   }
 `;
 
-const Card = styled.div<{ $index?: number }>`
+const Card = styled.div`
   flex: 0 0 auto;
   width: 200px;
-  background: rgba(255, 255, 255, 0.02);
-  border-radius: var(--radius);
-  padding: 1rem;
-  transition: all 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  background: transparent;
+  border-radius: calc(var(--radius) * 0.8);
   cursor: pointer;
-  position: relative;
-  opacity: 0;
-  animation: ${slideUpFade} 0.4s ease-out forwards;
-  animation-delay: ${({ $index = 0 }) => `${0.05 + $index * 0.03}s`};
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 
   &:hover {
+    transform: translateY(-8px);
     background: rgba(255, 255, 255, 0.06);
-
     .play-overlay {
       opacity: 1;
-      transform: translateY(0);
+      transform: translateY(0) scale(1);
     }
-  }
-
-  @media (max-width: 600px) {
-    width: 150px;
+    img {
+      transform: scale(1.05);
+    }
+    .image-container {
+      box-shadow: 0 16px 32px rgba(0,0,0,0.5);
+    }
+    .image-container::after {
+      opacity: 1;
+    }
   }
 `;
 
 const ImageContainer = styled.div`
-  width: 100%;
-  aspect-ratio: 1 / 1;
-  margin-bottom: 1rem;
   position: relative;
-  border-radius: calc(var(--radius) * 0.9);
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: calc(var(--radius) * 0.6);
   overflow: hidden;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  transition: all 0.3s ease;
+  
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border-radius: inherit;
+    background: rgba(0, 0, 0, 0.4);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+  }
 
   img {
     width: 100%;
     height: 100%;
     object-fit: cover;
+    transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   }
 `;
 
@@ -144,19 +158,20 @@ const PlayOverlay = styled.div`
   right: 12px;
   width: 48px;
   height: 48px;
-  border-radius: 50%;
   background: var(--accent);
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   color: #000;
   opacity: 0;
-  transform: translateY(8px);
-  transition: all 0.2s ease;
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
+  transform: translateY(12px) scale(0.9);
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  box-shadow: 0 8px 16px rgba(0,0,0,0.3);
+  z-index: 2;
 
   &:hover {
-    transform: scale(1.08) translateY(0);
+    transform: translateY(0) scale(1.08) !important;
     filter: brightness(1.1);
   }
 
@@ -166,10 +181,10 @@ const PlayOverlay = styled.div`
 `;
 
 const CardTitle = styled.h3`
-  font-size: 1.05rem;
+  font-size: 0.95rem;
   font-weight: 700;
   color: #fff;
-  margin: 0 0 0.25rem 0;
+  margin: 0;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -179,9 +194,6 @@ const CardSubtitle = styled.p`
   font-size: 0.85rem;
   color: var(--muted);
   margin: 0;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 `;
 
 const LoadingSpinner = () => {
@@ -263,7 +275,7 @@ export function ArtistView({ artistId }: ArtistViewProps) {
           <ShelfContainer>
             {artist.albums.map((album: any) => (
               <Card key={album.id} onClick={() => router.push('/album/' + album.id)}>
-                <ImageContainer>
+                <ImageContainer className="image-container">
                   <img src={album.thumbnailUrl || '/placeholder-artist.jpg'} alt={album.title} loading="lazy" />
                   <PlayOverlay className="play-overlay">
                     <Play fill="currentColor" size={24} />
@@ -283,7 +295,7 @@ export function ArtistView({ artistId }: ArtistViewProps) {
           <ShelfContainer>
             {artist.singles.map((single: any) => (
               <Card key={single.id} onClick={() => router.push('/album/' + single.id)}>
-                <ImageContainer>
+                <ImageContainer className="image-container">
                   <img src={single.thumbnailUrl || '/placeholder-artist.jpg'} alt={single.title} loading="lazy" />
                   <PlayOverlay className="play-overlay">
                     <Play fill="currentColor" size={24} />

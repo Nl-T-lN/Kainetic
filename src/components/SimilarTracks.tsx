@@ -40,18 +40,30 @@ const ScrollContainer = styled.div`
 const Card = styled.div`
   flex-shrink: 0;
   width: 160px;
-  background: ${({ theme }) => theme.colors.cardBg};
-  border-radius: ${({ theme }) => theme.radii.md};
-  padding: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.6rem;
+  background: transparent;
+  border-radius: calc(var(--radius, 12px) * 0.8);
   cursor: pointer;
-  transition: background ${({ theme }) => theme.transitions.normal};
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 
   &:hover {
-    background: ${({ theme }) => theme.colors.cardBgHover};
-
+    transform: translateY(-8px);
+    background: rgba(255, 255, 255, 0.06);
     .play-btn {
       opacity: 1;
-      transform: translateY(0);
+      transform: translateY(0) scale(1);
+    }
+    img {
+      transform: scale(1.05);
+    }
+    .image-wrapper {
+      box-shadow: 0 16px 32px rgba(0,0,0,0.5);
+    }
+    .image-wrapper::after {
+      opacity: 1;
     }
   }
 `;
@@ -60,24 +72,41 @@ const ImageWrapper = styled.div`
   position: relative;
   width: 100%;
   aspect-ratio: 1;
-  border-radius: ${({ theme }) => theme.radii.md};
+  border-radius: calc(var(--radius, 12px) * 0.6);
   overflow: hidden;
-  margin-bottom: 0.65rem;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s ease;
+  margin-bottom: 0.25rem;
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border-radius: inherit;
+    background: rgba(0, 0, 0, 0.4);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+    z-index: 1;
+  }
 `;
 
 const Thumb = styled.img`
   width: 100%;
   height: 100%;
   object-fit: cover;
+  transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 `;
 
 const PlayBtn = styled.div`
   position: absolute;
-  bottom: 6px;
-  right: 6px;
-  width: 36px;
-  height: 36px;
+  bottom: 8px;
+  right: 8px;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
   background: ${({ theme }) => theme.colors.accent};
   display: flex;
@@ -85,12 +114,18 @@ const PlayBtn = styled.div`
   justify-content: center;
   color: #000;
   opacity: 0;
-  transform: translateY(4px);
-  transition: all ${({ theme }) => theme.transitions.normal};
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  transform: translateY(12px) scale(0.9);
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+  z-index: 2;
+
+  &:hover {
+    transform: translateY(0) scale(1.08) !important;
+    filter: brightness(1.1);
+  }
 
   svg {
-    margin-left: 1px;
+    margin-left: 2px;
   }
 `;
 
@@ -131,7 +166,7 @@ export function SimilarTracks({
       <ScrollContainer>
         {tracks.map((t) => (
           <Card key={t.videoId} onClick={() => onSelect(t)}>
-            <ImageWrapper>
+            <ImageWrapper className="image-wrapper">
               <Thumb src={t.thumbnailUrl} alt={t.title} loading="lazy" />
               <PlayBtn className="play-btn">
                 <Play fill="currentColor" size={18} />
