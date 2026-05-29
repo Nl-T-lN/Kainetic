@@ -1,8 +1,27 @@
-export function getHighResThumbnail(thumbnails: any[]): string {
-  if (!thumbnails || thumbnails.length === 0) return "";
+export function getHighResThumbnail(thumbnails: any): string {
+  if (!thumbnails) return "";
+  
+  let thumbArray = thumbnails;
+  
+  // Unwrap Innertube MusicThumbnail objects
+  if (typeof thumbnails === 'object' && !Array.isArray(thumbnails)) {
+    if (thumbnails.contents && Array.isArray(thumbnails.contents)) {
+      thumbArray = thumbnails.contents;
+    } else if (thumbnails.url) {
+      thumbArray = [thumbnails];
+    } else {
+      thumbArray = [thumbnails];
+    }
+  } else if (!Array.isArray(thumbnails)) {
+    thumbArray = [thumbnails];
+  }
+
+  if (!Array.isArray(thumbArray) || thumbArray.length === 0) return "";
   
   // Sort by width descending to find the largest available in the array
-  const sorted = [...thumbnails].sort((a, b) => (b.width || 0) - (a.width || 0));
+  const sorted = [...thumbArray].sort((a, b) => (b.width || 0) - (a.width || 0));
+  if (!sorted[0] || !sorted[0].url) return "";
+  
   let url = sorted[0].url;
 
   // Handle Google User Content and YT3 images (Album covers, Artist avatars)

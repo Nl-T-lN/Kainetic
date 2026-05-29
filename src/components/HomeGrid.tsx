@@ -505,8 +505,8 @@ export function HomeGrid() {
     );
   }
 
-  const hits = tracks.slice(0, 10);
-  const recommended = tracks.slice(10);
+  const hits = tracks.slice(0, 15);
+  const recommended = tracks.slice(15);
 
   return (
     <Container>
@@ -541,7 +541,23 @@ export function HomeGrid() {
                   </button>
                 </ImageContainer>
                 <Title>{track.title}</Title>
-                <Subtitle>
+                <Subtitle
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (track.artistId) {
+                      router.push('/artist/' + track.artistId);
+                    } else if (track.artist || track.channelTitle) {
+                      router.push('/search?q=' + encodeURIComponent(track.artist || track.channelTitle || ""));
+                    }
+                  }}
+                  style={{ cursor: 'pointer' }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.textDecoration = 'underline';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.textDecoration = 'none';
+                  }}
+                >
                   {track.channelTitle || track.artist || "Artist"}
                 </Subtitle>
               </Card>
@@ -564,7 +580,26 @@ export function HomeGrid() {
                 <img src={track.thumbnailUrl} alt={track.title} loading="lazy" />
                 <div className="info">
                   <div className="title">{track.title}</div>
-                  <div className="artist">{track.channelTitle || track.artist || "Artist"}</div>
+                  <div 
+                    className="artist"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (track.artistId) {
+                        router.push('/artist/' + track.artistId);
+                      } else if (track.artist || track.channelTitle) {
+                        router.push('/search?q=' + encodeURIComponent(track.artist || track.channelTitle || ""));
+                      }
+                    }}
+                    style={{ cursor: 'pointer' }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.textDecoration = 'underline';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.textDecoration = 'none';
+                    }}
+                  >
+                    {track.channelTitle || track.artist || "Artist"}
+                  </div>
                 </div>
                 <div className="meta">
                   <span>{track.durationMs ? `${Math.floor(track.durationMs / 60000)}:${String(Math.floor((track.durationMs % 60000) / 1000)).padStart(2, '0')}` : "3:45"}</span>

@@ -35,16 +35,30 @@ export async function GET(request: Request) {
     const info = await yt.music.getInfo(videoId);
     const upNext = await info.getUpNext();
 
-    const tracks = (upNext.contents as YTMusicVideo[])
+    const tracks = (upNext.contents as any[])
       .filter((c) => c.type === "PlaylistPanelVideo" && c.video_id)
-      .map((c) => ({
-        videoId: c.video_id,
-        title: c.title?.text || "Unknown Title",
-        artist: c.author || c.artists?.[0]?.name || "Unknown Artist",
-        channelTitle: c.author || c.artists?.[0]?.name || "Unknown Artist",
-        thumbnailUrl: getHighResThumbnail(c.thumbnail),
-        durationMs: (c.duration?.seconds || 0) * 1000,
-      }));
+      .map((c) => {
+        let artistId = undefined;
+        let channelTitle = c.author || c.artists?.[0]?.name || "Unknown Artist";
+        
+        if (c.artists && c.artists.length > 0) {
+          channelTitle = c.artists.map((a: any) => a.name).join(", ");
+          artistId = c.artists[0]?.channel_id || c.artists[0]?.id || c.artists[0]?.endpoint?.payload?.browseId;
+        } else if (c.authors && c.authors.length > 0) {
+          channelTitle = c.authors.map((a: any) => a.name).join(", ");
+          artistId = c.authors[0]?.channel_id || c.authors[0]?.id || c.authors[0]?.endpoint?.payload?.browseId;
+        }
+
+        return {
+          videoId: c.video_id,
+          title: c.title?.text || c.title || "Unknown Title",
+          artist: channelTitle,
+          channelTitle: channelTitle,
+          artistId,
+          thumbnailUrl: getHighResThumbnail(c.thumbnail),
+          durationMs: (c.duration?.seconds || 0) * 1000,
+        };
+      });
 
     // Filter out the exact same song if it's the first one
     const filteredTracks = tracks.filter((t) => t.videoId !== videoId);

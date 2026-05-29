@@ -319,20 +319,20 @@ export function QueueSidebar({
                   className="artist"
                   onClick={(e) => {
                     e.stopPropagation();
+                    onClose();
                     if (track.artistId) {
-                      onClose();
                       router.push('/artist/' + track.artistId);
+                    } else if (track.artist || track.channelTitle) {
+                      router.push('/search?q=' + encodeURIComponent(track.artist || track.channelTitle || ""));
                     }
                   }}
                   style={{ 
-                    cursor: (track.artistId) ? 'pointer' : 'default',
+                    cursor: 'pointer',
                     pointerEvents: 'auto'
                   }}
                   onMouseEnter={(e) => {
-                    if (track.artistId) {
-                      e.currentTarget.style.textDecoration = 'underline';
-                      e.currentTarget.style.color = '#fff';
-                    }
+                    e.currentTarget.style.textDecoration = 'underline';
+                    e.currentTarget.style.color = '#fff';
                   }}
                   onMouseLeave={(e) => {
                     e.currentTarget.style.textDecoration = 'none';

@@ -5,6 +5,7 @@ import type { Track } from "@/types/music";
 import { Play, MoreVertical } from "lucide-react";
 import { TrackContextMenu } from "./TrackContextMenu";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 const ListContainer = styled.ul`
   list-style: none;
@@ -146,7 +147,6 @@ interface TrackListProps {
   onPlayNext?: (track: Track) => void;
   onAddToQueue?: (track: Track) => void;
   onStartRadio?: (track: Track) => void;
-  onArtistClick?: (artistId: string) => void;
   hideThumbnails?: boolean;
   isContextQueueEnabled?: boolean;
 }
@@ -159,10 +159,10 @@ export function TrackList({
   onPlayNext,
   onAddToQueue,
   onStartRadio,
-  onArtistClick,
   hideThumbnails,
   isContextQueueEnabled = false
 }: TrackListProps) {
+  const router = useRouter();
   const [menuTrack, setMenuTrack] = useState<{ track: Track, x: number, y: number } | null>(null);
 
   const handleContextMenuClick = (e: React.MouseEvent, track: Track) => {
@@ -224,16 +224,16 @@ export function TrackList({
                 <Title className="title">{track.title}</Title>
                 <Artist 
                   onClick={(e) => {
-                    if (onArtistClick && track.artistId) {
-                      e.stopPropagation(); // prevent playing the track
-                      onArtistClick(track.artistId);
+                    e.stopPropagation(); // prevent playing the track
+                    if (track.artistId) {
+                      router.push('/artist/' + track.artistId);
+                    } else if (track.artist || track.channelTitle) {
+                      router.push('/search?q=' + encodeURIComponent(track.artist || track.channelTitle || ""));
                     }
                   }}
-                  style={{ cursor: (onArtistClick && track.artistId) ? 'pointer' : 'default' }}
+                  style={{ cursor: 'pointer' }}
                   onMouseEnter={(e) => {
-                    if (onArtistClick && track.artistId) {
-                      e.currentTarget.style.textDecoration = 'underline';
-                    }
+                    e.currentTarget.style.textDecoration = 'underline';
                   }}
                   onMouseLeave={(e) => {
                     e.currentTarget.style.textDecoration = 'none';

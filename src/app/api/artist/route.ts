@@ -28,7 +28,7 @@ export async function GET(request: Request) {
       title: Array.isArray(item.title) ? item.title[0]?.text : item.title?.text || item.title || "Unknown Title",
       artist: item.authors?.[0]?.name || artist.header?.title?.text || "Unknown",
       channelTitle: item.authors?.[0]?.name || artist.header?.title?.text || "Unknown",
-      thumbnailUrl: getHighResThumbnail(item.thumbnails),
+      thumbnailUrl: getHighResThumbnail(item.thumbnail || item.thumbnails || []),
       durationMs: item.duration?.seconds ? item.duration.seconds * 1000 : 0
     });
 
@@ -36,7 +36,7 @@ export async function GET(request: Request) {
       id: item.id,
       title: item.title?.text || item.title || "Unknown Album",
       year: item.year?.text || item.year || "",
-      thumbnailUrl: getHighResThumbnail(item.thumbnails)
+      thumbnailUrl: getHighResThumbnail(item.thumbnail || item.thumbnails || [])
     });
 
     let topTracks: any[] = [];
@@ -70,13 +70,13 @@ export async function GET(request: Request) {
       name: (artist.header as any)?.title?.text,
       subscribers: (artist.header as any)?.subscribers?.text,
       description: (artist.header as any)?.description?.text,
-      thumbnailUrl: getHighResThumbnail((artist.header as any)?.thumbnail || (artist.header as any)?.thumbnails),
+      thumbnailUrl: getHighResThumbnail(((artist.header as any)?.thumbnail || (artist.header as any)?.thumbnails || [])),
       topTracks,
       albums,
       singles
     });
   } catch (error) {
-    console.error("Artist API Error:", error);
-    return NextResponse.json({ error: "Failed to fetch artist" }, { status: 500 });
+    console.error("Artist API Error:", error, (error as Error).stack);
+    return NextResponse.json({ error: "Failed to fetch artist", details: (error as Error).message }, { status: 500 });
   }
 }

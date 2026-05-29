@@ -540,20 +540,22 @@ export function BottomPlayer({
                     <div 
                       className="artist"
                       onClick={(e) => {
+                        e.stopPropagation();
                         if (currentTrack.artistId) {
                           router.push('/artist/' + currentTrack.artistId);
+                          setIsExpanded(false);
+                        } else if (currentTrack.artist || currentTrack.channelTitle) {
+                          router.push('/search?q=' + encodeURIComponent(currentTrack.artist || currentTrack.channelTitle || ""));
                           setIsExpanded(false);
                         }
                       }}
                       style={{ 
-                        cursor: (currentTrack.artistId) ? 'pointer' : 'default',
+                        cursor: 'pointer',
                         pointerEvents: 'auto'
                       }}
                       onMouseEnter={(e) => {
-                        if (currentTrack.artistId) {
-                          e.currentTarget.style.textDecoration = 'underline';
-                          e.currentTarget.style.color = '#fff';
-                        }
+                        e.currentTarget.style.textDecoration = 'underline';
+                        e.currentTarget.style.color = '#fff';
                       }}
                       onMouseLeave={(e) => {
                         e.currentTarget.style.textDecoration = 'none';

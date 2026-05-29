@@ -1,9 +1,15 @@
 import { useEffect, useState } from "react";
-import styled from "styled-components";
+import styled, { keyframes } from "styled-components";
 import type { Track } from "@/types/music";
 import { TrackList } from "./TrackList";
 import { usePlayer } from "@/contexts/PlayerContext";
 import { Play } from "lucide-react";
+import { useRouter } from "next/navigation";
+
+const slideUpFade = keyframes`
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+`;
 
 const Container = styled.div`
   padding-bottom: 4rem;
@@ -89,58 +95,70 @@ const ShelfContainer = styled.div`
   }
 `;
 
-const Card = styled.div`
+const Card = styled.div<{ $index?: number }>`
   flex: 0 0 auto;
   width: 200px;
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-  cursor: pointer;
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: var(--radius);
+  padding: 1rem;
   transition: all 0.2s ease;
+  cursor: pointer;
+  position: relative;
+  opacity: 0;
+  animation: ${slideUpFade} 0.4s ease-out forwards;
+  animation-delay: ${({ $index = 0 }) => `${0.05 + $index * 0.03}s`};
 
   &:hover {
-    transform: translateY(-4px);
+    background: rgba(255, 255, 255, 0.06);
+
     .play-overlay {
       opacity: 1;
-      transform: translate(-50%, -50%) scale(1);
+      transform: translateY(0);
     }
-    img {
-      box-shadow: 0 8px 24px rgba(0,0,0,0.4);
-    }
+  }
+
+  @media (max-width: 600px) {
+    width: 150px;
   }
 `;
 
 const ImageContainer = styled.div`
-  position: relative;
   width: 100%;
-  aspect-ratio: 1;
-  border-radius: calc(var(--radius) * 1.5);
+  aspect-ratio: 1 / 1;
+  margin-bottom: 1rem;
+  position: relative;
+  border-radius: calc(var(--radius) * 0.9);
   overflow: hidden;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
 
   img {
     width: 100%;
     height: 100%;
     object-fit: cover;
-    transition: all 0.3s ease;
   }
 `;
 
 const PlayOverlay = styled.div`
   position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%) scale(0.9);
+  bottom: 12px;
+  right: 12px;
   width: 48px;
   height: 48px;
-  background: var(--accent);
   border-radius: 50%;
+  background: var(--accent);
   display: flex;
   align-items: center;
   justify-content: center;
   color: #000;
   opacity: 0;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 8px 16px rgba(0,0,0,0.3);
+  transform: translateY(8px);
+  transition: all 0.2s ease;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
+
+  &:hover {
+    transform: scale(1.08) translateY(0);
+    filter: brightness(1.1);
+  }
 
   svg {
     margin-left: 3px;
@@ -148,10 +166,10 @@ const PlayOverlay = styled.div`
 `;
 
 const CardTitle = styled.h3`
-  font-size: 0.95rem;
+  font-size: 1.05rem;
   font-weight: 700;
   color: #fff;
-  margin: 0;
+  margin: 0 0 0.25rem 0;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -161,83 +179,16 @@ const CardSubtitle = styled.p`
   font-size: 0.85rem;
   color: var(--muted);
   margin: 0;
-`;
-
-const TapeContainer = styled.div`
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 200vw;
-  height: 100vh;
-  transform: translate(-50%, -50%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  pointer-events: none;
-`;
-
-const Tape = styled.div<{ $rotate: number }>`
-  position: absolute;
-  width: 200vw;
-  height: 80px;
-  background-color: #dca514;
-  background-image: repeating-linear-gradient(
-    45deg,
-    transparent,
-    transparent 40px,
-    #111 40px,
-    #111 80px
-  );
-  transform: rotate(${({ $rotate }) => $rotate}deg);
-  display: flex;
-  align-items: center;
+  white-space: nowrap;
   overflow: hidden;
-  z-index: 10;
-`;
-
-const TapeText = styled.div`
-  color: #111;
-  font-weight: 900;
-  font-size: 2.2rem;
-  letter-spacing: 4px;
-  white-space: nowrap;
-  font-family: 'Arial Black', sans-serif;
-  text-transform: uppercase;
-  padding: 0 10px;
-  margin: 0 20px;
-  text-shadow: 
-    -2px -2px 0 #dca514,
-     2px -2px 0 #dca514,
-    -2px  2px 0 #dca514,
-     2px  2px 0 #dca514;
-`;
-
-const TapeTextContainer = styled.div`
-  display: flex;
-  white-space: nowrap;
+  text-overflow: ellipsis;
 `;
 
 const LoadingSpinner = () => {
-  const textItems = Array(20).fill("UNDER CONSTRUCTION");
   return (
-    <div style={{ position: 'relative', height: '60vh', overflow: 'hidden', background: 'var(--bg)' }}>
-      <TapeContainer>
-        <Tape $rotate={-15}>
-          <TapeTextContainer>
-            {textItems.map((text, i) => (
-              <TapeText key={`tape1-${i}`}>{text}</TapeText>
-            ))}
-          </TapeTextContainer>
-        </Tape>
-        <Tape $rotate={15} style={{ zIndex: 11 }}>
-          <TapeTextContainer>
-            {textItems.map((text, i) => (
-              <TapeText key={`tape2-${i}`}>{text}</TapeText>
-            ))}
-          </TapeTextContainer>
-        </Tape>
-      </TapeContainer>
-    </div>
+    <Container style={{ display: 'flex', justifyContent: 'center', paddingTop: '4rem', color: 'var(--muted)' }}>
+      <h2>Loading artist...</h2>
+    </Container>
   );
 };
 
@@ -247,6 +198,7 @@ interface ArtistViewProps {
 
 export function ArtistView({ artistId }: ArtistViewProps) {
   const { onPlay, onPlayNext, onAddToQueue } = usePlayer();
+  const router = useRouter();
   const [artist, setArtist] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
@@ -310,7 +262,7 @@ export function ArtistView({ artistId }: ArtistViewProps) {
           <SectionTitle>Albums</SectionTitle>
           <ShelfContainer>
             {artist.albums.map((album: any) => (
-              <Card key={album.id}>
+              <Card key={album.id} onClick={() => router.push('/album/' + album.id)}>
                 <ImageContainer>
                   <img src={album.thumbnailUrl || '/placeholder-artist.jpg'} alt={album.title} loading="lazy" />
                   <PlayOverlay className="play-overlay">
@@ -330,7 +282,7 @@ export function ArtistView({ artistId }: ArtistViewProps) {
           <SectionTitle>Singles</SectionTitle>
           <ShelfContainer>
             {artist.singles.map((single: any) => (
-              <Card key={single.id}>
+              <Card key={single.id} onClick={() => router.push('/album/' + single.id)}>
                 <ImageContainer>
                   <img src={single.thumbnailUrl || '/placeholder-artist.jpg'} alt={single.title} loading="lazy" />
                   <PlayOverlay className="play-overlay">
