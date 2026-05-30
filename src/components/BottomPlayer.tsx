@@ -54,6 +54,15 @@ const BottomBar = styled.div<{ $isExpanded: boolean }>`
   z-index: 1000;
   transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
   overflow: hidden;
+
+  @media (max-width: 800px) {
+    left: 0;
+    right: 0;
+    width: 100%;
+    bottom: ${({ $isExpanded }) => ($isExpanded ? "0" : "65px")};
+    border-radius: ${({ $isExpanded }) => ($isExpanded ? "0" : "16px 16px 0 0")};
+    border: none;
+  }
 `;
 
 /* ── Mini Player ── */
@@ -86,6 +95,11 @@ const TrackInfo = styled.div`
     object-fit: cover;
     box-shadow: 0 4px 12px rgba(0,0,0,0.3);
     pointer-events: none;
+  }
+
+  @media (max-width: 800px) {
+    width: 60%;
+    min-width: 0;
   }
 `;
 
@@ -121,6 +135,12 @@ const ControlsContainer = styled.div<{ $isExpanded: boolean }>`
   gap: 0.25rem;
   width: ${({ $isExpanded }) => ($isExpanded ? "100%" : "40%")};
   max-width: ${({ $isExpanded }) => ($isExpanded ? "600px" : "560px")};
+
+  @media (max-width: 800px) {
+    width: ${({ $isExpanded }) => ($isExpanded ? "100%" : "40%")};
+    padding-right: ${({ $isExpanded }) => ($isExpanded ? "0" : "1rem")};
+    align-items: flex-end; /* Align buttons to right on mobile mini-player */
+  }
 `;
 
 const ButtonsRow = styled.div<{ $isExpanded: boolean }>`
@@ -159,6 +179,12 @@ const ButtonsRow = styled.div<{ $isExpanded: boolean }>`
         opacity: 0.9;
       }
     }
+
+    &.hide-on-mobile {
+      @media (max-width: 800px) {
+        display: none;
+      }
+    }
   }
 `;
 
@@ -168,6 +194,10 @@ const ExtraControls = styled.div`
   justify-content: flex-end;
   gap: 1rem;
   width: 30%;
+
+  @media (max-width: 800px) {
+    display: ${({ className }) => className?.includes("expanded") ? "flex" : "none"};
+  }
 `;
 
 const VolumeContainer = styled.div`
@@ -234,6 +264,11 @@ const ExpandedWrapper = styled.div`
   padding: 3rem 2rem;
   position: relative;
   overflow: hidden;
+
+  @media (max-width: 800px) {
+    padding: 1rem;
+    padding-top: 4rem;
+  }
 `;
 
 const CloseButton = styled.button`
@@ -258,6 +293,11 @@ const CloseButton = styled.button`
     background: rgba(255, 255, 255, 0.2);
     transform: translateY(-2px);
   }
+
+  @media (max-width: 800px) {
+    top: 1rem;
+    left: 1rem;
+  }
 `;
 
 const ExpandedContent = styled.div`
@@ -275,7 +315,8 @@ const ExpandedContent = styled.div`
     justify-content: flex-start;
     gap: 2rem;
     overflow-y: auto;
-    padding-top: 2rem;
+    padding-top: 1rem;
+    padding-bottom: 3rem;
   }
 `;
 
@@ -593,6 +634,7 @@ export function BottomPlayer({
             <ControlsContainer $isExpanded={false}>
               <ButtonsRow $isExpanded={false}>
                 <button 
+                  className="hide-on-mobile"
                   disabled={isGuest}
                   onClick={(e) => { e.stopPropagation(); if (toggleShuffle) toggleShuffle(); }}
                   style={{ color: isShuffle ? 'var(--accent)' : 'inherit', opacity: isGuest ? 0.3 : 1, cursor: isGuest ? 'not-allowed' : 'pointer' }}
@@ -600,6 +642,7 @@ export function BottomPlayer({
                   <Shuffle size={18} fill="currentColor" />
                 </button>
                 <button 
+                  className="hide-on-mobile"
                   disabled={isGuest} 
                   style={{ opacity: isGuest ? 0.3 : 1, cursor: isGuest ? 'not-allowed' : 'pointer' }} 
                   onClick={(e) => { e.stopPropagation(); if(onPrev) onPrev(); }}
@@ -622,6 +665,7 @@ export function BottomPlayer({
                   <SkipForward size={22} fill="currentColor" />
                 </button>
                 <button 
+                  className="hide-on-mobile"
                   disabled={isGuest}
                   onClick={(e) => { e.stopPropagation(); if (toggleRepeat) toggleRepeat(); }}
                   style={{ color: isRepeat ? 'var(--accent)' : 'inherit', opacity: isGuest ? 0.3 : 1, cursor: isGuest ? 'not-allowed' : 'pointer' }}

@@ -44,3 +44,9 @@ next-env.d.ts
 ideation/
 rm/
 rm/
+
+# graphify
+graphify-out/
+GEMINI.md
+.gemini/
+.agents/

@@ -22,7 +22,9 @@ import { useMoodSearch } from "@/hooks/useMoodSearch";
 import { usePlaylistGen } from "@/hooks/usePlaylistGen";
 import { useSimilarTracks } from "@/hooks/useSimilarTracks";
 import { usePathname, useRouter } from "next/navigation";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, Menu, Settings } from "lucide-react";
+import Link from "next/link";
+import { BottomNavBar } from "./BottomNavBar";
 
 const ModalOverlay = styled.div`
   position: fixed;
@@ -114,6 +116,12 @@ const MainContent = styled.div`
   padding-bottom: 110px;
   position: relative;
   z-index: 1;
+
+  @media (max-width: 800px) {
+    padding-bottom: 145px;
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
 `;
 
 const TopBar = styled.div`
@@ -129,6 +137,31 @@ const TopBar = styled.div`
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  gap: 1rem;
+
+  @media (max-width: 800px) {
+    padding: 1rem;
+    margin: 0 -1rem 1.5rem -1rem;
+  }
+`;
+
+const SettingsButton = styled(Link)`
+  display: none;
+  color: ${({ theme }) => theme.colors.cream};
+  
+  @media (max-width: 800px) {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.5rem;
+    border-radius: 50%;
+    margin-left: 0.5rem;
+    transition: background 0.2s ease;
+    
+    &:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+  }
 `;
 
 export function GlobalShell({ children }: { children: React.ReactNode }) {
@@ -326,7 +359,7 @@ export function GlobalShell({ children }: { children: React.ReactNode }) {
       party,
       currentTrack: playerState.currentTrack || null,
     }}>
-      <AppLayout style={{ '--sidebar-width': isSidebarCollapsed ? '80px' : '260px' } as any}>
+      <AppLayout style={{ '--sidebar-width': isSidebarCollapsed ? '80px' : '230px' } as any}>
         <Sidebar 
           isCollapsed={isSidebarCollapsed}
           onToggleCollapse={() => setIsSidebarCollapsed(prev => !prev)}
@@ -334,14 +367,19 @@ export function GlobalShell({ children }: { children: React.ReactNode }) {
 
         <MainContent>
           <TopBar>
-            <Suspense fallback={<div>Loading...</div>}>
-              <SearchHub 
-                onSearch={search.search}
-                onMoodSearch={moodSearch.searchMood}
-                onPlaylistGenerate={playlistGen.generatePlaylist}
-                isLoading={search.isLoading || moodSearch.isLoading || playlistGen.isLoading}
-              />
-            </Suspense>
+            <div style={{ flex: 1 }}>
+              <Suspense fallback={<div>Loading...</div>}>
+                <SearchHub 
+                  onSearch={search.search}
+                  onMoodSearch={moodSearch.searchMood}
+                  onPlaylistGenerate={playlistGen.generatePlaylist}
+                  isLoading={search.isLoading || moodSearch.isLoading || playlistGen.isLoading}
+                />
+              </Suspense>
+            </div>
+            <SettingsButton href="/settings">
+              <Settings size={24} strokeWidth={2.5} />
+            </SettingsButton>
           </TopBar>
 
           {children}
@@ -425,6 +463,8 @@ export function GlobalShell({ children }: { children: React.ReactNode }) {
             }
           }}
         />
+
+        <BottomNavBar />
 
         {pendingTrackAction && (
           <ModalOverlay>

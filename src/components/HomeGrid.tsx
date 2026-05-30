@@ -61,6 +61,11 @@ const RecommendedTrack = styled.div<{ $index: number }>`
     }
   }
 
+  @media (max-width: 800px) {
+    width: 85vw;
+    scroll-snap-align: center;
+  }
+
   img {
     width: 64px;
     height: 64px;
@@ -205,6 +210,16 @@ const ArtistCircle = styled.div<{ $index: number }>`
     }
   }
 
+  @media (max-width: 800px) {
+    width: 110px;
+    scroll-snap-align: start;
+    
+    img {
+      width: 110px;
+      height: 110px;
+    }
+  }
+
   img {
     width: 140px;
     height: 140px;
@@ -261,6 +276,12 @@ const ShelfContainer = styled.div`
   &::-webkit-scrollbar {
     display: none;
   }
+
+  @media (max-width: 800px) {
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    gap: 1rem;
+  }
 `;
 
 const GridContainer = styled.div`
@@ -268,6 +289,11 @@ const GridContainer = styled.div`
   grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
   gap: 1.5rem;
   padding: 0.5rem 0 2rem;
+
+  @media (max-width: 800px) {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+  }
 `;
 
 const Card = styled.div<{ $index: number }>`
@@ -285,6 +311,12 @@ const Card = styled.div<{ $index: number }>`
   opacity: 0;
   animation: ${slideUpFade} 0.4s ease-out forwards;
   animation-delay: ${({ $index }) => `${0.05 + $index * 0.03}s`};
+
+  @media (max-width: 800px) {
+    width: 140px;
+    padding: 0.5rem;
+    scroll-snap-align: start;
+  }
 
   .context-menu-btn {
     opacity: 0;

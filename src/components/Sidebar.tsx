@@ -54,6 +54,10 @@ const MenuButton = styled.button`
   &:hover {
     background: rgba(255, 255, 255, 0.1);
   }
+
+  @media (max-width: 800px) {
+    display: none;
+  }
 `;
 
 const Logo = styled.div`

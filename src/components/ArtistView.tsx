@@ -89,6 +89,11 @@ const ShelfContainer = styled.div`
   &::-webkit-scrollbar {
     display: none;
   }
+  @media (max-width: 800px) {
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    gap: 1rem;
+  }
 `;
 
 const Card = styled.div`
@@ -119,6 +124,12 @@ const Card = styled.div`
     .image-container::after {
       opacity: 1;
     }
+  }
+
+  @media (max-width: 800px) {
+    width: 140px;
+    padding: 0.5rem;
+    scroll-snap-align: start;
   }
 `;
 
