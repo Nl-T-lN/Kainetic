@@ -52,8 +52,14 @@ const BottomBar = styled.div<{ $isExpanded: boolean }>`
   flex-direction: column;
   align-items: center;
   z-index: 1000;
-  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: bottom 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+              height 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+              left 0.3s cubic-bezier(0.2, 0, 0, 1),
+              width 0.3s cubic-bezier(0.2, 0, 0, 1),
+              border-radius 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+              background 0.4s cubic-bezier(0.16, 1, 0.3, 1);
   overflow: hidden;
+  will-change: width, left, height, bottom;
 
   @media (max-width: 800px) {
     left: 0;

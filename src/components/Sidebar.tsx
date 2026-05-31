@@ -77,8 +77,9 @@ const Logo = styled.div`
     margin-left: 0.6rem;
     visibility: visible;
     overflow: hidden;
-    transition: all 0.3s cubic-bezier(0.2, 0, 0, 1);
+    transition: opacity 0.3s cubic-bezier(0.2, 0, 0, 1), max-width 0.3s cubic-bezier(0.2, 0, 0, 1), margin-left 0.3s cubic-bezier(0.2, 0, 0, 1);
     white-space: nowrap;
+    will-change: opacity, max-width, margin-left;
   }
 
   .collapsed & span {
@@ -149,7 +150,8 @@ const NavItem = styled(Link)<{ $active?: boolean }>`
     margin-left: 1rem;
     visibility: visible;
     overflow: hidden;
-    transition: all 0.3s cubic-bezier(0.2, 0, 0, 1);
+    transition: opacity 0.3s cubic-bezier(0.2, 0, 0, 1), max-width 0.3s cubic-bezier(0.2, 0, 0, 1), margin-left 0.3s cubic-bezier(0.2, 0, 0, 1);
+    will-change: opacity, max-width, margin-left;
   }
 
   .collapsed & span {
@@ -174,7 +176,7 @@ const RoomBadge = styled.div`
   max-width: 50px;
   visibility: visible;
   overflow: hidden;
-  transition: all 0.3s cubic-bezier(0.2, 0, 0, 1);
+  transition: opacity 0.3s cubic-bezier(0.2, 0, 0, 1), max-width 0.3s cubic-bezier(0.2, 0, 0, 1);
 
   .collapsed & {
     opacity: 0;
