@@ -13,6 +13,11 @@ const Header = styled.h3`
   font-weight: 700;
   color: ${({ theme }) => theme.colors.cream};
   margin-bottom: 1rem;
+  padding: 0 1.75rem;
+
+  @media (max-width: 800px) {
+    padding: 0 1rem;
+  }
 `;
 
 const ScrollContainer = styled.div`
@@ -20,6 +25,13 @@ const ScrollContainer = styled.div`
   gap: 0.85rem;
   overflow-x: auto;
   padding-bottom: 0.75rem;
+  padding-left: 1.75rem;
+  padding-right: 1.75rem;
+
+  @media (max-width: 800px) {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
 
   /* Hide scrollbar but keep functionality */
   scrollbar-width: thin;

@@ -20,13 +20,14 @@ const Header = styled.div`
   display: flex;
   align-items: flex-end;
   gap: 2rem;
-  padding: 2rem 0;
+  padding: 2rem 1.75rem;
   margin-bottom: 2rem;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   
   @media (max-width: 768px) {
     flex-direction: column;
     align-items: flex-start;
+    padding: 2rem 1rem;
   }
 `;
 
@@ -78,13 +79,26 @@ const SectionTitle = styled.h2`
   font-size: 1.5rem;
   font-weight: 700;
   margin: 2rem 0 1rem 0;
+  padding: 0 1.75rem;
+
+  @media (max-width: 768px) {
+    padding: 0 1rem;
+  }
+`;
+
+const TrackListWrapper = styled.div`
+  padding: 0 1.75rem;
+  
+  @media (max-width: 768px) {
+    padding: 0 1rem;
+  }
 `;
 
 const ShelfContainer = styled.div`
   display: flex;
   overflow-x: auto;
   gap: 1.5rem;
-  padding: 0.5rem 0 2rem;
+  padding: 0.5rem 1.75rem 2rem;
   scrollbar-width: none;
   &::-webkit-scrollbar {
     display: none;
@@ -93,6 +107,7 @@ const ShelfContainer = styled.div`
     scroll-snap-type: x mandatory;
     -webkit-overflow-scrolling: touch;
     gap: 1rem;
+    padding: 0.5rem 1rem 2rem;
   }
 `;
 
@@ -273,12 +288,14 @@ export function ArtistView({ artistId }: ArtistViewProps) {
       {artist.topTracks && artist.topTracks.length > 0 && (
         <>
           <SectionTitle>Top Songs</SectionTitle>
-          <TrackList 
-            tracks={artist.topTracks} 
-            onTrackSelect={onPlay} 
-            onPlayNext={onPlayNext}
-            onAddToQueue={onAddToQueue}
-          />
+          <TrackListWrapper>
+            <TrackList 
+              tracks={artist.topTracks} 
+              onTrackSelect={onPlay} 
+              onPlayNext={onPlayNext}
+              onAddToQueue={onAddToQueue}
+            />
+          </TrackListWrapper>
         </>
       )}
 

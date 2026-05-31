@@ -18,6 +18,11 @@ const ResultsHeader = styled.h2`
   font-weight: 700;
   margin-bottom: 1rem;
   color: ${({ theme }) => theme.colors.cream};
+  padding: 0 1.75rem;
+  
+  @media (max-width: 800px) {
+    padding: 0 1rem;
+  }
 `;
 
 const ResultsTabs = styled.div`
@@ -25,6 +30,19 @@ const ResultsTabs = styled.div`
   gap: 1.5rem;
   margin-bottom: 1.5rem;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 0 1.75rem;
+  
+  @media (max-width: 800px) {
+    padding: 0 1rem;
+  }
+`;
+
+const ContentWrapper = styled.div`
+  padding: 0 1.75rem;
+  
+  @media (max-width: 800px) {
+    padding: 0 1rem;
+  }
 `;
 
 const ResultTabButton = styled.button<{ $active?: boolean }>`
@@ -112,21 +130,23 @@ export function SearchResultsOverlay({
         ))}
       </ResultsTabs>
 
-      {searchCategory === "Artists" ? (
-        <ArtistGrid 
-          artists={artists} 
-        />
-      ) : (
-        <TrackList
-          tracks={getActiveTracks()}
-          currentTrackId={currentTrackId}
-          onTrackSelect={onPlay}
-          isLoading={isLoading}
-          onPlayNext={onPlayNext}
-          onAddToQueue={onAddToQueue}
-          onStartRadio={onStartRadio}
-        />
-      )}
+      <ContentWrapper>
+        {searchCategory === "Artists" ? (
+          <ArtistGrid 
+            artists={artists} 
+          />
+        ) : (
+          <TrackList
+            tracks={getActiveTracks()}
+            currentTrackId={currentTrackId}
+            onTrackSelect={onPlay}
+            isLoading={isLoading}
+            onPlayNext={onPlayNext}
+            onAddToQueue={onAddToQueue}
+            onStartRadio={onStartRadio}
+          />
+        )}
+      </ContentWrapper>
 
       {similarTracks.length > 0 && (
         <SimilarTracksComponent

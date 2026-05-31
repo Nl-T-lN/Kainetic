@@ -29,9 +29,16 @@ const RecommendedContainer = styled.div`
   gap: 1rem;
   margin-bottom: 2.5rem;
   padding-bottom: 1rem;
+  padding-left: 1.75rem;
+  padding-right: 1.75rem;
   scrollbar-width: none;
   &::-webkit-scrollbar {
     display: none;
+  }
+
+  @media (max-width: 800px) {
+    padding-left: 1rem;
+    padding-right: 1rem;
   }
 `;
 
@@ -135,6 +142,11 @@ const SectionHeaderRow = styled.div`
   justify-content: space-between;
   margin-bottom: 1.25rem;
   margin-top: 1rem;
+  padding: 0 1.75rem;
+
+  @media (max-width: 800px) {
+    padding: 0 1rem;
+  }
 `;
 
 const SectionTitleGroup = styled.div`
@@ -217,14 +229,19 @@ const ArtistCircle = styled.div<{ $index: number }>`
     img {
       width: 110px;
       height: 110px;
+      min-width: 110px;
+      min-height: 110px;
     }
   }
 
   img {
     width: 140px;
     height: 140px;
+    min-width: 140px;
+    min-height: 140px;
     border-radius: 50%;
     object-fit: cover;
+    aspect-ratio: 1 / 1;
     box-shadow: 0 4px 12px rgba(0,0,0,0.2);
     transition: all 0.2s;
   }
@@ -271,7 +288,7 @@ const ShelfContainer = styled.div`
   display: flex;
   overflow-x: auto;
   gap: 1.5rem;
-  padding: 0.5rem 0 2rem;
+  padding: 0.5rem 1.75rem 2rem;
   scrollbar-width: none;
   &::-webkit-scrollbar {
     display: none;
@@ -281,6 +298,7 @@ const ShelfContainer = styled.div`
     scroll-snap-type: x mandatory;
     -webkit-overflow-scrolling: touch;
     gap: 1rem;
+    padding: 0.5rem 1rem 2rem;
   }
 `;
 
@@ -288,11 +306,12 @@ const GridContainer = styled.div`
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
   gap: 1.5rem;
-  padding: 0.5rem 0 2rem;
+  padding: 0.5rem 1.75rem 2rem;
 
   @media (max-width: 800px) {
     grid-template-columns: repeat(2, 1fr);
     gap: 1rem;
+    padding: 0.5rem 1rem 2rem;
   }
 `;
 
@@ -554,7 +573,6 @@ export function HomeGrid() {
   if (loading) {
     return (
       <Container>
-        <SectionTitle>{getGreeting()}</SectionTitle>
         <ShelfContainer>
           {Array.from({ length: 8 }).map((_, i) => (
             <SkeletonCard key={i} $index={i}>
@@ -573,7 +591,6 @@ export function HomeGrid() {
 
   return (
     <Container>
-      <SectionTitle>{getGreeting()}</SectionTitle>
 
       {recentTracks.length > 0 && (
         <>

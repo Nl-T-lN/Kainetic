@@ -38,10 +38,14 @@ const ContentContainer = styled.div`
   flex-direction: column;
   padding-top: 3rem;
   gap: 3rem;
+  padding-left: 1rem;
+  padding-right: 1rem;
 
   @media (min-width: 900px) {
     flex-direction: row;
     align-items: flex-start;
+    padding-left: 1.75rem;
+    padding-right: 1.75rem;
   }
 `;
 

@@ -28,8 +28,8 @@ const NavBarContainer = styled.nav`
       bottom: 0;
       left: 0;
       right: 0;
-      height: 180px;
-      background: linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.6) 40%, rgba(0,0,0,1) 90%, rgba(0,0,0,1) 100%);
+      height: 90px;
+      background: linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.8) 30%, rgba(0,0,0,1) 100%);
       z-index: -1;
       pointer-events: none;
     }

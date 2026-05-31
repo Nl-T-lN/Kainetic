@@ -41,8 +41,9 @@ const BottomBar = styled.div<{ $isExpanded: boolean }>`
   background: ${({ $isExpanded }) =>
     $isExpanded
       ? "var(--bg)"
-      : "color-mix(in srgb, var(--bg) 85%, transparent)"};
-  backdrop-filter: blur(20px);
+      : "rgba(0, 0, 0, 0.4)"};
+  backdrop-filter: ${({ $isExpanded }) => ($isExpanded ? "none" : "blur(12px)")};
+  -webkit-backdrop-filter: ${({ $isExpanded }) => ($isExpanded ? "none" : "blur(12px)")};
   border-radius: ${({ $isExpanded }) => ($isExpanded ? "0" : "var(--radius)")};
   border: ${({ $isExpanded }) =>
     $isExpanded ? "none" : "1px solid rgba(255, 255, 255, 0.1)"};
@@ -62,12 +63,13 @@ const BottomBar = styled.div<{ $isExpanded: boolean }>`
   will-change: width, left, height, bottom;
 
   @media (max-width: 800px) {
-    left: 0;
-    right: 0;
-    width: 100%;
-    bottom: ${({ $isExpanded }) => ($isExpanded ? "0" : "65px")};
-    border-radius: ${({ $isExpanded }) => ($isExpanded ? "0" : "16px 16px 0 0")};
+    left: ${({ $isExpanded }) => ($isExpanded ? "0" : "8px")};
+    right: ${({ $isExpanded }) => ($isExpanded ? "0" : "8px")};
+    width: ${({ $isExpanded }) => ($isExpanded ? "100%" : "calc(100% - 16px)")};
+    bottom: ${({ $isExpanded }) => ($isExpanded ? "0" : "70px")};
+    border-radius: ${({ $isExpanded }) => ($isExpanded ? "0" : "8px")};
     border: none;
+    background: ${({ $isExpanded }) => ($isExpanded ? "var(--bg)" : "rgba(0, 0, 0, 0.75)")};
   }
 `;
 
@@ -81,6 +83,31 @@ const MiniPlayerContainer = styled.div`
   padding: 0 0.75rem;
   flex-shrink: 0;
   position: relative;
+  overflow: hidden; /* For the absolute progress bar to clip its corners */
+`;
+
+const MobileMiniProgress = styled.div<{ $pct: number }>`
+  display: none;
+  @media (max-width: 800px) {
+    display: block;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background: rgba(255, 255, 255, 0.1);
+    
+    &::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      height: 100%;
+      width: ${({ $pct }) => $pct}%;
+      background: #fff;
+      transition: width 0.1s linear;
+    }
+  }
 `;
 
 const TrackInfo = styled.div`
@@ -143,9 +170,16 @@ const ControlsContainer = styled.div<{ $isExpanded: boolean }>`
   max-width: ${({ $isExpanded }) => ($isExpanded ? "600px" : "560px")};
 
   @media (max-width: 800px) {
-    width: ${({ $isExpanded }) => ($isExpanded ? "100%" : "40%")};
-    padding-right: ${({ $isExpanded }) => ($isExpanded ? "0" : "1rem")};
+    width: ${({ $isExpanded }) => ($isExpanded ? "100%" : "auto")};
+    padding-right: ${({ $isExpanded }) => ($isExpanded ? "0" : "0.5rem")};
     align-items: flex-end; /* Align buttons to right on mobile mini-player */
+  }
+`;
+
+const DesktopProgressBarWrapper = styled.div<{ $isExpanded: boolean }>`
+  width: 100%;
+  @media (max-width: 800px) {
+    display: ${({ $isExpanded }) => ($isExpanded ? "block" : "none")};
   }
 `;
 
@@ -679,7 +713,9 @@ export function BottomPlayer({
                   <Repeat size={18} fill="currentColor" />
                 </button>
               </ButtonsRow>
-              <ProgressBar positionMs={positionMs} durationMs={durationMs} onSeek={(ms) => { if (!isGuest) onSeek(ms); }} />
+              <DesktopProgressBarWrapper $isExpanded={false}>
+                <ProgressBar positionMs={positionMs} durationMs={durationMs} onSeek={(ms) => { if (!isGuest) onSeek(ms); }} />
+              </DesktopProgressBarWrapper>
             </ControlsContainer>
 
             <ExtraControls>
@@ -695,6 +731,8 @@ export function BottomPlayer({
                 <VolumeSlider onClick={handleVolumeClick}><VolumeFill className="vol-fill" style={{ width: `${volume}%` }} /></VolumeSlider>
               </VolumeContainer>
             </ExtraControls>
+            
+            <MobileMiniProgress $pct={durationMs > 0 ? (positionMs / durationMs) * 100 : 0} />
           </MiniPlayerContainer>
         </>
       ) : (

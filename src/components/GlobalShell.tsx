@@ -112,15 +112,13 @@ const MainContent = styled.div`
   display: flex;
   flex-direction: column;
   overflow-y: auto;
-  padding: 0 1.75rem;
+  padding: 0;
   padding-bottom: 110px;
   position: relative;
   z-index: 1;
 
   @media (max-width: 800px) {
     padding-bottom: 145px;
-    padding-left: 1rem;
-    padding-right: 1rem;
   }
 `;
 
@@ -132,7 +130,7 @@ const TopBar = styled.div`
   top: 0;
   z-index: 50;
   padding: 1.25rem 1.75rem 1rem 1.75rem;
-  margin: 0 -1.75rem 1.5rem -1.75rem;
+  margin-bottom: 1.5rem;
   background: rgba(0, 0, 0, 0.4);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
@@ -141,7 +139,7 @@ const TopBar = styled.div`
 
   @media (max-width: 800px) {
     padding: 1rem;
-    margin: 0 -1rem 1.5rem -1rem;
+    margin-bottom: 1.5rem;
   }
 `;
 
