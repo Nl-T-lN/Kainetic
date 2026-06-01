@@ -88,7 +88,8 @@ const ExpandedLeft = styled.div`
   align-items: flex-start;
   justify-content: center;
   min-width: 0;
-  max-width: 500px;
+  max-width: min(600px, 100vh - 350px);
+  width: 100%;
 
   @media (max-width: 1000px) {
     flex: none;
@@ -98,15 +99,14 @@ const ExpandedLeft = styled.div`
   }
 `;
 
-const ArtworkContainer = styled.div<{ $isPlaying: boolean }>`
+const ArtworkContainer = styled.div`
   width: 100%;
   aspect-ratio: 1;
   border-radius: var(--radius);
   overflow: hidden;
   box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6);
-  transition: transform 1s cubic-bezier(0.16, 1, 0.3, 1);
-  transform: scale(${({ $isPlaying }) => ($isPlaying ? 1 : 0.92)});
   background: rgba(255, 255, 255, 0.05);
+  flex-shrink: 0;
 
   img {
     width: 100%;
@@ -117,17 +117,17 @@ const ArtworkContainer = styled.div<{ $isPlaying: boolean }>`
 `;
 
 const TrackDetails = styled.div`
-  margin-top: 2rem;
+  margin-top: 0.5rem;
   text-align: left;
   width: 100%;
 
   .title {
-    font-size: 2.25rem;
+    font-size: 1.75rem;
     font-weight: 800;
     color: #fff;
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.25rem;
     line-height: 1.1;
-    letter-spacing: -1px;
+    letter-spacing: -0.5px;
     
     display: -webkit-box;
     -webkit-line-clamp: 2;
@@ -136,7 +136,7 @@ const TrackDetails = styled.div`
   }
 
   .artist {
-    font-size: 1.25rem;
+    font-size: 1.1rem;
     font-weight: 500;
     color: rgba(255, 255, 255, 0.6);
   }
@@ -201,7 +201,7 @@ export function ExpandedPlayer({
       {currentTrack && (
         <ExpandedContent>
           <ExpandedLeft>
-            <ArtworkContainer $isPlaying={isPlaying}>
+            <ArtworkContainer>
               <img src={currentTrack.thumbnailUrl} alt={currentTrack.title} />
             </ArtworkContainer>
             

@@ -8,8 +8,8 @@ const ControlsWrapper = styled.div`
   width: 100%;
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
-  margin-top: 2rem;
+  gap: 1rem;
+  margin-top: 1rem;
   z-index: 10;
 `;
 
