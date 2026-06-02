@@ -44,8 +44,9 @@ export async function GET(request: Request) {
 
       const results = searchData.artists.contents.map((item: any) => {
         const thumbnail = getHighResThumbnail(item.thumbnails);
+        const artistId = item.id || item.endpoint?.payload?.browseId || null;
         return {
-          id: item.id,
+          id: artistId,
           name: item.name,
           subscribers: item.subscribers || "",
           thumbnailUrl: thumbnail,
@@ -83,8 +84,10 @@ export async function GET(request: Request) {
         artistId = item.authors[0]?.channel_id || item.authors[0]?.id || item.authors[0]?.endpoint?.payload?.browseId;
       }
 
+      const videoId = item.id || item.video_id || item.endpoint?.payload?.videoId || item.play_endpoint?.payload?.videoId || item.overlay?.content?.endpoint?.payload?.videoId || null;
+
       return {
-        videoId: item.id,
+        videoId: videoId,
         title: item.title,
         channelTitle: channelTitle,
         artistId: artistId,
