@@ -6,6 +6,8 @@ import type { Track } from "@/types/music";
 export interface UseSearchReturn {
   tracks: Track[];
   artists: any[];
+  albums: any[];
+  playlists: any[];
   isLoading: boolean;
   query: string;
   search: (query: string) => void;
@@ -32,6 +34,8 @@ export function useSearch(): UseSearchReturn {
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
 
   const [artists, setArtists] = useState<any[]>([]);
+  const [albums, setAlbums] = useState<any[]>([]);
+  const [playlists, setPlaylists] = useState<any[]>([]);
 
   const search = useCallback((query: string) => {
     if (debounceRef.current) {
@@ -41,6 +45,8 @@ export function useSearch(): UseSearchReturn {
     if (!query.trim()) {
       setTracks([]);
       setArtists([]);
+      setAlbums([]);
+      setPlaylists([]);
       setQuery("");
       return;
     }
@@ -50,9 +56,11 @@ export function useSearch(): UseSearchReturn {
 
     debounceRef.current = setTimeout(async () => {
       try {
-        const [trackRes, artistRes] = await Promise.all([
+        const [trackRes, artistRes, albumRes, playlistRes] = await Promise.all([
           fetch(`/api/search?q=${encodeURIComponent(query)}&type=song`),
-          fetch(`/api/search?q=${encodeURIComponent(query)}&type=artist`)
+          fetch(`/api/search?q=${encodeURIComponent(query)}&type=artist`),
+          fetch(`/api/search?q=${encodeURIComponent(query)}&type=album`),
+          fetch(`/api/search?q=${encodeURIComponent(query)}&type=playlist`)
         ]);
 
         if (trackRes.ok) {
@@ -68,15 +76,31 @@ export function useSearch(): UseSearchReturn {
         } else {
           setArtists([]);
         }
+        
+        if (albumRes.ok) {
+          const data = await albumRes.json();
+          setAlbums(data.results || []);
+        } else {
+          setAlbums([]);
+        }
+        
+        if (playlistRes.ok) {
+          const data = await playlistRes.json();
+          setPlaylists(data.results || []);
+        } else {
+          setPlaylists([]);
+        }
       } catch (error) {
         console.error("Search failed:", error);
         setTracks([]);
         setArtists([]);
+        setAlbums([]);
+        setPlaylists([]);
       } finally {
         setIsLoading(false);
       }
     }, 400); // 400ms debounce
   }, []);
 
-  return { tracks, artists, isLoading, query, search };
+  return { tracks, artists, albums, playlists, isLoading, query, search };
 }

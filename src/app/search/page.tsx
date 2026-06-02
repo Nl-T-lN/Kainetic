@@ -45,6 +45,8 @@ function SearchPageContent() {
         query={q || vibe || magic || ""}
         tracks={search.tracks.length > 0 ? search.tracks : (moodSearch.tracks.length > 0 ? moodSearch.tracks : playlistGen.tracks)}
         artists={search.artists}
+        albums={search.albums}
+        playlists={search.playlists}
         isLoading={search.isLoading || moodSearch.isLoading || playlistGen.isLoading}
         similarTracks={similar.tracks}
         isSimilarLoading={similar.isLoading}

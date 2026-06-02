@@ -3,6 +3,7 @@
 import styled from "styled-components";
 import { TrackList } from "./TrackList";
 import { ArtistGrid } from "./ArtistGrid";
+import { AlbumGrid } from "./AlbumGrid";
 import { SimilarTracks as SimilarTracksComponent } from "./SimilarTracks";
 import { useState } from "react";
 import type { Track } from "@/types/music";
@@ -76,6 +77,8 @@ interface SearchResultsOverlayProps {
   query: string;
   tracks: Track[];
   artists: any[];
+  albums: any[];
+  playlists: any[];
   isLoading: boolean;
   similarTracks: Track[];
   isSimilarLoading: boolean;
@@ -86,6 +89,8 @@ export function SearchResultsOverlay({
   query,
   tracks,
   artists,
+  albums,
+  playlists,
   isLoading,
   similarTracks,
   isSimilarLoading,
@@ -100,17 +105,6 @@ export function SearchResultsOverlay({
   };
 
   const getActiveTracks = () => {
-    if (searchCategory !== "All") {
-      if (searchCategory === "Artists") {
-        return tracks.filter((_, i) => i % 3 === 0);
-      } else if (searchCategory === "Albums") {
-        return tracks.filter((_, i) => i % 4 === 0);
-      } else if (searchCategory === "Playlists") {
-        return tracks.filter((_, i) => i % 5 === 0);
-      } else if (searchCategory === "Podcasts") {
-        return [];
-      }
-    }
     return tracks;
   };
 
@@ -132,9 +126,13 @@ export function SearchResultsOverlay({
 
       <ContentWrapper>
         {searchCategory === "Artists" ? (
-          <ArtistGrid 
-            artists={artists} 
-          />
+          <ArtistGrid artists={artists} />
+        ) : searchCategory === "Albums" ? (
+          <AlbumGrid items={albums} />
+        ) : searchCategory === "Playlists" ? (
+          <AlbumGrid items={playlists} />
+        ) : searchCategory === "Podcasts" ? (
+          <div style={{ color: 'var(--muted)', padding: '1rem' }}>No podcasts available</div>
         ) : (
           <TrackList
             tracks={getActiveTracks()}

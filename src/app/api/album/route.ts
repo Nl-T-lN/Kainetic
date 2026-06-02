@@ -45,13 +45,13 @@ export async function GET(request: Request) {
     
     const tracks = (result.contents || result.items || []).map((item: any) => {
       // Handle both album and playlist item structures
-      const trackId = item.id || item.videoId || item.endpoint?.payload?.videoId;
+      const trackId = item.id || item.videoId || item.endpoint?.payload?.videoId || item.play_endpoint?.payload?.videoId || item.overlay?.content?.endpoint?.payload?.videoId;
       if (!trackId) return null;
       
       return {
         videoId: trackId,
         title: item.title?.text || item.title || "Unknown Track",
-        artist: item.author?.name || item.artists?.[0]?.name || author,
+        artist: item.author?.name || item.authors?.[0]?.name || item.artists?.[0]?.name || author,
         thumbnailUrl: getHighResThumbnail(item.thumbnail?.contents || item.thumbnails || []) || thumbnailUrl,
         durationMs: item.duration?.seconds ? item.duration.seconds * 1000 : 0
       };

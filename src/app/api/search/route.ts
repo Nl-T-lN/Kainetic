@@ -56,6 +56,26 @@ export async function GET(request: Request) {
       return NextResponse.json({ results });
     }
 
+    if (type === "album" || type === "playlist") {
+      const contents = type === "album" ? searchData.albums?.contents : searchData.playlists?.contents;
+      if (!contents || contents.length === 0) {
+        return NextResponse.json({ results: [] });
+      }
+
+      const results = contents.map((item: any) => {
+        const thumbnail = getHighResThumbnail(item.thumbnails || item.thumbnail);
+        const itemId = item.id || item.endpoint?.payload?.browseId || null;
+        return {
+          id: itemId,
+          title: item.title?.text || item.title || "Unknown Title",
+          subtitle: item.subtitle?.text || item.author?.name || item.author || (type === "album" ? "Album" : "Playlist"),
+          thumbnailUrl: thumbnail,
+          type: type
+        };
+      });
+      return NextResponse.json({ results });
+    }
+
     if (!searchData.songs?.contents || searchData.songs.contents.length === 0) {
       return NextResponse.json({ tracks: [] });
     }
