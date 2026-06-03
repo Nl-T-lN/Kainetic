@@ -6,7 +6,7 @@ import type { Track } from "@/types/music";
 import { AmbientBackground } from "./AmbientBackground";
 import { PlayerControls } from "./PlayerControls";
 import { LyricsView } from "./LyricsView";
-import { useLyrics } from "@/hooks/useLyrics";
+import { usePlayer } from "@/contexts/PlayerContext";
 
 const fadeIn = keyframes`
   from { opacity: 0; transform: translateY(20px); }
@@ -188,7 +188,7 @@ export function ExpandedPlayer({
   isHost,
   onClose
 }: ExpandedPlayerProps) {
-  const { lyrics, plainLyrics, isLoading: lyricsLoading } = useLyrics(currentTrack);
+  const { lyrics, plainLyrics, isLyricsLoading } = usePlayer();
 
   return (
     <ExpandedWrapper>
@@ -232,7 +232,7 @@ export function ExpandedPlayer({
           <LyricsView 
             lyrics={lyrics}
             plainLyrics={plainLyrics}
-            isLoading={lyricsLoading}
+            isLoading={isLyricsLoading}
             positionMs={positionMs}
             onSeek={onSeek}
             isExpanded={true}

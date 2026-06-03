@@ -25,6 +25,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { AlertTriangle, Menu, Settings } from "lucide-react";
 import Link from "next/link";
 import { BottomNavBar } from "./BottomNavBar";
+import { useLyrics } from "@/hooks/useLyrics";
 
 const ModalOverlay = styled.div`
   position: fixed;
@@ -180,6 +181,9 @@ export function GlobalShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const [pendingTrackAction, setPendingTrackAction] = useState<{track: Track, contextQueue?: Track[]} | null>(null);
   const lastTrackChangeRef = useRef(0);
+  
+  // Global lyrics fetching
+  const { lyrics, plainLyrics, isLoading: isLyricsLoading } = useLyrics(playerState.currentTrack);
 
   // When in listener mode, sync to party state
   useEffect(() => {
@@ -356,6 +360,10 @@ export function GlobalShell({ children }: { children: React.ReactNode }) {
       onStartRadio: interceptedOnPlay,
       party,
       currentTrack: playerState.currentTrack || null,
+      lyrics,
+      plainLyrics,
+      isLyricsLoading,
+      playerRef: player.playerRef
     }}>
       <AppLayout style={{ '--sidebar-width': isSidebarCollapsed ? '80px' : '230px' } as any}>
         <Sidebar 
