@@ -32,10 +32,31 @@ const interFont = Inter({
 
 // 🔵 WE CODE: Metadata API
 export const metadata: Metadata = {
-  title: "Ventify",
-  description: "A modern glassmorphic music streaming platform.",
+  title: "Ventify | Music Streaming",
+  description: "A premium, music streaming platform powered by the YouTube Music catalog. Listen with friends in real-time, view time-synced lyrics, and discover new music.",
   icons: {
     icon: "/favicon.svg",
+  },
+  openGraph: {
+    title: "Ventify | Music Streaming",
+    description: "A music streaming platform. Listen with friends in real-time, view time-synced lyrics, and discover new music.",
+    siteName: "Ventify",
+    images: [
+      {
+        url: "/assets/home.jpeg",
+        width: 1920,
+        height: 1080,
+        alt: "Ventify Dashboard",
+      },
+    ],
+    locale: "en_US",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Ventify | Music Streaming",
+    description: "A premium, music streaming platform powered by the YouTube Music catalog.",
+    images: ["/assets/home.jpeg"],
   },
 };
 
