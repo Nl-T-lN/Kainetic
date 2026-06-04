@@ -1,25 +1,22 @@
 "use client";
 
 import styled from "styled-components";
-import { useEffect, useState } from "react";
-import MusicMap from "@/components/explore/MusicMap";
-import GenreGrid from "@/components/explore/GenreGrid";
+import { useEffect, useState, use } from "react";
 import { TrackList } from "@/components/TrackList";
 import { AlbumGrid } from "@/components/AlbumGrid";
-import { Compass, Loader2 } from "lucide-react";
+import { Loader2, ArrowLeft } from "lucide-react";
 import { usePlayer } from "@/contexts/PlayerContext";
 import type { Track } from "@/types/music";
-
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 const HeaderRow = styled.div`
   display: flex;
   align-items: center;
-  justify-content: space-between;
   margin-bottom: 2rem;
   border-bottom: 1px solid rgba(255, 255, 255, 0.06);
   padding-bottom: 1rem;
   padding-top: 1rem;
+  gap: 16px;
 `;
 
 const Header = styled.h2`
@@ -30,9 +27,24 @@ const Header = styled.h2`
   align-items: center;
   gap: 0.75rem;
   margin: 0;
+`;
 
-  svg {
-    color: var(--accent);
+const BackButton = styled.button`
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: scale(1.05);
   }
 `;
 
@@ -65,39 +77,6 @@ const SectionHeader = styled.div`
   }
 `;
 
-const MoodContainer = styled.div`
-  display: flex;
-  overflow-x: auto;
-  gap: 12px;
-  padding-bottom: 12px;
-  
-  /* Hide scrollbar */
-  &::-webkit-scrollbar {
-    display: none;
-  }
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-`;
-
-const MoodButton = styled.button`
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 999px;
-  padding: 10px 20px;
-  color: #fff;
-  font-size: 0.95rem;
-  font-weight: 600;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: all 0.2s ease;
-  flex-shrink: 0;
-  
-  &:hover {
-    background: rgba(255, 255, 255, 0.15);
-    transform: scale(1.02);
-  }
-`;
-
 const LoadingContainer = styled.div`
   display: flex;
   flex-direction: column;
@@ -117,21 +96,25 @@ const LoadingContainer = styled.div`
   }
 `;
 
-export default function ExplorePage() {
+export default function GenrePage({ params }: { params: Promise<{ params: string }> }) {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const title = searchParams.get("title") || "Genre";
+  const unwrappedParams = use(params);
+  
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const { onPlay, currentTrack } = usePlayer();
 
   useEffect(() => {
-    fetch("/api/explore")
+    fetch(`/api/genre?params=${unwrappedParams.params}`)
       .then(res => res.json())
       .then(d => {
         setData(d);
         setLoading(false);
       })
       .catch(() => setLoading(false));
-  }, []);
+  }, [unwrappedParams.params]);
 
   const handleTrackSelect = (track: Track) => {
     onPlay(track);
@@ -139,46 +122,28 @@ export default function ExplorePage() {
 
   return (
     <Container>
-      <Header>
-        <Compass size={36} color="white" />
-        <h1>Explore</h1>
-      </Header>
+      <HeaderRow>
+        <BackButton onClick={() => router.back()}>
+          <ArrowLeft size={24} />
+        </BackButton>
+        <Header>{title}</Header>
+      </HeaderRow>
 
       {loading && (
         <LoadingContainer>
           <Loader2 size={32} />
-          <span>Discovering music...</span>
+          <span>Loading {title}...</span>
         </LoadingContainer>
       )}
-
-      {data?.moods && data.moods.length > 0 && (
-        <Section>
-          <SectionHeader>
-            <h3>Mood</h3>
-          </SectionHeader>
-          <MoodContainer>
-            {data.moods.map((mood: any, idx: number) => (
-              <MoodButton 
-                key={idx}
-                onClick={() => router.push(`/genre/${mood.params}?title=${encodeURIComponent(mood.title)}`)}
-              >
-                {mood.title}
-              </MoodButton>
-            ))}
-          </MoodContainer>
-        </Section>
-      )}
-
-      <Section>
-        <GenreGrid />
-      </Section>
 
       {data && data.sections && data.sections.map((section: any, idx: number) => {
         const isAlbumSection = section.items[0]?.type === "MusicTwoRowItem";
         
         return (
           <Section key={idx}>
-            <SectionHeader>{section.title}</SectionHeader>
+            <SectionHeader>
+              <h3>{section.title}</h3>
+            </SectionHeader>
             {isAlbumSection ? (
               <AlbumGrid items={section.items} />
             ) : (
@@ -197,10 +162,6 @@ export default function ExplorePage() {
           </Section>
         );
       })}
-
-      <Section>
-        <MusicMap />
-      </Section>
     </Container>
   );
 }

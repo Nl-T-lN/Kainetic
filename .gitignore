@@ -50,3 +50,6 @@ graphify-out/
 GEMINI.md
 .gemini/
 .agents/
+
+tmp/
+
