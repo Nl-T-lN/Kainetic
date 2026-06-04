@@ -1,17 +1,16 @@
-# Ventify
+# About
 
-Ventify is an ad-free music streaming client powered by the YouTube Music catalog, built to look and feel like a premium native app.
-
+a music streaming client.
 ## Features
 
 ### Audio & Playback
-- Ad-free streaming directly from the YouTube Music catalog
+- Ad-free streaming directly from the YouTube Music.
 - Full-screen player with dynamic, blurred album art background
 - Real-time, word-by-word synced lyrics
 
 ### Interface
-- Responsive dark mode UI built with styled-components
-- Clean, native-feeling design inspired by Apple Music and Spotify
+- Responsive UI built with styled-components
+- Clean, native-feeling design
 - Fast navigation with minimal loading states
 
 ### Discovery & Organization
