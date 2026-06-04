@@ -26,9 +26,11 @@ a music streaming client.
 ## Screenshots
 
 ![Home Dashboard](public/assets/home.jpeg)
-![Explore Hub](public/assets/explore.jpeg)
-![PlaySync Session](public/assets/Party.jpeg)
 ![Time-Synced Lyrics](public/assets/extendedplayer.jpeg)
+![PlaySync Session](public/assets/Party.jpeg)
+![Explore Hub](public/assets/explore.jpeg)
+
+
 
 ## Getting Started
 
