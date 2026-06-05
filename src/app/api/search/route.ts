@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { Innertube } from "youtubei.js";
+import { getSharedInnertube } from "@/lib/youtube";
 import { getHighResThumbnail } from "@/lib/thumbnail";
 import type { SearchResult } from "@/types/music";
 
@@ -11,17 +11,7 @@ import type { SearchResult } from "@/types/music";
 // and gives us direct access to YouTube Music's high-quality metadata.
 // ============================================================
 
-// Keep a cached instance of Innertube for performance
-let innertube: Innertube | null = null;
-
-async function getInnertube() {
-  if (!innertube) {
-    // Generate an Innertube client
-    innertube = await Innertube.create();
-  }
-  return innertube;
-}
-
+// Using shared singleton from @/lib/youtube
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const query = searchParams.get("q");
@@ -32,7 +22,7 @@ export async function GET(request: Request) {
   }
 
   try {
-    const yt = await getInnertube();
+    const yt = await getSharedInnertube();
     
     // Search strictly for the specified type in YouTube Music
     const searchData = await yt.music.search(query, { type: type as any });

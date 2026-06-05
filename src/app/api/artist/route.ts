@@ -1,15 +1,8 @@
 import { NextResponse } from "next/server";
-import { Innertube } from "youtubei.js";
+import { getSharedInnertube } from "@/lib/youtube";
 import { getHighResThumbnail } from "@/lib/thumbnail";
 
-let innertube: Innertube | null = null;
-
-async function getInnertube() {
-  if (!innertube) {
-    innertube = await Innertube.create();
-  }
-  return innertube;
-}
+// Using shared singleton from @/lib/youtube
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -20,7 +13,7 @@ export async function GET(request: Request) {
   }
 
   try {
-    const yt = await getInnertube();
+    const yt = await getSharedInnertube();
     const artist = await yt.music.getArtist(id);
 
     const formatTrack = (item: any) => ({

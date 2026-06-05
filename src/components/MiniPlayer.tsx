@@ -4,6 +4,7 @@ import styled from "styled-components";
 import { Play, Pause, SkipBack, SkipForward, Shuffle, Repeat, Volume2, VolumeX, ListMusic } from "lucide-react";
 import type { Track } from "@/types/music";
 import { ProgressBar } from "./ProgressBar";
+import { usePlayerStore } from "@/store/playerStore";
 
 const MiniPlayerContainer = styled.div`
   display: flex;
@@ -214,9 +215,6 @@ const RoomBadge = styled.div`
 
 interface MiniPlayerProps {
   currentTrack: Track | null;
-  isPlaying: boolean;
-  positionMs: number;
-  durationMs: number;
   onPlayPause: () => void;
   onSeek: (ms: number) => void;
   onNext?: () => void;
@@ -238,9 +236,6 @@ interface MiniPlayerProps {
 
 export function MiniPlayer({
   currentTrack,
-  isPlaying,
-  positionMs,
-  durationMs,
   onPlayPause,
   onSeek,
   onNext,
@@ -264,6 +259,10 @@ export function MiniPlayer({
     const pct = Math.max(0, Math.min(100, ((e.clientX - rect.left) / rect.width) * 100));
     setVolume(Math.round(pct));
   };
+
+  const isPlaying = usePlayerStore(s => s.isPlaying);
+  const positionMs = usePlayerStore(s => s.positionMs);
+  const durationMs = usePlayerStore(s => s.durationMs);
 
   return (
     <MiniPlayerContainer>
@@ -355,7 +354,7 @@ export function MiniPlayer({
           </button>
         </ButtonsRow>
         <DesktopProgressBarWrapper>
-          <ProgressBar positionMs={positionMs} durationMs={durationMs} onSeek={(ms) => { if (!isGuest) onSeek(ms); }} />
+          <ProgressBar onSeek={(ms) => { if (!isGuest) onSeek(ms); }} />
         </DesktopProgressBarWrapper>
       </ControlsContainer>
 

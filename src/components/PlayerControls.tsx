@@ -3,6 +3,7 @@
 import styled from "styled-components";
 import { Play, Pause, SkipBack, SkipForward, Shuffle, Repeat, Users } from "lucide-react";
 import { ProgressBar } from "./ProgressBar";
+import { usePlayerStore } from "@/store/playerStore";
 
 const ControlsWrapper = styled.div`
   width: 100%;
@@ -108,9 +109,6 @@ const LiveDot = styled.div`
 `;
 
 interface PlayerControlsProps {
-  isPlaying: boolean;
-  positionMs: number;
-  durationMs: number;
   onPlayPause: () => void;
   onSeek: (ms: number) => void;
   onNext?: () => void;
@@ -126,9 +124,6 @@ interface PlayerControlsProps {
 }
 
 export function PlayerControls({
-  isPlaying,
-  positionMs,
-  durationMs,
   onPlayPause,
   onSeek,
   onNext,
@@ -142,9 +137,11 @@ export function PlayerControls({
   listenerCount,
   isHost
 }: PlayerControlsProps) {
+  const isPlaying = usePlayerStore(s => s.isPlaying);
+
   return (
     <ControlsWrapper>
-      <ProgressBar positionMs={positionMs} durationMs={durationMs} onSeek={(ms) => { if (!isGuest) onSeek(ms); }} />
+      <ProgressBar onSeek={(ms) => { if (!isGuest) onSeek(ms); }} />
       
       <ButtonsRow>
         <ControlButton 

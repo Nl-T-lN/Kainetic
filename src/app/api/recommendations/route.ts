@@ -1,16 +1,9 @@
 import { NextResponse } from "next/server";
-import { Innertube } from "youtubei.js";
+import { getSharedInnertube } from "@/lib/youtube";
 import type { SearchResult } from "@/types/music";
 import { getHighResThumbnail } from "@/lib/thumbnail";
 
-let innertube: Innertube | null = null;
-
-async function getInnertube() {
-  if (!innertube) {
-    innertube = await Innertube.create();
-  }
-  return innertube;
-}
+// Using shared singleton from @/lib/youtube
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -21,7 +14,7 @@ export async function GET(request: Request) {
   }
 
   try {
-    const yt = await getInnertube();
+    const yt = await getSharedInnertube();
     
     // Get the "Up Next" queue for a specific video ID using YouTube Music
     const upNext = await yt.music.getUpNext(videoId);

@@ -20,9 +20,6 @@ export interface SearchResult {
 
 export interface PlayerState {
   currentTrack: Track | null;
-  isPlaying: boolean;
-  positionMs: number;
-  durationMs: number;
 }
 
 // ── Party / Listen Along ──

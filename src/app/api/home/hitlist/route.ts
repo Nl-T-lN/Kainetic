@@ -1,22 +1,15 @@
 import { NextResponse } from "next/server";
-import { Innertube } from "youtubei.js";
+import { getSharedInnertube } from "@/lib/youtube";
 import { getHighResThumbnail } from "@/lib/thumbnail";
 
-let innertube: Innertube | null = null;
-
-async function getInnertube() {
-  if (!innertube) {
-    innertube = await Innertube.create();
-  }
-  return innertube;
-}
+// Using shared singleton from @/lib/youtube
 
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const artists = searchParams.get('artists');
     
-    const yt = await getInnertube();
+    const yt = await getSharedInnertube();
     const hitlists: any[] = [];
     
     if (artists) {

@@ -25,7 +25,7 @@ export async function runDJChain(
   memory: BufferMemory
 ): Promise<string> {
   const llm = new ChatGoogleGenerativeAI({
-    model: "gemini-1.5-pro-latest",
+    model: "gemini-1.5-flash-latest",
     temperature: 0.7, // 0.7 gives a good mix of creativity and focus
   });
 

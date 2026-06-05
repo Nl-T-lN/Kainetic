@@ -226,9 +226,6 @@ const LyricsWrapper = styled.div`
 
 interface ExpandedPlayerProps {
   currentTrack: Track | null;
-  isPlaying: boolean;
-  positionMs: number;
-  durationMs: number;
   onPlayPause: () => void;
   onSeek: (ms: number) => void;
   onNext?: () => void;
@@ -246,9 +243,6 @@ interface ExpandedPlayerProps {
 
 export function ExpandedPlayer({
   currentTrack,
-  isPlaying,
-  positionMs,
-  durationMs,
   onPlayPause,
   onSeek,
   onNext,
@@ -289,9 +283,6 @@ export function ExpandedPlayer({
 
             <ControlsContainer>
               <PlayerControls
-                isPlaying={isPlaying}
-                positionMs={positionMs}
-                durationMs={durationMs}
                 onPlayPause={onPlayPause}
                 onSeek={onSeek}
                 onNext={onNext}
@@ -313,7 +304,6 @@ export function ExpandedPlayer({
               lyrics={lyrics}
               plainLyrics={plainLyrics}
               isLoading={isLyricsLoading}
-              positionMs={positionMs}
               onSeek={onSeek}
               isExpanded={true}
             />

@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useRef } from "react";
 import type { PlayerState, Track } from "@/types/music";
+import { usePlayerStore } from "@/store/playerStore";
 
 // ============================================================
 // 📚 LEARN: usePlayerState.ts
@@ -35,9 +36,10 @@ export function usePlayerState(
   playerRef: React.MutableRefObject<YT.Player | null>
 ): UsePlayerStateReturn {
   const [currentTrack, setCurrentTrack] = useState<Track | null>(null);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [positionMs, setPositionMs] = useState(0);
-  const [durationMs, setDurationMs] = useState(0);
+
+  const setIsPlaying = usePlayerStore(state => state.setIsPlaying);
+  const setPositionMs = usePlayerStore(state => state.setPositionMs);
+  const setDurationMs = usePlayerStore(state => state.setDurationMs);
   
   const [queue, setQueueState] = useState<Track[]>([]);
   const [queueIndex, setQueueIndex] = useState(0);
@@ -89,7 +91,7 @@ export function usePlayerState(
         setPositionMs(pos);
         
         const dur = playerRef.current.getDuration() * 1000;
-        if (dur > 0 && dur !== durationMs) {
+        if (dur > 0 && dur !== usePlayerStore.getState().durationMs) {
           setDurationMs(dur);
         }
       } else {
@@ -102,13 +104,13 @@ export function usePlayerState(
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
-  }, [playerRef, durationMs]);
+  }, [playerRef]);
 
   const getExactPosition = () => {
     if (playerRef.current && typeof (playerRef.current as any).getCurrentTime === 'function') {
       return (playerRef.current as any).getCurrentTime() * 1000;
     }
-    return positionMs;
+    return usePlayerStore.getState().positionMs;
   };
 
   const handleSetTrack = (track: Track | null) => {
@@ -170,7 +172,7 @@ export function usePlayerState(
   };
 
   const playPrev = () => {
-    if (positionMs > 3000) {
+    if (usePlayerStore.getState().positionMs > 3000) {
       // If we are more than 3 seconds in, just restart the song
       if (playerRef.current) playerRef.current.seekTo(0, true);
     } else if (queue.length > 0 && queueIndex > 0) {
@@ -227,9 +229,6 @@ export function usePlayerState(
 
   return { 
     currentTrack, 
-    isPlaying, 
-    positionMs, 
-    durationMs, 
     setCurrentTrack: handleSetTrack,
     queue,
     queueIndex,

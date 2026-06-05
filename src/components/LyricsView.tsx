@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, useMemo } from "react";
 import styled from "styled-components";
 import type { ParsedLyricLine } from "@/utils/lyricsParser";
 import { usePlayer } from "@/contexts/PlayerContext";
+import { usePlayerStore } from "@/store/playerStore";
 
 const LyricsContainer = styled.div`
   flex: 1;
@@ -144,18 +145,17 @@ interface LyricsViewProps {
   lyrics: ParsedLyricLine[];
   plainLyrics: string | null;
   isLoading: boolean;
-  positionMs: number;
   onSeek: (ms: number) => void;
   isExpanded: boolean;
 }
 
-export function LyricsView({ lyrics, plainLyrics, isLoading, positionMs: globalPositionMs, onSeek, isExpanded }: LyricsViewProps) {
+export function LyricsView({ lyrics, plainLyrics, isLoading, onSeek, isExpanded }: LyricsViewProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [userIsScrolling, setUserIsScrolling] = useState(false);
   const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const { playerRef } = usePlayer();
-  const [positionMs, setPositionMs] = useState(globalPositionMs);
+  const [positionMs, setPositionMs] = useState(usePlayerStore.getState().positionMs);
 
   useEffect(() => {
     let rafId: number;

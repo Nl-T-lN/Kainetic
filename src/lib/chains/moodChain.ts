@@ -14,7 +14,7 @@ import { PromptTemplate } from "@langchain/core/prompts";
 
 export async function runMoodChain(moodQuery: string): Promise<string[]> {
   const llm = new ChatGoogleGenerativeAI({
-    model: "gemini-1.5-pro-latest",
+    model: "gemini-1.5-flash-latest",
     temperature: 0.5, // Lower temperature to force strict JSON output format
   });
 

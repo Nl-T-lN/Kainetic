@@ -670,6 +670,7 @@ export function ListenAlong({ party }: ListenAlongProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<Track[]>([]);
   const [isSearching, setIsSearching] = useState(false);
+  const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
 
   const [showProfileModal, setShowProfileModal] = useState(false);
@@ -737,22 +738,29 @@ export function ListenAlong({ party }: ListenAlongProps) {
     }
   };
 
-  const handleSearch = async (query: string) => {
+  const handleSearch = (query: string) => {
     setSearchQuery(query);
     if (!query.trim()) {
       setSearchResults([]);
       return;
     }
-    setIsSearching(true);
-    try {
-      const res = await fetch(`/api/search?q=${encodeURIComponent(query)}&type=song`);
-      const data = await res.json();
-      setSearchResults(data.tracks || []);
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setIsSearching(false);
+    
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
     }
+    
+    searchTimeoutRef.current = setTimeout(async () => {
+      setIsSearching(true);
+      try {
+        const res = await fetch(`/api/search?q=${encodeURIComponent(query)}&type=song`);
+        const data = await res.json();
+        setSearchResults(data.tracks || []);
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setIsSearching(false);
+      }
+    }, 500);
   };
 
   const handleAddTrack = (track: Track) => {

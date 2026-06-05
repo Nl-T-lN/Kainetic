@@ -52,9 +52,6 @@ const BottomBar = styled.div<{ $isExpanded: boolean }>`
 
 interface BottomPlayerProps {
   currentTrack: Track | null;
-  isPlaying: boolean;
-  positionMs: number;
-  durationMs: number;
   queue?: Track[];
   queueIndex?: number;
   onPlayPause: () => void;
@@ -74,9 +71,6 @@ interface BottomPlayerProps {
 
 export function BottomPlayer({
   currentTrack,
-  isPlaying,
-  positionMs,
-  durationMs,
   queue,
   queueIndex,
   onPlayPause,
@@ -105,9 +99,6 @@ export function BottomPlayer({
       {!isExpanded ? (
         <MiniPlayer
           currentTrack={currentTrack}
-          isPlaying={isPlaying}
-          positionMs={positionMs}
-          durationMs={durationMs}
           onPlayPause={onPlayPause}
           onSeek={onSeek}
           onNext={onNext}
@@ -132,9 +123,6 @@ export function BottomPlayer({
       ) : (
         <ExpandedPlayer
           currentTrack={currentTrack}
-          isPlaying={isPlaying}
-          positionMs={positionMs}
-          durationMs={durationMs}
           onPlayPause={onPlayPause}
           onSeek={onSeek}
           onNext={onNext}

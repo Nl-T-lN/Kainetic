@@ -1,20 +1,12 @@
 import { NextResponse } from "next/server";
-import { Innertube } from "youtubei.js";
+import { getSharedInnertube } from "@/lib/youtube";
 import { getHighResThumbnail } from "@/lib/thumbnail";
 
-// Keep a cached instance of Innertube for performance
-let innertube: Innertube | null = null;
-
-async function getInnertube() {
-  if (!innertube) {
-    innertube = await Innertube.create();
-  }
-  return innertube;
-}
+// Using shared singleton from @/lib/youtube
 
 export async function GET() {
   try {
-    const yt = await getInnertube();
+    const yt = await getSharedInnertube();
     const explore = await yt.music.getExplore();
     
     // We will extract structured sections from explore data

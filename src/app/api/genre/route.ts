@@ -1,15 +1,8 @@
 import { NextResponse } from "next/server";
-import { Innertube } from "youtubei.js";
+import { getSharedInnertube } from "@/lib/youtube";
 import { getHighResThumbnail } from "@/lib/thumbnail";
 
-let innertube: Innertube | null = null;
-
-async function getInnertube() {
-  if (!innertube) {
-    innertube = await Innertube.create();
-  }
-  return innertube;
-}
+// Using shared singleton from @/lib/youtube
 
 export async function GET(request: Request) {
   try {
@@ -20,7 +13,7 @@ export async function GET(request: Request) {
         return NextResponse.json({ error: "Missing params parameter" }, { status: 400 });
     }
 
-    const yt = await getInnertube();
+    const yt = await getSharedInnertube();
     const page = await yt.actions.execute('/browse', { browseId: 'FEmusic_moods_and_genres_category', params, client: 'YTMUSIC' });
     const pageAny = page as any;
     const sectionsRaw = pageAny.data?.contents?.singleColumnBrowseResultsRenderer?.tabs?.[0]?.tabRenderer?.content?.sectionListRenderer?.contents;

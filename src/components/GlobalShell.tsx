@@ -14,6 +14,7 @@ import { PlayerContext } from "@/contexts/PlayerContext";
 
 // Components
 import { Sidebar } from "./Sidebar";
+import { usePlayerStore } from "@/store/playerStore";
 import { BottomPlayer } from "./BottomPlayer";
 import { QueueSidebar } from "./QueueSidebar";
 import { SearchHub } from "./SearchHub";
@@ -166,6 +167,7 @@ const SettingsButton = styled(Link)`
 export function GlobalShell({ children }: { children: React.ReactNode }) {
   const player = useYTPlayer();
   const playerState = usePlayerState(player.playerRef);
+  const isPlaying = usePlayerStore(s => s.isPlaying);
 
   const search = useSearch();
   const moodSearch = useMoodSearch();
@@ -208,9 +210,9 @@ export function GlobalShell({ children }: { children: React.ReactNode }) {
       }
 
       // Sync play/pause based on host's state
-      if (ps.isPlaying && !playerState.isPlaying) {
+      if (ps.isPlaying && !isPlaying) {
         player.resume();
-      } else if (!ps.isPlaying && playerState.isPlaying) {
+      } else if (!ps.isPlaying && isPlaying) {
         player.pause();
       }
 
@@ -222,7 +224,7 @@ export function GlobalShell({ children }: { children: React.ReactNode }) {
         player.seek(ps.positionMs);
       }
     }
-  }, [party.isHost, party.partyPlayerState, player, playerState, playerState.currentTrack?.videoId, playerState.isPlaying, playerState.positionMs]);
+  }, [party.isHost, party.partyPlayerState, player, playerState, playerState.currentTrack?.videoId, isPlaying]);
 
   useEffect(() => {
     if (playerState.currentTrack?.thumbnailUrl) {
@@ -264,6 +266,25 @@ export function GlobalShell({ children }: { children: React.ReactNode }) {
     }
   }, [playerState.currentTrack?.thumbnailUrl]);
 
+  // Sync to OS MediaSession for background playback
+  useEffect(() => {
+    if (playerState.currentTrack && typeof navigator !== 'undefined' && 'mediaSession' in navigator) {
+      navigator.mediaSession.metadata = new window.MediaMetadata({
+        title: playerState.currentTrack.title,
+        artist: playerState.currentTrack.channelTitle || (playerState.currentTrack as any).artist || 'Unknown Artist',
+        album: 'Vintify',
+        artwork: [
+          { src: playerState.currentTrack.thumbnailUrl || '', sizes: '512x512', type: 'image/jpeg' }
+        ]
+      });
+
+      navigator.mediaSession.setActionHandler('play', () => player.resume());
+      navigator.mediaSession.setActionHandler('pause', () => player.pause());
+      navigator.mediaSession.setActionHandler('previoustrack', () => playerState.playPrev());
+      navigator.mediaSession.setActionHandler('nexttrack', () => playerState.playNext());
+    }
+  }, [playerState.currentTrack, player, playerState]);
+
   const handlePlayTrack = async (track: Track, contextQueue?: Track[]) => {
     // 1. Play track immediately and clear old queue
     playerState.setCurrentTrack(track);
@@ -297,7 +318,7 @@ export function GlobalShell({ children }: { children: React.ReactNode }) {
     if (party.roomCode && !party.isHost) return;
     
     if (!playerState.currentTrack) return;
-    if (playerState.isPlaying) {
+    if (isPlaying) {
       player.pause();
     } else {
       player.resume();
@@ -345,10 +366,11 @@ export function GlobalShell({ children }: { children: React.ReactNode }) {
 
   const handleSkip = (direction: "forward" | "backward") => {
     const skipAmount = 10000; // 10 seconds
+    const currentPos = usePlayerStore.getState().positionMs;
     if (direction === "forward") {
-      player.seek(playerState.positionMs + skipAmount);
+      player.seek(currentPos + skipAmount);
     } else {
-      player.seek(Math.max(0, playerState.positionMs - skipAmount));
+      player.seek(Math.max(0, currentPos - skipAmount));
     }
   };
 
@@ -394,36 +416,40 @@ export function GlobalShell({ children }: { children: React.ReactNode }) {
         <YouTube
           videoId={playerState.currentTrack?.videoId}
           opts={{
-            height: '200',
-            width: '200',
+            height: '1',
+            width: '1',
             playerVars: {
               autoplay: 1,
               controls: 0,
               disablekb: 1,
               fs: 0,
               rel: 0,
+              playsinline: 1,
             },
           }}
-          onReady={player.onReady}
+          onReady={(event) => {
+            event.target.setPlaybackQuality('small');
+            player.onReady(event);
+          }}
           onEnd={() => {
             if (party.roomCode && !party.isHost) return;
             playerState.playNext();
           }}
           className="yt-player-hidden"
           style={{
-            position: "absolute",
-            top: "-9999px",
-            left: "-9999px",
-            width: "200px",
-            height: "200px",
+            position: "fixed",
+            top: 0,
+            left: 0,
+            width: "1px",
+            height: "1px",
+            opacity: 0.01,
+            pointerEvents: "none",
+            zIndex: -1,
           }}
         />
 
         <BottomPlayer
           currentTrack={playerState.currentTrack}
-          isPlaying={playerState.isPlaying}
-          positionMs={playerState.positionMs}
-          durationMs={playerState.durationMs}
           queue={activeQueue}
           queueIndex={activeQueueIndex}
           onPlayPause={togglePlay}

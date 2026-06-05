@@ -7,7 +7,7 @@ export async function runPlaylistChain(vibeDescription: string): Promise<{
   songs: Array<{ title: string; artist: string }>;
 } | null> {
   const llm = new ChatGoogleGenerativeAI({
-    model: "gemini-1.5-pro-latest",
+    model: "gemini-1.5-flash-latest",
     temperature: 0.7, 
   });
 

@@ -14,6 +14,7 @@ import type {
 import type { UsePlayerStateReturn } from "./usePlayerState";
 import { PartyEventSchema } from "@/lib/party-schema";
 import { createMeasurement, calculateOffsetEstimate, NTPMeasurement } from "@/lib/ntp";
+import { usePlayerStore } from "@/store/playerStore";
 export type ConnectionStatus = 'idle' | 'connecting' | 'connected' | 'error';
 
 export interface UsePartyRoomReturn {
@@ -62,6 +63,8 @@ export function usePartyRoom(localState: UsePlayerStateReturn): UsePartyRoomRetu
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>('idle');
   const [profile, setProfile] = useState<PartyProfile | null>(null);
+
+  const isPlaying = usePlayerStore(state => state.isPlaying);
   
   const ablyRef = useRef<Ably.Realtime | null>(null);
   const channelRef = useRef<Ably.RealtimeChannel | null>(null);
@@ -114,7 +117,7 @@ export function usePartyRoom(localState: UsePlayerStateReturn): UsePartyRoomRetu
       
       const payload: SyncPayload = {
         currentTrack: localState.currentTrack,
-        isPlaying: localState.isPlaying,
+        isPlaying: isPlaying,
         positionMs: localState.getExactPosition(),
         timestamp: now,
         queue: localState.queue,
@@ -126,19 +129,19 @@ export function usePartyRoom(localState: UsePlayerStateReturn): UsePartyRoomRetu
       setPartyQueueIndex(localState.queueIndex);
 
       const isMajorChange = 
-        prevIsPlaying.current !== localState.isPlaying || 
+        prevIsPlaying.current !== isPlaying || 
         prevTrackId.current !== localState.currentTrack?.videoId;
 
       if (isMajorChange || (now - lastSyncTime.current > 2000)) {
         channelRef.current.publish("party_events", { type: "SYNC", syncPayload: payload } as PartyEvent);
         lastSyncTime.current = now;
-        prevIsPlaying.current = localState.isPlaying;
+        prevIsPlaying.current = isPlaying;
         prevTrackId.current = localState.currentTrack?.videoId;
       }
     }
   }, [
     isHost, roomCode, 
-    localState.isPlaying, localState.currentTrack, localState.positionMs, 
+    isPlaying, localState.currentTrack,
     localState.queue, localState.queueIndex
   ]);
 

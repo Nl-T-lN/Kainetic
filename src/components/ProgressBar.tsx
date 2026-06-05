@@ -1,6 +1,7 @@
 "use client";
 
 import styled from "styled-components";
+import { usePlayerStore } from "@/store/playerStore";
 
 const ProgressWrapper = styled.div`
   width: 100%;
@@ -73,16 +74,14 @@ function formatTime(ms: number) {
 }
 
 interface ProgressBarProps {
-  positionMs: number;
-  durationMs: number;
   onSeek: (ms: number) => void;
 }
 
 export function ProgressBar({
-  positionMs,
-  durationMs,
   onSeek,
 }: ProgressBarProps) {
+  const positionMs = usePlayerStore(s => s.positionMs);
+  const durationMs = usePlayerStore(s => s.durationMs);
   const fillPct = durationMs > 0 ? (positionMs / durationMs) * 100 : 0;
   const clampedPct = Math.min(100, Math.max(0, fillPct));
 

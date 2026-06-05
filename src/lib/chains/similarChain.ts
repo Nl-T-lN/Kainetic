@@ -4,7 +4,7 @@ import { PromptTemplate } from "@langchain/core/prompts";
 
 export async function runSimilarChain(track: { title: string; artist: string; album?: string }): Promise<Array<{ title: string; artist: string }> | null> {
   const llm = new ChatGoogleGenerativeAI({
-    model: "gemini-1.5-pro-latest",
+    model: "gemini-1.5-flash-latest",
     temperature: 0.5, 
   });
 

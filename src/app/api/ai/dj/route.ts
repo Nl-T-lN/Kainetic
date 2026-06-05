@@ -1,18 +1,21 @@
 import { NextResponse } from "next/server";
 import { runDJChain, createDJMemory } from "@/lib/chains/djChain";
 import { BufferMemory } from "langchain/memory";
+import { LRUCache } from "lru-cache";
 
 // ============================================================
 // 📚 LEARN: api/ai/dj/route.ts
 // ============================================================
 // We need to keep the DJ's memory alive across multiple API calls,
-// so we store memories in a global Map associated with a `sessionId`.
-// Note: In a real distributed backend, you'd save this to Redis!
-// For this tutorial, an in-memory Map is fine.
+// so we store memories in a global LRUCache associated with a `sessionId`.
+// The LRUCache limits the number of sessions, preventing unbounded memory leaks.
 // ============================================================
 
 // Memory store for user sessions 
-const memoryStore = new Map<string, BufferMemory>();
+const memoryStore = new LRUCache<string, BufferMemory>({
+  max: 1000,
+  ttl: 1000 * 60 * 60, // 1 hour TTL
+});
 
 export async function POST(req: Request) {
   try {
