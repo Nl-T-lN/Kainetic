@@ -24,7 +24,6 @@ const LyricsContainer = styled.div`
 
   @media (max-width: 1000px) {
     width: 100%;
-    min-height: 80vh;
     padding: 20vh 0;
     mask-image: linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%);
     -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%);

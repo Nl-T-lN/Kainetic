@@ -71,6 +71,17 @@ const PlayButton = styled.button`
     opacity: 0.5;
     cursor: not-allowed;
   }
+
+  @media (max-width: 1000px) {
+    background: transparent;
+    border: none;
+    backdrop-filter: none;
+    
+    &:hover:not(:disabled) {
+      background: transparent;
+      transform: scale(1.1);
+    }
+  }
 `;
 
 const RoomBadge = styled.div`
@@ -145,15 +156,15 @@ export function PlayerControls({
         </ControlButton>
         
         <ControlButton disabled={isGuest} onClick={onPrev}>
-          <SkipBack size={28} fill="currentColor" />
+          <SkipBack size={36} fill="currentColor" />
         </ControlButton>
         
         <PlayButton disabled={isGuest} onClick={onPlayPause}>
-          {isPlaying ? <Pause size={28} fill="currentColor" /> : <Play size={28} fill="currentColor" style={{ marginLeft: "4px" }} />}
+          {isPlaying ? <Pause size={48} fill="currentColor" /> : <Play size={48} fill="currentColor" />}
         </PlayButton>
         
         <ControlButton disabled={isGuest} onClick={onNext}>
-          <SkipForward size={28} fill="currentColor" />
+          <SkipForward size={36} fill="currentColor" />
         </ControlButton>
         
         <ControlButton 
