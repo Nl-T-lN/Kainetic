@@ -150,12 +150,22 @@ const PlaylistCount = styled.div`
 `;
 
 import { usePlayer } from "@/contexts/PlayerContext";
+import { useLibraryStore } from "@/store/libraryStore";
 
 export function LibraryView() {
   const { onPlay, onPlayNext, onAddToQueue, onStartRadio } = usePlayer();
   const [activeTab, setActiveTab] = useState("Liked Songs");
   const { likedTracks } = useLikedTracks();
-  const [playlists] = useState<{ id: string; name: string; count: number }[]>([]);
+  
+  // Bring in our Local-First Zustand store!
+  const { playlists, createPlaylist } = useLibraryStore();
+
+  const handleCreatePlaylist = () => {
+    const name = window.prompt("Enter playlist name:");
+    if (name && name.trim()) {
+      createPlaylist(name.trim());
+    }
+  };
 
   return (
     <ViewContainer>
@@ -172,7 +182,7 @@ export function LibraryView() {
             <ListMusic size={20} color="var(--accent)" />
             Your Playlists
           </h3>
-          <CreateButton>
+          <CreateButton onClick={handleCreatePlaylist}>
             <Plus size={16} />
             New Playlist
           </CreateButton>
@@ -183,10 +193,14 @@ export function LibraryView() {
             {playlists.map(p => (
               <PlaylistCard key={p.id}>
                 <PlaylistThumb>
-                  <ListMusic size={32} />
+                  {p.coverUrl ? (
+                    <img src={p.coverUrl} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 'calc(var(--radius) * 0.8)' }} />
+                  ) : (
+                    <ListMusic size={32} />
+                  )}
                 </PlaylistThumb>
                 <PlaylistTitle>{p.name}</PlaylistTitle>
-                <PlaylistCount>{p.count} tracks</PlaylistCount>
+                <PlaylistCount>{p.tracks.length} tracks</PlaylistCount>
               </PlaylistCard>
             ))}
           </PlaylistsGrid>
@@ -194,7 +208,7 @@ export function LibraryView() {
           <EmptyState>
             <ListMusic size={40} />
             <h4>No playlists created</h4>
-            <p>Create your first playlist to start organizing your music.</p>
+            <p>Create your first playlist to start organizing your music locally.</p>
           </EmptyState>
         )}
       </SectionContainer>

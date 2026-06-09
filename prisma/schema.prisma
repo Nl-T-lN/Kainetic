@@ -8,28 +8,55 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  name      String
-  avatarUrl String?
-  createdAt DateTime @default(now())
-
-  // We MUST tell the User model about the Follow relationships!
-  followers Follow[] @relation("UserFollowers")
-  following Follow[] @relation("UserFollowing")
+  id              String        @id @default(uuid())
+  email           String        @unique
+  name            String?
+  avatarUrl       String?
+  createdAt       DateTime      @default(now())
+  playHistory     PlayHistory[]
+  playlists       Playlist[]
 }
-
-// Join Table that connects two Users together
-model Follow {
-  followerId  String
-  followingId String
-  createdAt   DateTime @default(now())
-
-  // If a user is deleted, their follows are instantly deleted too
-  follower  User @relation("UserFollowing", fields: [followerId], references: [id], onDelete: Cascade)
-  following User @relation("UserFollowers", fields: [followingId], references: [id], onDelete: Cascade)
+// 2. The Central Track Database (Saved once, referenced millions of times)
+model Track {
+  id              String        @id // YouTube Video ID
+  title           String
+  artist          String
+  coverUrl        String?
+  durationMs      Int?
   
-  @@id([followerId, followingId])
-  @@index([followerId])
-  @@index([followingId])
+  playHistory     PlayHistory[]
+  playlistTracks  PlaylistTrack[]
+}
+// 3. User Listening History
+model PlayHistory {
+  id              String        @id @default(uuid())
+  userId          String
+  trackId         String
+  playedAt        DateTime      @default(now())
+  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  track           Track         @relation(fields: [trackId], references: [id], onDelete: Cascade)
+  @@index([userId, playedAt(sort: Desc)])
+}
+// 4. User Playlists
+model Playlist {
+  id              String          @id @default(uuid())
+  userId          String
+  name            String
+  coverUrl        String?
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  user            User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tracks          PlaylistTrack[]
+}
+// 5. Tracks inside a Playlist (Optimized to prevent duplicates)
+model PlaylistTrack {
+  playlistId      String
+  trackId         String
+  addedAt         DateTime      @default(now())
+  position        Int           
+  playlist        Playlist      @relation(fields: [playlistId], references: [id], onDelete: Cascade)
+  track           Track         @relation(fields: [trackId], references: [id], onDelete: Cascade)
+  // This prevents the same track from being saved twice in the same playlist
+  @@id([playlistId, trackId])
+  @@index([playlistId, position])
 }

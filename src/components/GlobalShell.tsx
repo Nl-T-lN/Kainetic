@@ -27,6 +27,7 @@ import { AlertTriangle, Menu, Settings } from "lucide-react";
 import Link from "next/link";
 import { BottomNavBar } from "./BottomNavBar";
 import { useLyrics } from "@/hooks/useLyrics";
+import { AuthButton } from "./AuthButton";
 
 const ModalOverlay = styled.div`
   position: fixed;
@@ -405,6 +406,7 @@ export function GlobalShell({ children }: { children: React.ReactNode }) {
                 />
               </Suspense>
             </div>
+            <AuthButton />
             <SettingsButton href="/settings">
               <Settings size={24} strokeWidth={2.5} />
             </SettingsButton>
