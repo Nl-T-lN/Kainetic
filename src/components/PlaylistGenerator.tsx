@@ -92,14 +92,14 @@ export function PlaylistGenerator({ tracks }: { tracks: Track[] }) {
   const handleExportM3U = () => {
     setIsExporting(true);
     const m3u = generateM3U(tracks);
-    downloadFile(m3u, "ventify-playlist.m3u", "audio/x-mpegurl");
+    downloadFile(m3u, "kainetic-playlist.m3u", "audio/x-mpegurl");
     setIsExporting(false);
   };
 
   const handleExportJSON = () => {
     setIsExporting(true);
     const json = generateJSON(tracks);
-    downloadFile(json, "ventify-playlist.json", "application/json");
+    downloadFile(json, "kainetic-playlist.json", "application/json");
     setIsExporting(false);
   };
 

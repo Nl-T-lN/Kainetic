@@ -273,7 +273,7 @@ export function GlobalShell({ children }: { children: React.ReactNode }) {
       navigator.mediaSession.metadata = new window.MediaMetadata({
         title: playerState.currentTrack.title,
         artist: playerState.currentTrack.channelTitle || (playerState.currentTrack as any).artist || 'Unknown Artist',
-        album: 'Vintify',
+        album: 'Kainetic',
         artwork: [
           { src: playerState.currentTrack.thumbnailUrl || '', sizes: '512x512', type: 'image/jpeg' }
         ]

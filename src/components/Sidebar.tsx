@@ -206,7 +206,7 @@ export function Sidebar({ roomCode, isCollapsed, onToggleCollapse }: SidebarProp
         <Link href="/">
           <Logo style={{ cursor: 'pointer' }}>
             <Disc3 size={28} strokeWidth={2.5} />
-            <span>Ventify</span>
+            <span>Kainetic</span>
           </Logo>
         </Link>
       </HeaderSection>
