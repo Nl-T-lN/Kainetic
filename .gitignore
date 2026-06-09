@@ -53,3 +53,5 @@ GEMINI.md
 
 tmp/
 
+
+/src/generated/prisma
