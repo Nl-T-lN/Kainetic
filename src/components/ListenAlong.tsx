@@ -28,6 +28,10 @@ const ViewContainer = styled.div`
   flex-direction: column;
   flex: 1;
   min-height: 0;
+  
+  @media (max-width: 800px) {
+    padding: 0 1rem;
+  }
 `;
 
 const Container = styled.div`
@@ -39,14 +43,11 @@ const Container = styled.div`
 const ActiveRoomGrid = styled.div`
   width: 100%;
   display: grid;
-  grid-template-columns: 300px 1fr 350px;
+  grid-template-columns: 1fr 350px;
   gap: 1.5rem;
   flex: 1;
   min-height: 0;
   
-  @media (max-width: 1100px) {
-    grid-template-columns: 250px 1fr;
-  }
   @media (max-width: 800px) {
     grid-template-columns: 1fr;
   }
@@ -273,45 +274,51 @@ const PanelHeader = styled.div`
 `;
 
 /* ── Panel 1: Members ── */
-const MemberList = styled.div`
-  flex: 1;
-  overflow-y: auto;
-  padding: 1rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-`;
-
-const MemberItem = styled.div`
+const TopMembersRow = styled.div`
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 0.75rem;
-  border-radius: var(--radius);
-  background: rgba(255, 255, 255, 0.03);
-  position: relative;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+  overflow-x: auto;
+  padding-bottom: 0.5rem;
   
-  .info {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
+  /* hide scrollbar */
+  &::-webkit-scrollbar { display: none; }
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+`;
+
+const MemberBubble = styled.div<{ $isHost?: boolean }>`
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  color: #fff;
+  font-size: 1.1rem;
+  position: relative;
+  border: 2px solid ${({ $isHost }) => $isHost ? '#f9ca24' : 'rgba(255, 255, 255, 0.1)'};
+  flex-shrink: 0;
+  cursor: pointer;
+  background: #333;
+  transition: transform 0.2s;
+  
+  &:hover {
+    transform: scale(1.05);
   }
   
-  .avatar {
-    width: 32px;
-    height: 32px;
+  .crown {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    background: #111;
     border-radius: 50%;
+    padding: 2px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-weight: bold;
-    color: #fff;
-    font-size: 0.8rem;
-  }
-  
-  .name {
-    font-size: 0.95rem;
-    font-weight: 500;
   }
 `;
 
@@ -564,6 +571,55 @@ function SortableQueueItem(props: { track: Track; index: number; isActive: boole
 
 
 /* ── Panel 3: Chat ── */
+const ChatPanelWrapper = styled(Panel)<{ $isOpenOnMobile: boolean }>`
+  @media (max-width: 800px) {
+    display: ${({ $isOpenOnMobile }) => $isOpenOnMobile ? 'flex' : 'none'};
+    position: fixed;
+    top: auto;
+    bottom: 120px;
+    right: 1rem;
+    left: 1rem;
+    height: 400px;
+    z-index: 850;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+    background: #1a1a1a;
+  }
+`;
+
+const MobileChatToggle = styled.button`
+  display: none;
+  
+  @media (max-width: 800px) {
+    display: flex;
+    position: fixed;
+    bottom: 160px;
+    right: 20px;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: #000;
+    border: none;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+    z-index: 900;
+    cursor: pointer;
+    transition: transform 0.2s;
+    
+    &:active {
+      transform: scale(0.95);
+    }
+  }
+`;
+
+const ChatHeaderMobileAction = styled.div`
+  display: none;
+  @media (max-width: 800px) {
+    display: flex;
+  }
+`;
+
 const MessageList = styled.div`
   flex: 1;
   overflow-y: auto;
@@ -665,6 +721,7 @@ export function ListenAlong({ party }: ListenAlongProps) {
   const [copied, setCopied] = useState(false);
   const [linkCopied, setLinkCopied] = useState(false);
   const [chatInput, setChatInput] = useState("");
+  const [isChatOpen, setIsChatOpen] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
   const [searchQuery, setSearchQuery] = useState("");
@@ -836,50 +893,39 @@ export function ListenAlong({ party }: ListenAlongProps) {
           </div>
         </HeaderRow>
         
-        <ActiveRoomGrid>
-          {/* PANEL 1: MEMBERS */}
-          <Panel className="glass">
-            <PanelHeader>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <Users size={18} /> Members ({party.members.length})
-              </div>
-            </PanelHeader>
-            <MemberList>
-              {party.members.map(m => (
-                <MemberItem key={m.clientId}>
-                  <div className="info">
-                    <div className="avatar" style={{ background: m.profile?.avatarId || '#333' }}>
-                      {m.profile?.name?.charAt(0).toUpperCase() || '?'}
-                    </div>
-                    <div className="name">
-                      {m.profile?.name || 'Unknown'} 
-                      {m.clientId === party.profile?.name && " (You)"}
-                    </div>
+        <TopMembersRow>
+          {party.members.map(m => (
+            <div key={m.clientId} style={{ position: 'relative' }}>
+              <MemberBubble 
+                $isHost={m.isHost} 
+                style={{ background: m.profile?.avatarId || '#333' }}
+                onClick={() => {
+                  if (party.isHost && !m.isHost) {
+                    setActiveMenuId(activeMenuId === m.clientId ? null : m.clientId);
+                  }
+                }}
+                title={m.profile?.name || 'Unknown'}
+              >
+                {m.profile?.name?.charAt(0).toUpperCase() || '?'}
+                {m.isHost && (
+                  <div className="crown">
+                    <Crown size={12} color="#f9ca24" />
                   </div>
-                  {m.isHost && <Crown size={16} color="#f9ca24" />}
-                  
-                  {party.isHost && !m.isHost && (
-                    <div style={{ position: 'relative' }}>
-                      <button 
-                        style={{ background: 'transparent', border: 'none', color: '#fff', cursor: 'pointer', opacity: 0.5 }}
-                        onClick={() => setActiveMenuId(activeMenuId === m.clientId ? null : m.clientId)}
-                      >
-                        ⋮
-                      </button>
-                      {activeMenuId === m.clientId && (
-                        <AdminMenu>
-                          <button onClick={() => { party.kickUser(m.clientId); setActiveMenuId(null); }} style={{ color: '#ff6b6b' }}>
-                            <LogOut size={14} /> Kick User
-                          </button>
-                        </AdminMenu>
-                      )}
-                    </div>
-                  )}
-                </MemberItem>
-              ))}
-            </MemberList>
-          </Panel>
-
+                )}
+              </MemberBubble>
+              
+              {activeMenuId === m.clientId && (
+                <AdminMenu style={{ top: '100%', left: '0', right: 'auto', marginTop: '8px' }}>
+                  <button onClick={() => { party.kickUser(m.clientId); setActiveMenuId(null); }} style={{ color: '#ff6b6b' }}>
+                    <LogOut size={14} /> Kick
+                  </button>
+                </AdminMenu>
+              )}
+            </div>
+          ))}
+        </TopMembersRow>
+        
+        <ActiveRoomGrid>
           {/* PANEL 2: QUEUE */}
           <Panel className="glass" style={{ position: 'relative' }}>
             <PanelHeader>
@@ -961,8 +1007,15 @@ export function ListenAlong({ party }: ListenAlongProps) {
           </Panel>
 
           {/* PANEL 3: CHAT */}
-          <Panel className="glass">
-            <PanelHeader>Chat</PanelHeader>
+          <ChatPanelWrapper className="glass" $isOpenOnMobile={isChatOpen}>
+            <PanelHeader>
+              Chat
+              <ChatHeaderMobileAction>
+                <button onClick={() => setIsChatOpen(false)} style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer' }}>
+                  <X size={20} />
+                </button>
+              </ChatHeaderMobileAction>
+            </PanelHeader>
             <MessageList>
               {party.messages.length === 0 ? (
                 <div style={{ textAlign: 'center', color: 'var(--muted)', marginTop: '2rem', fontSize: '0.9rem' }}>
@@ -991,8 +1044,14 @@ export function ListenAlong({ party }: ListenAlongProps) {
                 <Send size={16} />
               </SendButton>
             </ChatInputForm>
-          </Panel>
+          </ChatPanelWrapper>
         </ActiveRoomGrid>
+
+        {!isChatOpen && (
+          <MobileChatToggle onClick={() => setIsChatOpen(true)}>
+            <Send size={24} />
+          </MobileChatToggle>
+        )}
       </ViewContainer>
     );
   }
