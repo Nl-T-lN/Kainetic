@@ -16,10 +16,10 @@ const fadeSlideIn = keyframes`
 const ViewContainer = styled.div`
   width: 100%;
   animation: ${fadeSlideIn} 0.4s ease-out;
-  padding: 2rem;
+  padding: 0 2rem 2rem 2rem;
   
   @media (max-width: 768px) {
-    padding: 1rem;
+    padding: 0 1rem 1rem 1rem;
   }
 `;
 

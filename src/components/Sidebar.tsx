@@ -217,13 +217,13 @@ export function Sidebar({ roomCode, isCollapsed, onToggleCollapse }: SidebarProp
             <Home />
             <span>Home</span>
           </NavItem>
-          <NavItem href="/explore" $active={pathname.startsWith("/explore")}>
-            <Compass />
-            <span>Explore</span>
-          </NavItem>
           <NavItem href="/library" $active={pathname.startsWith("/library")}>
             <Library />
             <span>Library</span>
+          </NavItem>
+          <NavItem href="/explore" $active={pathname.startsWith("/explore")}>
+            <Compass />
+            <span>Explore</span>
           </NavItem>
           <NavItem href="/recent" $active={pathname.startsWith("/recent")}>
             <Clock />
