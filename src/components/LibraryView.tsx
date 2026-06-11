@@ -6,6 +6,7 @@ import { useState } from "react";
 import type { Track } from "@/types/music";
 import { Library, Heart, ListMusic, Plus } from "lucide-react";
 import { useLikedTracks } from "@/hooks/useLikedTracks";
+import Link from "next/link";
 
 const fadeSlideIn = keyframes`
   from { opacity: 0; transform: translateY(12px); }
@@ -15,27 +16,10 @@ const fadeSlideIn = keyframes`
 const ViewContainer = styled.div`
   width: 100%;
   animation: ${fadeSlideIn} 0.4s ease-out;
-`;
-
-const HeaderRow = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 2rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-  padding-bottom: 1rem;
-`;
-
-const Header = styled.h2`
-  font-size: 1.75rem;
-  font-weight: 800;
-  color: #fff;
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-
-  svg {
-    color: var(--accent);
+  padding: 2rem;
+  
+  @media (max-width: 768px) {
+    padding: 1rem;
   }
 `;
 
@@ -183,13 +167,6 @@ export function LibraryView() {
 
   return (
     <ViewContainer>
-      <HeaderRow>
-        <Header>
-          <Library size={28} />
-          Your Library
-        </Header>
-      </HeaderRow>
-
       <SectionContainer>
         <SectionHeader>
           <h3>
@@ -207,17 +184,19 @@ export function LibraryView() {
           </NewPlaylistCard>
 
           {playlists.map(p => (
-            <PlaylistCard key={p.id}>
-              <PlaylistThumb>
-                {p.coverUrl ? (
-                  <img src={p.coverUrl} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 'calc(var(--radius) * 0.8)' }} />
-                ) : (
-                  <ListMusic size={32} />
-                )}
-              </PlaylistThumb>
-              <PlaylistTitle>{p.name}</PlaylistTitle>
-              <PlaylistCount>{p.tracks.length} tracks</PlaylistCount>
-            </PlaylistCard>
+            <Link href={`/library/${p.id}`} key={p.id} style={{ textDecoration: 'none' }}>
+              <PlaylistCard>
+                <PlaylistThumb>
+                  {p.coverUrl ? (
+                    <img src={p.coverUrl} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 'calc(var(--radius) * 0.8)' }} />
+                  ) : (
+                    <ListMusic size={32} />
+                  )}
+                </PlaylistThumb>
+                <PlaylistTitle>{p.name}</PlaylistTitle>
+                <PlaylistCount>{p.tracks.length} {p.tracks.length === 1 ? 'track' : 'tracks'}</PlaylistCount>
+              </PlaylistCard>
+            </Link>
           ))}
         </PlaylistsGrid>
       </SectionContainer>

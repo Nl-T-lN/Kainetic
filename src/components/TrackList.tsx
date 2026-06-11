@@ -2,7 +2,7 @@
 
 import styled, { keyframes } from "styled-components";
 import type { Track } from "@/types/music";
-import { Play, MoreVertical } from "lucide-react";
+import { Play, MoreVertical, X, Plus } from "lucide-react";
 import { TrackContextMenu } from "./TrackContextMenu";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -149,6 +149,8 @@ interface TrackListProps {
   onStartRadio?: (track: Track) => void;
   hideThumbnails?: boolean;
   isContextQueueEnabled?: boolean;
+  onRemoveTrack?: (track: Track) => void;
+  onAddTrack?: (track: Track) => void;
 }
 
 export function TrackList({
@@ -160,7 +162,9 @@ export function TrackList({
   onAddToQueue,
   onStartRadio,
   hideThumbnails,
-  isContextQueueEnabled = false
+  isContextQueueEnabled = false,
+  onRemoveTrack,
+  onAddTrack
 }: TrackListProps) {
   const router = useRouter();
   const [menuTrack, setMenuTrack] = useState<{ track: Track, x: number, y: number } | null>(null);
@@ -254,6 +258,38 @@ export function TrackList({
               >
                 <MoreVertical size={16} />
               </button>
+              
+              {onAddTrack && (
+                <button 
+                  onClick={(e) => { e.stopPropagation(); onAddTrack(track); }}
+                  style={{
+                    background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', 
+                    cursor: 'pointer', padding: '4px', display: 'flex', marginLeft: '4px',
+                    transition: 'color 0.2s'
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.color = '#fff'}
+                  onMouseLeave={(e) => e.currentTarget.style.color = 'rgba(255,255,255,0.4)'}
+                  title="Add to playlist"
+                >
+                  <Plus size={18} />
+                </button>
+              )}
+              
+              {onRemoveTrack && (
+                <button 
+                  onClick={(e) => { e.stopPropagation(); onRemoveTrack(track); }}
+                  style={{
+                    background: 'none', border: 'none', color: 'rgba(255,107,107,0.6)', 
+                    cursor: 'pointer', padding: '4px', display: 'flex', marginLeft: '4px',
+                    transition: 'color 0.2s'
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.color = '#ff6b6b'}
+                  onMouseLeave={(e) => e.currentTarget.style.color = 'rgba(255,107,107,0.6)'}
+                  title="Remove from playlist"
+                >
+                  <X size={18} />
+                </button>
+              )}
             </TrackItem>
           );
         })}
