@@ -62,19 +62,7 @@ const HeaderRow = styled.div`
   padding-bottom: 1rem;
 `;
 
-const PageTitle = styled.h1`
-  font-size: 1.75rem;
-  font-weight: 800;
-  color: #fff;
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  margin: 0;
 
-  svg {
-    color: var(--accent);
-  }
-`;
 
 const PageSubtitle = styled.p`
   font-size: 0.95rem;
@@ -871,12 +859,7 @@ export function ListenAlong({ party }: ListenAlongProps) {
     return (
       <ViewContainer>
         <HeaderRow>
-          <div style={{ display: 'flex', alignItems: 'flex-end', gap: '1rem' }}>
-            <PageTitle>
-              <Radio size={28} />
-              PlaySync
-            </PageTitle>
-          </div>
+          <div></div>
           <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
             <div style={{ fontFamily: 'monospace', fontSize: '1.2rem', letterSpacing: '2px', fontWeight: 'bold', marginRight: '0.5rem', display: 'flex', alignItems: 'center', height: '100%' }}>
               {party.roomCode}
@@ -1083,19 +1066,7 @@ export function ListenAlong({ party }: ListenAlongProps) {
         </ModalOverlay>
       )}
 
-      <HeaderRow>
-        <div style={{ display: 'flex', alignItems: 'flex-end' }}>
-          <PageTitle>
-            <Radio size={28} />
-            PlaySync
-          </PageTitle>
-          <PageSubtitle>
-            Create a room and share the code, or join a friend&apos;s room to
-            listen together in perfect sync.
-          </PageSubtitle>
-        </div>
-      </HeaderRow>
-      
+
       <Container>
       <CardsGrid>
         <ActionCard onClick={initiateHost}>

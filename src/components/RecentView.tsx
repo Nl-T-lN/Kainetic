@@ -26,18 +26,7 @@ const HeaderRow = styled.div`
   padding-bottom: 1rem;
 `;
 
-const Header = styled.h2`
-  font-size: 1.75rem;
-  font-weight: 800;
-  color: #fff;
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
 
-  svg {
-    color: var(--accent);
-  }
-`;
 
 const ClearButton = styled.button`
   display: flex;
@@ -129,10 +118,7 @@ export function RecentView() {
   return (
     <ViewContainer>
       <HeaderRow>
-        <Header>
-          <History size={26} />
-          Recently Played
-        </Header>
+        <div></div>
         {recentTracks.length > 0 && (
           <ClearButton onClick={clearRecent} title="Clear History">
             <Trash2 size={20} />

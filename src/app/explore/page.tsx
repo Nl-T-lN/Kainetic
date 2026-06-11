@@ -12,29 +12,7 @@ import type { Track } from "@/types/music";
 
 import { useRouter } from "next/navigation";
 
-const HeaderRow = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 2rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-  padding-bottom: 1rem;
-  padding-top: 1rem;
-`;
 
-const Header = styled.h2`
-  font-size: 1.75rem;
-  font-weight: 800;
-  color: #fff;
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  margin: 0;
-
-  svg {
-    color: var(--accent);
-  }
-`;
 
 const Container = styled.div`
   padding: 0 2rem 4rem 2rem;
@@ -139,10 +117,7 @@ export default function ExplorePage() {
 
   return (
     <Container>
-      <Header>
-        <Compass size={36} color="white" />
-        <h1>Explore</h1>
-      </Header>
+
 
       {loading && (
         <LoadingContainer>
