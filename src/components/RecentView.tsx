@@ -15,15 +15,23 @@ const fadeSlideIn = keyframes`
 const ViewContainer = styled.div`
   width: 100%;
   animation: ${fadeSlideIn} 0.4s ease-out;
+  padding: 0 2rem 2rem 2rem;
+  position: relative;
+
+  @media (max-width: 768px) {
+    padding: 0 1rem 1rem 1rem;
+  }
 `;
 
-const HeaderRow = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 1.5rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-  padding-bottom: 1rem;
+const TopControls = styled.div`
+  position: absolute;
+  top: 1rem;
+  right: 2rem;
+  z-index: 10;
+  
+  @media (max-width: 768px) {
+    right: 1rem;
+  }
 `;
 
 
@@ -48,16 +56,16 @@ const ClearButton = styled.button`
   }
 `;
 
-const DateHeader = styled.h3`
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: rgba(255, 255, 255, 0.8);
-  margin: 2rem 0 1rem 0;
+const DateHeader = styled.h2`
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #fff;
+  margin: 2rem 0 0.5rem 0;
   padding-bottom: 0.5rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  letter-spacing: -0.5px;
   
   &:first-of-type {
-    margin-top: 0;
+    margin-top: 1rem;
   }
 `;
 
@@ -117,14 +125,13 @@ export function RecentView() {
 
   return (
     <ViewContainer>
-      <HeaderRow>
-        <div></div>
-        {recentTracks.length > 0 && (
+      {recentTracks.length > 0 && (
+        <TopControls>
           <ClearButton onClick={clearRecent} title="Clear History">
             <Trash2 size={20} />
           </ClearButton>
-        )}
-      </HeaderRow>
+        </TopControls>
+      )}
 
       {groupedTracks.length > 0 ? (
         <div>

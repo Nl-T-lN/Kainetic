@@ -132,8 +132,8 @@ const TopBar = styled.div`
   position: sticky;
   top: 0;
   z-index: 50;
-  padding: 1.25rem 1.75rem 1rem 1.75rem;
-  margin-bottom: 1.5rem;
+  padding: 1.25rem 2rem 1rem 2rem;
+  margin-bottom: 0;
   background: rgba(0, 0, 0, 0.4);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
@@ -142,7 +142,7 @@ const TopBar = styled.div`
 
   @media (max-width: 800px) {
     padding: 1rem;
-    margin-bottom: 1.5rem;
+    margin-bottom: 0;
   }
 `;
 

@@ -29,8 +29,8 @@ const RecommendedContainer = styled.div`
   gap: 1rem;
   margin-bottom: 2.5rem;
   padding-bottom: 1rem;
-  padding-left: 1.75rem;
-  padding-right: 1.75rem;
+  padding-left: 2rem;
+  padding-right: 2rem;
   scrollbar-width: none;
   &::-webkit-scrollbar {
     display: none;
@@ -140,9 +140,9 @@ const SectionHeaderRow = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 1.25rem;
+  margin-bottom: 0.5rem;
   margin-top: 1rem;
-  padding: 0 1.75rem;
+  padding: 0 2rem;
 
   @media (max-width: 800px) {
     padding: 0 1rem;
@@ -288,7 +288,7 @@ const ShelfContainer = styled.div`
   display: flex;
   overflow-x: auto;
   gap: 1.5rem;
-  padding: 0.5rem 1.75rem 2rem;
+  padding: 0.5rem 2rem 2rem;
   scrollbar-width: none;
   &::-webkit-scrollbar {
     display: none;
@@ -306,7 +306,7 @@ const GridContainer = styled.div`
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
   gap: 1.5rem;
-  padding: 0.5rem 1.75rem 2rem;
+  padding: 0.5rem 2rem 2rem;
 
   @media (max-width: 800px) {
     grid-template-columns: repeat(2, 1fr);
