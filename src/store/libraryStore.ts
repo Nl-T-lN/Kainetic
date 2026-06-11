@@ -12,7 +12,7 @@ export interface Playlist {
 
 interface LibraryState {
   playlists: Playlist[];
-  createPlaylist: (name: string) => void;
+  createPlaylist: (name: string, initialTracks?: Track[]) => string;
   deletePlaylist: (id: string) => void;
   addTrackToPlaylist: (playlistId: string, track: Track) => void;
   removeTrackFromPlaylist: (playlistId: string, trackId: string) => void;
@@ -23,14 +23,17 @@ export const useLibraryStore = create<LibraryState>()(
     (set, get) => ({
       playlists: [],
 
-      createPlaylist: (name: string) => {
+      createPlaylist: (name: string, initialTracks?: Track[]) => {
+        const id = crypto.randomUUID();
         const newPlaylist: Playlist = {
-          id: crypto.randomUUID(),
+          id,
           name,
-          tracks: [],
+          tracks: initialTracks || [],
+          coverUrl: initialTracks && initialTracks.length > 0 ? initialTracks[0].thumbnailUrl : undefined,
           createdAt: Date.now(),
         };
         set({ playlists: [...get().playlists, newPlaylist] });
+        return id;
       },
 
       deletePlaylist: (id: string) => {

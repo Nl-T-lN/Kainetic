@@ -59,22 +59,49 @@ const SectionHeader = styled.div`
   }
 `;
 
-const CreateButton = styled.button`
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: #fff;
-  border-radius: 99px;
-  padding: 0.4rem 1rem;
-  font-size: 0.85rem;
-  font-weight: 600;
+const PlaylistCard = styled.div`
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: var(--radius);
+  padding: 1rem;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.2s;
 
   &:hover {
-    background: rgba(255, 255, 255, 0.12);
+    background: rgba(255, 255, 255, 0.06);
+    transform: translateY(-2px);
+  }
+`;
+
+const NewPlaylistCard = styled(PlaylistCard)`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border: 2px dashed rgba(255, 255, 255, 0.1);
+  background: transparent;
+  color: var(--muted);
+  gap: 1rem;
+  
+  &:hover {
+    border-color: rgba(255, 255, 255, 0.3);
+    color: #fff;
+    background: rgba(255, 255, 255, 0.02);
+  }
+`;
+
+const NewPlaylistIcon = styled.div`
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.05);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 0.5rem;
+  
+  ${NewPlaylistCard}:hover & {
+    background: rgba(255, 255, 255, 0.1);
   }
 `;
 
@@ -112,19 +139,6 @@ const PlaylistsGrid = styled.div`
   gap: 1.5rem;
 `;
 
-const PlaylistCard = styled.div`
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  border-radius: var(--radius);
-  padding: 1rem;
-  cursor: pointer;
-  transition: all 0.2s;
-
-  &:hover {
-    background: rgba(255, 255, 255, 0.06);
-    transform: translateY(-2px);
-  }
-`;
 
 const PlaylistThumb = styled.div`
   width: 100%;
@@ -151,20 +165,20 @@ const PlaylistCount = styled.div`
 
 import { usePlayer } from "@/contexts/PlayerContext";
 import { useLibraryStore } from "@/store/libraryStore";
+import { NewPlaylistModal } from "./NewPlaylistModal";
 
 export function LibraryView() {
   const { onPlay, onPlayNext, onAddToQueue, onStartRadio } = usePlayer();
   const [activeTab, setActiveTab] = useState("Liked Songs");
   const { likedTracks } = useLikedTracks();
-  
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
   // Bring in our Local-First Zustand store!
   const { playlists, createPlaylist } = useLibraryStore();
 
-  const handleCreatePlaylist = () => {
-    const name = window.prompt("Enter playlist name:");
-    if (name && name.trim()) {
-      createPlaylist(name.trim());
-    }
+  const handleSavePlaylist = (name: string, tracks: Track[]) => {
+    createPlaylist(name, tracks);
+    setIsModalOpen(false);
   };
 
   return (
@@ -182,35 +196,30 @@ export function LibraryView() {
             <ListMusic size={20} color="var(--accent)" />
             Your Playlists
           </h3>
-          <CreateButton onClick={handleCreatePlaylist}>
-            <Plus size={16} />
-            New Playlist
-          </CreateButton>
         </SectionHeader>
 
-        {playlists.length > 0 ? (
-          <PlaylistsGrid>
-            {playlists.map(p => (
-              <PlaylistCard key={p.id}>
-                <PlaylistThumb>
-                  {p.coverUrl ? (
-                    <img src={p.coverUrl} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 'calc(var(--radius) * 0.8)' }} />
-                  ) : (
-                    <ListMusic size={32} />
-                  )}
-                </PlaylistThumb>
-                <PlaylistTitle>{p.name}</PlaylistTitle>
-                <PlaylistCount>{p.tracks.length} tracks</PlaylistCount>
-              </PlaylistCard>
-            ))}
-          </PlaylistsGrid>
-        ) : (
-          <EmptyState>
-            <ListMusic size={40} />
-            <h4>No playlists created</h4>
-            <p>Create your first playlist to start organizing your music locally.</p>
-          </EmptyState>
-        )}
+        <PlaylistsGrid>
+          <NewPlaylistCard onClick={() => setIsModalOpen(true)}>
+            <NewPlaylistIcon>
+              <Plus size={24} />
+            </NewPlaylistIcon>
+            <PlaylistTitle>New Playlist</PlaylistTitle>
+          </NewPlaylistCard>
+
+          {playlists.map(p => (
+            <PlaylistCard key={p.id}>
+              <PlaylistThumb>
+                {p.coverUrl ? (
+                  <img src={p.coverUrl} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 'calc(var(--radius) * 0.8)' }} />
+                ) : (
+                  <ListMusic size={32} />
+                )}
+              </PlaylistThumb>
+              <PlaylistTitle>{p.name}</PlaylistTitle>
+              <PlaylistCount>{p.tracks.length} tracks</PlaylistCount>
+            </PlaylistCard>
+          ))}
+        </PlaylistsGrid>
       </SectionContainer>
 
       <SectionContainer>
@@ -222,13 +231,13 @@ export function LibraryView() {
         </SectionHeader>
 
         {likedTracks.length > 0 ? (
-          <TrackList 
-            tracks={likedTracks} 
-            onTrackSelect={onPlay} 
+          <TrackList
+            tracks={likedTracks}
+            onTrackSelect={onPlay}
             onPlayNext={onPlayNext}
             onAddToQueue={onAddToQueue}
             onStartRadio={onStartRadio}
-            currentTrackId={undefined} 
+            currentTrackId={undefined}
           />
         ) : (
           <EmptyState>
@@ -238,6 +247,13 @@ export function LibraryView() {
           </EmptyState>
         )}
       </SectionContainer>
+
+      {isModalOpen && (
+        <NewPlaylistModal
+          onClose={() => setIsModalOpen(false)}
+          onSave={handleSavePlaylist}
+        />
+      )}
     </ViewContainer>
   );
 }
