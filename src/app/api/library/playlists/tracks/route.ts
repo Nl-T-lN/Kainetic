@@ -31,7 +31,7 @@ export async function POST(req: Request) {
       create: {
         id: track.videoId,
         title: track.title,
-        artist: track.artist,
+        artist: track.channelTitle || track.artist || "Unknown Artist",
         coverUrl: track.thumbnailUrl,
         durationMs: track.durationMs,
       }

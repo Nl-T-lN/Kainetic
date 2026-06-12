@@ -3,15 +3,7 @@ import { getSharedInnertube } from "@/lib/youtube";
 import { getHighResThumbnail } from "@/lib/thumbnail";
 import type { SearchResult } from "@/types/music";
 
-// ============================================================
-// 📚 LEARN: api/search/route.ts (I Build)
-// ============================================================
-// We are now using the unlimited Innertube API via `youtubei.js`.
-// This bypasses the strict daily quotas of the standard YouTube Data API v3,
-// and gives us direct access to YouTube Music's high-quality metadata.
-// ============================================================
 
-// Using shared singleton from @/lib/youtube
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const query = searchParams.get("q");
@@ -23,7 +15,7 @@ export async function GET(request: Request) {
 
   try {
     const yt = await getSharedInnertube();
-    
+
     // Search strictly for the specified type in YouTube Music
     const searchData = await yt.music.search(query, { type: type as any });
 
@@ -72,7 +64,7 @@ export async function GET(request: Request) {
 
     // 2. Map into our clean SearchResult type
     const tracks: SearchResult[] = searchData.songs.contents.map((item: any) => {
-      
+
       // Parse duration
       let durationMs = 0;
       if (item.duration && item.duration.seconds) {
@@ -85,7 +77,7 @@ export async function GET(request: Request) {
       // Extract the artist name safely
       let channelTitle = "Unknown Artist";
       let artistId = undefined;
-      
+
       if (item.artists && item.artists.length > 0) {
         channelTitle = item.artists.map((a: any) => a.name).join(", ");
         artistId = item.artists[0]?.channel_id || item.artists[0]?.id || item.artists[0]?.endpoint?.payload?.browseId;

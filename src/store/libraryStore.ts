@@ -12,7 +12,10 @@ export interface Playlist {
 
 interface LibraryState {
   playlists: Playlist[];
+  recentTracks: Track[];
   setPlaylists: (playlists: Playlist[]) => void;
+  setRecentTracks: (tracks: Track[]) => void;
+  addRecentTrack: (track: Track) => void;
   createPlaylist: (name: string, initialTracks?: Track[]) => string;
   deletePlaylist: (id: string) => void;
   addTrackToPlaylist: (playlistId: string, track: Track) => void;
@@ -23,9 +26,29 @@ export const useLibraryStore = create<LibraryState>()(
   persist(
     (set, get) => ({
       playlists: [],
+      recentTracks: [],
 
       setPlaylists: (playlists: Playlist[]) => {
         set({ playlists });
+      },
+
+      setRecentTracks: (tracks: Track[]) => {
+        set({ recentTracks: tracks });
+      },
+
+      addRecentTrack: (track: Track) => {
+        set((state) => {
+          const filtered = state.recentTracks.filter((t) => t.videoId !== track.videoId);
+          const newTracks = [track, ...filtered].slice(0, 50);
+          return { recentTracks: newTracks };
+        });
+
+        // Sync API
+        fetch('/api/library/history', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ track })
+        }).catch(console.error);
       },
 
       createPlaylist: (name: string, initialTracks?: Track[]) => {

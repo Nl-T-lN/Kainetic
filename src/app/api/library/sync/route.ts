@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { prisma } from "@/lib/prisma";
+import { prisma, ensureUserExists } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 
@@ -14,16 +14,7 @@ export async function GET() {
     }
 
     // Ensure user exists in our local DB
-    await prisma.user.upsert({
-      where: { id: user.id },
-      update: {},
-      create: {
-        id: user.id,
-        email: user.email!,
-        name: user.user_metadata?.full_name,
-        avatarUrl: user.user_metadata?.avatar_url,
-      }
-    });
+    await ensureUserExists(user);
 
     const dbPlaylists = await prisma.playlist.findMany({
       where: { userId: user.id },
@@ -90,16 +81,7 @@ export async function POST(req: Request) {
 
     const { playlists, recentTracks } = await req.json();
 
-    await prisma.user.upsert({
-      where: { id: user.id },
-      update: {},
-      create: {
-        id: user.id,
-        email: user.email!,
-        name: user.user_metadata?.full_name,
-        avatarUrl: user.user_metadata?.avatar_url,
-      }
-    });
+    await ensureUserExists(user);
 
     // 1. Sync recent tracks
     if (recentTracks && Array.isArray(recentTracks)) {
@@ -110,7 +92,7 @@ export async function POST(req: Request) {
           create: {
             id: track.videoId,
             title: track.title,
-            artist: track.artist,
+            artist: track.channelTitle || track.artist || "Unknown Artist",
             coverUrl: track.thumbnailUrl,
             durationMs: track.durationMs,
           }
@@ -153,7 +135,7 @@ export async function POST(req: Request) {
               create: {
                 id: track.videoId,
                 title: track.title,
-                artist: track.artist,
+                artist: track.channelTitle || track.artist || "Unknown Artist",
                 coverUrl: track.thumbnailUrl,
                 durationMs: track.durationMs,
               }
@@ -183,8 +165,8 @@ export async function POST(req: Request) {
     }
 
     return NextResponse.json({ success: true });
-  } catch (error) {
+  } catch (error: any) {
     console.error("Bulk Sync Error:", error);
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    return NextResponse.json({ error: "Internal Server Error", details: error.message }, { status: 500 });
   }
 }

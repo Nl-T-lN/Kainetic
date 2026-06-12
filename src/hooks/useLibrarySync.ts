@@ -29,26 +29,57 @@ export function useLibrarySync() {
 
         const { playlists: dbPlaylists, recentTracks: dbRecentTracks } = await res.json();
         
-        // Fetch local state
         const localPlaylists = useLibraryStore.getState().playlists || [];
-        const storedRecent = localStorage.getItem('ventify-recent-tracks');
-        const localRecentTracks = storedRecent ? JSON.parse(storedRecent) : [];
+        const localRecentTracks = useLibraryStore.getState().recentTracks || [];
 
-        let mergedPlaylists = [...localPlaylists];
-        let mergedRecentTracks = [...localRecentTracks];
         let needsUpload = false;
 
-        if (dbPlaylists && dbPlaylists.length > 0) {
-          mergedPlaylists = dbPlaylists;
-        } else if (localPlaylists.length > 0) {
-          needsUpload = true;
+        // Merge Playlists
+        const mergedPlaylistsMap = new Map();
+        if (dbPlaylists) {
+          dbPlaylists.forEach((p: any) => mergedPlaylistsMap.set(p.id, JSON.parse(JSON.stringify(p)))); // Deep copy
         }
+        localPlaylists.forEach((p: any) => {
+          if (!mergedPlaylistsMap.has(p.id)) {
+            mergedPlaylistsMap.set(p.id, p);
+            needsUpload = true; // Local playlist not in DB
+          } else {
+            // Deep merge tracks if playlist exists in both
+            const dbP = mergedPlaylistsMap.get(p.id);
+            const dbTracksMap = new Map();
+            if (dbP.tracks) dbP.tracks.forEach((t: any) => dbTracksMap.set(t.videoId, t));
+            
+            let playlistNeedsUpload = false;
+            if (p.tracks) {
+              p.tracks.forEach((t: any) => {
+                if (!dbTracksMap.has(t.videoId)) {
+                  dbP.tracks.push(t);
+                  playlistNeedsUpload = true;
+                }
+              });
+            }
+            if (playlistNeedsUpload) {
+              needsUpload = true;
+              mergedPlaylistsMap.set(p.id, dbP);
+            }
+          }
+        });
+        const mergedPlaylists = Array.from(mergedPlaylistsMap.values());
 
-        if (dbRecentTracks && dbRecentTracks.length > 0) {
-          mergedRecentTracks = dbRecentTracks;
-        } else if (localRecentTracks.length > 0) {
-          needsUpload = true;
+        // Merge Recent Tracks
+        const mergedRecentMap = new Map();
+        if (dbRecentTracks) {
+          dbRecentTracks.forEach((t: any) => mergedRecentMap.set(t.videoId, t));
         }
+        localRecentTracks.forEach((t: any) => {
+          if (!mergedRecentMap.has(t.videoId)) {
+            mergedRecentMap.set(t.videoId, t);
+            needsUpload = true; // Local track not in DB
+          }
+        });
+        const mergedRecentTracks = Array.from(mergedRecentMap.values())
+          .sort((a: any, b: any) => (b.playedAt || 0) - (a.playedAt || 0))
+          .slice(0, 50);
 
         if (needsUpload) {
           await fetch('/api/library/sync', {

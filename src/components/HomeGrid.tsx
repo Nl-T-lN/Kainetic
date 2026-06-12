@@ -5,6 +5,7 @@ import styled, { keyframes } from "styled-components";
 import type { Track } from "@/types/music";
 import { Play, Heart, RefreshCw, Radio } from "lucide-react";
 import Link from "next/link";
+import { useLibraryStore } from "@/store/libraryStore";
 
 const slideUpFade = keyframes`
   from { opacity: 0; transform: translateY(16px); }
@@ -529,12 +530,9 @@ export function HomeGrid() {
       try {
         let recentArtistsStr = "";
         try {
-          const stored = localStorage.getItem('ventify-recent-tracks');
-          if (stored) {
-            const tracks = JSON.parse(stored);
-            const artists = Array.from(new Set(tracks.map((t: any) => t.channelTitle || t.artist).filter(Boolean))).slice(0, 2);
-            if (artists.length > 0) recentArtistsStr = (artists as string[]).join(',');
-          }
+          const tracks = useLibraryStore.getState().recentTracks || [];
+          const artists = Array.from(new Set(tracks.map((t: any) => t.channelTitle || t.artist).filter(Boolean))).slice(0, 2);
+          if (artists.length > 0) recentArtistsStr = (artists as string[]).join(',');
         } catch (e) { }
 
         const hitlistUrl = recentArtistsStr ? `/api/home/hitlist?artists=${encodeURIComponent(recentArtistsStr)}` : `/api/home/hitlist`;

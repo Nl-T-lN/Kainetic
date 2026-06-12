@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { prisma } from "@/lib/prisma";
+import { prisma, ensureUserExists } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 
@@ -15,16 +15,7 @@ export async function POST(req: Request) {
 
     const { id, name, coverUrl, createdAt } = await req.json();
 
-    await prisma.user.upsert({
-      where: { id: user.id },
-      update: {},
-      create: {
-        id: user.id,
-        email: user.email!,
-        name: user.user_metadata?.full_name,
-        avatarUrl: user.user_metadata?.avatar_url,
-      }
-    });
+    await ensureUserExists(user);
 
     const playlist = await prisma.playlist.create({
       data: {
@@ -37,9 +28,9 @@ export async function POST(req: Request) {
     });
 
     return NextResponse.json({ playlist });
-  } catch (error) {
+  } catch (error: any) {
     console.error("Create Playlist API Error:", error);
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    return NextResponse.json({ error: "Internal Server Error", details: error.message }, { status: 500 });
   }
 }
 
