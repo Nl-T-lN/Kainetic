@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useRef, useEffect } from "react";
 import styled from "styled-components";
 import { usePlayerStore } from "@/store/playerStore";
 
@@ -82,23 +83,73 @@ export function ProgressBar({
 }: ProgressBarProps) {
   const positionMs = usePlayerStore(s => s.positionMs);
   const durationMs = usePlayerStore(s => s.durationMs);
-  const fillPct = durationMs > 0 ? (positionMs / durationMs) * 100 : 0;
+  const setPositionMs = usePlayerStore(s => s.setPositionMs);
+  
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragPct, setDragPct] = useState(0);
+  const trackRef = useRef<HTMLDivElement>(null);
+  const dragRectRef = useRef<{ left: number, width: number } | null>(null);
+
+  const displayMs = isDragging ? dragPct * durationMs : positionMs;
+  const fillPct = durationMs > 0 ? (displayMs / durationMs) * 100 : 0;
   const clampedPct = Math.min(100, Math.max(0, fillPct));
 
-  const handleSeekClick = (e: React.MouseEvent<HTMLDivElement>) => {
+  const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
     if (durationMs <= 0) return;
-    const rect = e.currentTarget.getBoundingClientRect();
-    const clickX = e.clientX - rect.left;
-    const clickPct = clickX / rect.width;
-    onSeek(clickPct * durationMs);
+    if (trackRef.current) {
+      dragRectRef.current = trackRef.current.getBoundingClientRect();
+    }
+    setIsDragging(true);
+    updateDragPosition(e.clientX);
   };
+
+  const updateDragPosition = (clientX: number) => {
+    const rect = dragRectRef.current;
+    if (!rect) return;
+    const clickX = clientX - rect.left;
+    const clickPct = Math.min(1, Math.max(0, clickX / rect.width));
+    setDragPct(clickPct);
+  };
+
+  useEffect(() => {
+    if (!isDragging) return;
+
+    const handlePointerMove = (e: PointerEvent) => {
+      updateDragPosition(e.clientX);
+    };
+
+    const handlePointerUp = (e: PointerEvent) => {
+      setIsDragging(false);
+      
+      const rect = dragRectRef.current;
+      if (!rect) return;
+      
+      const clickX = e.clientX - rect.left;
+      const finalPct = Math.min(1, Math.max(0, clickX / rect.width));
+      const targetMs = finalPct * durationMs;
+      
+      setPositionMs(targetMs);
+      onSeek(targetMs);
+    };
+
+    window.addEventListener("pointermove", handlePointerMove);
+    window.addEventListener("pointerup", handlePointerUp);
+
+    return () => {
+      window.removeEventListener("pointermove", handlePointerMove);
+      window.removeEventListener("pointerup", handlePointerUp);
+    };
+  }, [isDragging, durationMs, onSeek, setPositionMs]);
 
   return (
     <ProgressWrapper>
       <TimeDisplay style={{ textAlign: "right" }}>
-        {formatTime(positionMs)}
+        {formatTime(displayMs)}
       </TimeDisplay>
-      <TrackLine onClick={handleSeekClick}>
+      <TrackLine 
+        ref={trackRef}
+        onPointerDown={handlePointerDown}
+      >
         <Fill className="fill" style={{ width: `${clampedPct}%` }} />
         <Thumb className="thumb" style={{ left: `${clampedPct}%` }} />
       </TrackLine>
