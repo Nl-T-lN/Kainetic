@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, Suspense, useRef } from "react";
+import { useState, useEffect, Suspense, useRef, useCallback } from "react";
 import styled from "styled-components";
 import type { Track } from "@/types/music";
 import YouTube from "react-youtube";
@@ -169,6 +169,13 @@ export function GlobalShell({ children }: { children: React.ReactNode }) {
   const player = useYTPlayer();
   const playerState = usePlayerState(player.playerRef);
   const isPlaying = usePlayerStore(s => s.isPlaying);
+
+  const [volume, setVolumeState] = useState(70);
+
+  const handleSetVolume = useCallback((vol: number) => {
+    setVolumeState(vol);
+    player.setVolume(vol);
+  }, [player]);
 
   const search = useSearch();
   const moodSearch = useMoodSearch();
@@ -467,6 +474,8 @@ export function GlobalShell({ children }: { children: React.ReactNode }) {
           toggleShuffle={playerState.toggleShuffle}
           isRepeat={playerState.isRepeat}
           toggleRepeat={playerState.toggleRepeat}
+          volume={volume}
+          setVolume={handleSetVolume}
         />
 
         <QueueSidebar 

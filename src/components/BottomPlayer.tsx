@@ -67,6 +67,8 @@ interface BottomPlayerProps {
   toggleShuffle?: () => void;
   isRepeat?: boolean;
   toggleRepeat?: () => void;
+  volume: number;
+  setVolume: (vol: number) => void;
 }
 
 export function BottomPlayer({
@@ -85,11 +87,12 @@ export function BottomPlayer({
   isShuffle = false,
   toggleShuffle,
   isRepeat = false,
-  toggleRepeat
+  toggleRepeat,
+  volume,
+  setVolume
 }: BottomPlayerProps) {
   const router = useRouter();
   const [isExpanded, setIsExpanded] = useState(false);
-  const [volume, setVolume] = useState(70);
   const { toggleLike, isLiked } = useLikedTracks();
   
   const isGuest = !!roomCode && !isHost;

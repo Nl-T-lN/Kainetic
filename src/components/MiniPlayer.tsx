@@ -255,6 +255,7 @@ export function MiniPlayer({
   setVolume,
 }: MiniPlayerProps) {
   const handleVolumeClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    e.stopPropagation();
     const rect = e.currentTarget.getBoundingClientRect();
     const pct = Math.max(0, Math.min(100, ((e.clientX - rect.left) / rect.width) * 100));
     setVolume(Math.round(pct));
@@ -367,7 +368,7 @@ export function MiniPlayer({
           <ListMusic size={20} />
         </button>
         <VolumeContainer>
-          {volume === 0 ? <VolumeX size={20} onClick={() => setVolume(70)} /> : <Volume2 size={20} onClick={() => setVolume(0)} />}
+          {volume === 0 ? <VolumeX size={20} onClick={(e) => { e.stopPropagation(); setVolume(70); }} /> : <Volume2 size={20} onClick={(e) => { e.stopPropagation(); setVolume(0); }} />}
           <VolumeSlider onClick={handleVolumeClick}><VolumeFill className="vol-fill" style={{ width: `${volume}%` }} /></VolumeSlider>
         </VolumeContainer>
       </ExtraControls>

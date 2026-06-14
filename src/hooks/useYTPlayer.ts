@@ -7,6 +7,7 @@ export interface UseYTPlayerReturn {
   pause: () => void;
   resume: () => void;
   seek: (ms: number) => void;
+  setVolume: (vol: number) => void;
   onReady: (event: { target: any }) => void;
   playerRef: React.MutableRefObject<any>;
 }
@@ -46,5 +47,11 @@ export function useYTPlayer(): UseYTPlayerReturn {
     }
   }, [playerReady]);
 
-  return { playerReady, play, pause, resume, seek, onReady, playerRef };
+  const setVolume = useCallback((vol: number) => {
+    if (playerReady && playerRef.current && typeof playerRef.current.setVolume === "function") {
+      playerRef.current.setVolume(vol);
+    }
+  }, [playerReady]);
+
+  return { playerReady, play, pause, resume, seek, setVolume, onReady, playerRef };
 }
