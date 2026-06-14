@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import styled from "styled-components";
 import { Play, Pause, SkipBack, SkipForward, Shuffle, Repeat, Volume2, VolumeX, ListMusic } from "lucide-react";
 import type { Track } from "@/types/music";
@@ -254,6 +255,8 @@ export function MiniPlayer({
   volume,
   setVolume,
 }: MiniPlayerProps) {
+  const [prevVolume, setPrevVolume] = useState(70);
+
   const handleVolumeClick = (e: React.MouseEvent<HTMLDivElement>) => {
     e.stopPropagation();
     const rect = e.currentTarget.getBoundingClientRect();
@@ -368,7 +371,24 @@ export function MiniPlayer({
           <ListMusic size={20} />
         </button>
         <VolumeContainer>
-          {volume === 0 ? <VolumeX size={20} onClick={(e) => { e.stopPropagation(); setVolume(70); }} /> : <Volume2 size={20} onClick={(e) => { e.stopPropagation(); setVolume(0); }} />}
+          {volume === 0 ? (
+            <VolumeX 
+              size={20} 
+              onClick={(e) => { 
+                e.stopPropagation(); 
+                setVolume(prevVolume > 0 ? prevVolume : 70); 
+              }} 
+            />
+          ) : (
+            <Volume2 
+              size={20} 
+              onClick={(e) => { 
+                e.stopPropagation(); 
+                setPrevVolume(volume);
+                setVolume(0); 
+              }} 
+            />
+          )}
           <VolumeSlider onClick={handleVolumeClick}><VolumeFill className="vol-fill" style={{ width: `${volume}%` }} /></VolumeSlider>
         </VolumeContainer>
       </ExtraControls>
