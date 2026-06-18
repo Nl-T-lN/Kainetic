@@ -53,42 +53,6 @@ export async function GET(request: Request) {
         });
       }
     }
-
-    if (hitlists.length < 2) {
-      const home = await yt.music.getHomeFeed();
-      
-      if (home.sections) {
-        for (const section of home.sections) {
-          if ('contents' in section && Array.isArray(section.contents)) {
-            const items = section.contents.filter((item: any) => 
-              item.item_type === 'playlist' || item.item_type === 'album' || item.type === 'MusicTwoRowItem'
-            );
-            
-            if (items.length > 0) {
-              const formattedItems = items.map((item: any) => ({
-                id: item.id || item.endpoint?.payload?.browseId,
-                title: item.title?.text || "Unknown Title",
-                subtitle: item.subtitle?.text || item.subtitle?.runs?.map((r:any)=>r.text).join('') || "Mix",
-                thumbnailUrl: getHighResThumbnail(item.thumbnail),
-                type: item.item_type || 'playlist'
-              })).filter(t => t.id && t.thumbnailUrl);
-              
-              if (formattedItems.length > 0) {
-                const headerText = ('header' in section && (section.header as any)?.title?.text) ? (section.header as any).title.text : "Hitlist";
-                // Avoid duplicate section titles if we fallback
-                if (!hitlists.find(h => h.title === headerText)) {
-                  hitlists.push({
-                    title: headerText,
-                    items: formattedItems
-                  });
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-    
     // Only return top 2 hitlists to avoid clutter
     return NextResponse.json({ hitlists: hitlists.slice(0, 2) });
   } catch (error) {

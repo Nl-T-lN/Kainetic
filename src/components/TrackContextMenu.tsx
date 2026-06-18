@@ -6,6 +6,8 @@ import { Play, Plus, ListPlus, Heart, Download, User, Mic2, Share2, Disc } from 
 import type { Track } from "@/types/music";
 import { useLikedTracks } from "@/hooks/useLikedTracks";
 import { useRouter } from "next/navigation";
+import { usePlayer } from "@/contexts/PlayerContext";
+import { useUIStore } from "@/store/uiStore";
 
 const fadeIn = keyframes`
   from { opacity: 0; transform: scale(0.95); }
@@ -87,6 +89,8 @@ export function TrackContextMenu({
   const menuRef = useRef<HTMLDivElement>(null);
   const { toggleLike, isLiked } = useLikedTracks();
   const router = useRouter();
+  const player = usePlayer();
+  const { setPlaylistModalTrack } = useUIStore();
   const liked = isLiked(track.videoId);
 
   useEffect(() => {
@@ -112,19 +116,26 @@ export function TrackContextMenu({
   // Decide if we should align to the right side of the cursor
   const alignRight = x > window.innerWidth - 260;
 
+  // Determine actual actions (prefer props, fallback to context)
+  const handleStartRadio = onStartRadio || player.onStartRadio;
+  const handlePlayNext = onPlayNext || player.onPlayNext;
+  const handleAddToQueue = onAddToQueue || player.onAddToQueue;
+
+  const hasAlbum = !!((track as any).albumId || track.album?.id);
+
   return (
     <MenuContainer ref={menuRef} $x={x} $y={adjustY} $alignRight={alignRight}>
-      <MenuItem onClick={() => { onStartRadio?.(track); onClose(); }}>
+      <MenuItem onClick={() => { handleStartRadio?.(track); onClose(); }}>
         <Mic2 size={18} /> Start mix
       </MenuItem>
       
       <Divider />
       
-      <MenuItem onClick={() => { onPlayNext?.(track); onClose(); }}>
+      <MenuItem onClick={() => { handlePlayNext?.(track); onClose(); }}>
         <Play size={18} /> Play next
       </MenuItem>
       
-      <MenuItem onClick={() => { onAddToQueue?.(track); onClose(); }}>
+      <MenuItem onClick={() => { handleAddToQueue?.(track); onClose(); }}>
         <ListPlus size={18} /> Add to queue
       </MenuItem>
       
@@ -139,34 +150,39 @@ export function TrackContextMenu({
         <Download size={18} /> Download
       </MenuItem>
       
-      <MenuItem onClick={() => onClose()}>
+      <MenuItem onClick={() => {
+        setPlaylistModalTrack(track);
+        onClose();
+      }}>
         <Plus size={18} /> Save to playlist
       </MenuItem>
       
       <Divider />
       
-      <MenuItem onClick={() => {
-        onClose();
-        if ((track as any).albumId) {
-          router.push('/album/' + (track as any).albumId);
-        } else if (track.album) {
-          // If we only have the name, we might not be able to link properly,
-          // but we can try to search or just disable this option. For now, doing nothing.
-        }
-      }}>
-        <Disc size={18} /> Go to album
-      </MenuItem>
+      {hasAlbum && (
+        <MenuItem onClick={() => {
+          onClose();
+          const id = (track as any).albumId || track.album?.id;
+          if (id) router.push('/album/' + id);
+        }}>
+          <Disc size={18} /> Go to album
+        </MenuItem>
+      )}
       
       <MenuItem onClick={() => {
         onClose();
-        if (track.artistId) {
-          router.push('/artist/' + track.artistId);
+        const artistId = track.artistId || track.artists?.[0]?.id;
+        if (artistId) {
+          router.push('/artist/' + artistId);
         }
       }}>
         <User size={18} /> Go to artist
       </MenuItem>
       
-      <MenuItem onClick={() => onClose()}>
+      <MenuItem onClick={() => {
+        navigator.clipboard.writeText(window.location.origin + '/track/' + track.videoId);
+        onClose();
+      }}>
         <Share2 size={18} /> Share
       </MenuItem>
     </MenuContainer>

@@ -47,7 +47,7 @@ export function usePlayerState(
   const [isShuffle, setIsShuffle] = useState(false);
   const [isRepeat, setIsRepeat] = useState(false);
 
-  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const intervalRef = useRef<NodeJS.Timeout | number | null>(null);
 
   const toggleShuffle = () => setIsShuffle(prev => !prev);
   const toggleRepeat = () => setIsRepeat(prev => !prev);

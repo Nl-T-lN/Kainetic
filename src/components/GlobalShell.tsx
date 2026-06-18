@@ -28,6 +28,8 @@ import Link from "next/link";
 import { BottomNavBar } from "./BottomNavBar";
 import { useLyrics } from "@/hooks/useLyrics";
 import { AuthButton } from "./AuthButton";
+import { useUIStore } from "@/store/uiStore";
+import { AddToPlaylistModal } from "./AddToPlaylistModal";
 
 const ModalOverlay = styled.div`
   position: fixed;
@@ -186,6 +188,7 @@ export function GlobalShell({ children }: { children: React.ReactNode }) {
   const party = usePartyRoom(playerState);
 
   const [isQueueOpen, setIsQueueOpen] = useState(false);
+  const { playlistModalTrack, setPlaylistModalTrack } = useUIStore();
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const { addTrack } = useRecentTracks();
   const pathname = usePathname();
@@ -524,6 +527,14 @@ export function GlobalShell({ children }: { children: React.ReactNode }) {
               </ModalButtons>
             </ModalCard>
           </ModalOverlay>
+        )}
+
+        {playlistModalTrack && (
+          <AddToPlaylistModal 
+            track={playlistModalTrack} 
+            onClose={() => setPlaylistModalTrack(null)} 
+            onAdded={() => {}} 
+          />
         )}
       </AppLayout>
     </PlayerContext.Provider>

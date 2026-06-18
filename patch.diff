@@ -1,0 +1,432 @@
+diff --git a/src/components/HomeGrid.tsx b/src/components/HomeGrid.tsx
+index ba58e4a..b34196c 100644
+--- a/src/components/HomeGrid.tsx
++++ b/src/components/HomeGrid.tsx
+@@ -510,8 +510,7 @@ export function HomeGrid() {
+     const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+     setMenuTrack({ track, x: rect.right - 240, y: rect.bottom });
+   };
+-  const [tracks, setTracks] = useState<Track[]>([]);
+-  const [hitlists, setHitlists] = useState<any[]>([]);
++  const [homeSections, setHomeSections] = useState<any[]>([]);
+   const [loading, setLoading] = useState(true);
+   const { recentTracks } = useRecentTracks();
+ 
+@@ -521,43 +520,23 @@ export function HomeGrid() {
+       const cached = getHomeCache();
+       
+       // If we have cache, use it immediately
+-      if (cached.tracks && cached.hitlists) {
+-        setTracks(cached.tracks);
+-        setHitlists(cached.hitlists);
++      if (cached.homeSections) {
++        setHomeSections(cached.homeSections);
+         setLoading(false);
+         return;
+       }
+       try {
+-        let recentArtistsStr = "";
+-        try {
+-          const tracks = useLibraryStore.getState().recentTracks || [];
+-          const artists = Array.from(new Set(tracks.map((t: any) => t.channelTitle || t.artist).filter(Boolean))).slice(0, 2);
+-          if (artists.length > 0) recentArtistsStr = (artists as string[]).join(',');
+-        } catch (e) { }
+-
+-        const hitlistUrl = recentArtistsStr ? `/api/home/hitlist?artists=${encodeURIComponent(recentArtistsStr)}` : `/api/home/hitlist`;
+-
+-        const [searchRes, hitlistRes] = await Promise.all([
+-          fetch(`/api/search?q=${encodeURIComponent("Top Pop Hits 2024")}`),
+-          fetch(hitlistUrl)
+-        ]);
+-
+-        let finalTracks: Track[] = [];
+-        let finalHitlists: any[] = [];
+-
+-        if (searchRes.ok) {
+-          const data = await searchRes.json();
+-          finalTracks = data.tracks || [];
+-          setTracks(finalTracks);
+-        }
++        const homeRes = await fetch(`/api/home`);
++
++        let finalHomeSections: any[] = [];
+ 
+-        if (hitlistRes.ok) {
+-          const data = await hitlistRes.json();
+-          finalHitlists = data.hitlists || [];
+-          setHitlists(finalHitlists);
++        if (homeRes.ok) {
++          const data = await homeRes.json();
++          finalHomeSections = data.sections || [];
++          setHomeSections(finalHomeSections);
+         }
+         
+-        setHomeCache(finalTracks, finalHitlists);
++        setHomeCache(finalHomeSections);
+       } catch (error) {
+         console.error("Error fetching home data", error);
+       } finally {
+@@ -584,12 +563,8 @@ export function HomeGrid() {
+     );
+   }
+ 
+-  const hits = tracks.slice(0, 15);
+-  const recommended = tracks.slice(15);
+-
+   return (
+     <Container>
+-
+       {recentTracks.length > 0 && (
+         <>
+           <SectionHeaderRow>
+@@ -644,76 +619,47 @@ export function HomeGrid() {
+         </>
+       )}
+ 
+-      {hits.length > 0 && (
+-        <>
+-          <SectionHeaderRow>
+-            <SectionTitleGroup>
+-              <h2>Recommendations</h2>
+-            </SectionTitleGroup>
+-            <IconButton><RefreshCw size={16} /></IconButton>
+-          </SectionHeaderRow>
+-          <RecommendedContainer>
+-            {hits.map((track, index) => (
+-              <RecommendedTrack key={`hit-${track.videoId}`} $index={index} onClick={() => onPlay(track)} onContextMenu={(e) => handleContextMenuClick(e, track)}>
+-                <img src={track.thumbnailUrl} alt={track.title} loading="lazy" />
+-                <div className="info">
+-                  <div className="title">{track.title}</div>
+-                  <div 
+-                    className="artist"
+-                    onClick={(e) => {
+-                      e.stopPropagation();
+-                      if (track.artistId) {
+-                        router.push('/artist/' + track.artistId);
+-                      } else if (track.artist || track.channelTitle) {
+-                        router.push('/search?q=' + encodeURIComponent(track.artist || track.channelTitle || ""));
+-                      }
+-                    }}
+-                    style={{ cursor: 'pointer' }}
+-                    onMouseEnter={(e) => {
+-                      e.currentTarget.style.textDecoration = 'underline';
+-                    }}
+-                    onMouseLeave={(e) => {
+-                      e.currentTarget.style.textDecoration = 'none';
+-                    }}
+-                  >
+-                    {track.channelTitle || track.artist || "Artist"}
+-                  </div>
+-                </div>
+-                <div className="meta">
+-                  <span>{track.durationMs ? `${Math.floor(track.durationMs / 60000)}:${String(Math.floor((track.durationMs % 60000) / 1000)).padStart(2, '0')}` : "3:45"}</span>
+-                  <button
+-                    className="context-menu-btn"
+-                    onClick={(e) => handleContextMenuClick(e, track)}
+-                    style={{
+-                      background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)',
+-                      cursor: 'pointer', padding: '0px', display: 'flex', marginLeft: '12px'
+-                    }}
+-                  >
+-                    <MoreVertical size={16} />
+-                  </button>
+-                </div>
+-              </RecommendedTrack>
+-            ))}
+-          </RecommendedContainer>
+-        </>
+-      )}
+-
+-      {hitlists.map((hitlist, idx) => (
+-        <div key={`hitlist-${idx}`}>
++      {homeSections.map((section, idx) => (
++        <div key={`section-${idx}`}>
+           <SectionHeaderRow>
+             <SectionTitleGroup>
+-              <h2>{hitlist.title}</h2>
++              <h2>{section.title}</h2>
+             </SectionTitleGroup>
+             <IconButton><RefreshCw size={16} /></IconButton>
+           </SectionHeaderRow>
+           <ShelfContainer>
+-            {hitlist.items.map((item: any, i: number) => (
++            {section.items.map((item: any, i: number) => (
+               <Card
+-                key={`hl-${item.id}-${i}`}
++                key={`item-${item.id}-${i}`}
+                 $index={i}
+                 onClick={() => {
+-                  if (item.id) {
+-                    router.push('/album/' + item.id);
++                  if (item.videoId) {
++                    onPlay({
++                      videoId: item.videoId,
++                      title: item.title,
++                      artist: item.artist,
++                      artistId: item.artistId,
++                      thumbnailUrl: item.thumbnailUrl,
++                      durationMs: 0
++                    });
++                  } else if (item.browseId) {
++                    if (item.browseId.startsWith('UC')) {
++                      router.push('/artist/' + item.browseId);
++                    } else {
++                      router.push('/album/' + item.browseId);
++                    }
++                  }
++                }}
++                onContextMenu={(e) => {
++                  if (item.videoId) {
++                    handleContextMenuClick(e, {
++                      videoId: item.videoId,
++                      title: item.title,
++                      artist: item.artist,
++                      artistId: item.artistId,
++                      thumbnailUrl: item.thumbnailUrl,
++                      durationMs: 0
++                    });
+                   }
+                 }}
+               >
+@@ -722,42 +668,57 @@ export function HomeGrid() {
+                   <PlayOverlay className="play-overlay">
+                     <Play fill="currentColor" size={24} />
+                   </PlayOverlay>
++                  {item.videoId && (
++                    <button
++                      onClick={(e) => {
++                        e.stopPropagation();
++                        handleContextMenuClick(e, {
++                          videoId: item.videoId,
++                          title: item.title,
++                          artist: item.artist,
++                          artistId: item.artistId,
++                          thumbnailUrl: item.thumbnailUrl,
++                          durationMs: 0
++                        });
++                      }}
++                      className="context-menu-btn"
++                      style={{
++                        position: 'absolute', top: '8px', right: '8px',
++                        background: 'rgba(0,0,0,0.5)', borderRadius: '50%', border: 'none',
++                        color: 'rgba(255,255,255,0.9)', cursor: 'pointer', padding: '6px',
++                        display: 'flex', zIndex: 10, backdropFilter: 'blur(4px)'
++                      }}
++                    >
++                      <MoreVertical size={16} />
++                    </button>
++                  )}
+                 </ImageContainer>
+                 <Title>{item.title}</Title>
+-                <Subtitle>{item.subtitle}</Subtitle>
++                <Subtitle
++                  onClick={(e) => {
++                    e.stopPropagation();
++                    if (item.artistId) {
++                      router.push('/artist/' + item.artistId);
++                    } else if (item.artist) {
++                      router.push('/search?q=' + encodeURIComponent(item.artist));
++                    }
++                  }}
++                  style={{ cursor: 'pointer' }}
++                  onMouseEnter={(e) => {
++                    e.currentTarget.style.textDecoration = 'underline';
++                  }}
++                  onMouseLeave={(e) => {
++                    e.currentTarget.style.textDecoration = 'none';
++                  }}
++                >
++                  {item.artist || "Unknown Artist"}
++                </Subtitle>
+               </Card>
+             ))}
+           </ShelfContainer>
+         </div>
+       ))}
+ 
+-      {recommended.length > 0 && (
+-        <>
+-          <SectionHeaderRow>
+-            <SectionTitleGroup>
+-              <h2>Recommended Artists</h2>
+-            </SectionTitleGroup>
+-            <IconButton><RefreshCw size={16} /></IconButton>
+-          </SectionHeaderRow>
+-          <ShelfContainer>
+-            {recommended.slice(0, 8).map((track, index) => (
+-              <ArtistCircle
+-                key={`artist-${track.videoId}`}
+-                $index={index}
+-                onClick={() => {
+-                  if (track.artistId) {
+-                    router.push('/artist/' + track.artistId);
+-                  }
+-                }}
+-              >
+-                <img src={track.thumbnailUrl} alt={track.channelTitle} loading="lazy" />
+-                <span>{track.channelTitle || track.artist || "Artist"}</span>
+-              </ArtistCircle>
+-            ))}
+-          </ShelfContainer>
+-        </>
+-      )}
+-
+       {menuTrack && (
+         <TrackContextMenu
+           track={menuTrack.track}
+diff --git a/src/components/ProgressBar.tsx b/src/components/ProgressBar.tsx
+index a92d5d4..6e68c43 100644
+--- a/src/components/ProgressBar.tsx
++++ b/src/components/ProgressBar.tsx
+@@ -1,5 +1,6 @@
+ "use client";
+ 
++import { useState, useRef, useEffect } from "react";
+ import styled from "styled-components";
+ import { usePlayerStore } from "@/store/playerStore";
+ 
+@@ -82,23 +83,73 @@ export function ProgressBar({
+ }: ProgressBarProps) {
+   const positionMs = usePlayerStore(s => s.positionMs);
+   const durationMs = usePlayerStore(s => s.durationMs);
+-  const fillPct = durationMs > 0 ? (positionMs / durationMs) * 100 : 0;
++  const setPositionMs = usePlayerStore(s => s.setPositionMs);
++  
++  const [isDragging, setIsDragging] = useState(false);
++  const [dragPct, setDragPct] = useState(0);
++  const trackRef = useRef<HTMLDivElement>(null);
++  const dragRectRef = useRef<{ left: number, width: number } | null>(null);
++
++  const displayMs = isDragging ? dragPct * durationMs : positionMs;
++  const fillPct = durationMs > 0 ? (displayMs / durationMs) * 100 : 0;
+   const clampedPct = Math.min(100, Math.max(0, fillPct));
+ 
+-  const handleSeekClick = (e: React.MouseEvent<HTMLDivElement>) => {
++  const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+     if (durationMs <= 0) return;
+-    const rect = e.currentTarget.getBoundingClientRect();
+-    const clickX = e.clientX - rect.left;
+-    const clickPct = clickX / rect.width;
+-    onSeek(clickPct * durationMs);
++    if (trackRef.current) {
++      dragRectRef.current = trackRef.current.getBoundingClientRect();
++    }
++    setIsDragging(true);
++    updateDragPosition(e.clientX);
+   };
+ 
++  const updateDragPosition = (clientX: number) => {
++    const rect = dragRectRef.current;
++    if (!rect) return;
++    const clickX = clientX - rect.left;
++    const clickPct = Math.min(1, Math.max(0, clickX / rect.width));
++    setDragPct(clickPct);
++  };
++
++  useEffect(() => {
++    if (!isDragging) return;
++
++    const handlePointerMove = (e: PointerEvent) => {
++      updateDragPosition(e.clientX);
++    };
++
++    const handlePointerUp = (e: PointerEvent) => {
++      setIsDragging(false);
++      
++      const rect = dragRectRef.current;
++      if (!rect) return;
++      
++      const clickX = e.clientX - rect.left;
++      const finalPct = Math.min(1, Math.max(0, clickX / rect.width));
++      const targetMs = finalPct * durationMs;
++      
++      setPositionMs(targetMs);
++      onSeek(targetMs);
++    };
++
++    window.addEventListener("pointermove", handlePointerMove);
++    window.addEventListener("pointerup", handlePointerUp);
++
++    return () => {
++      window.removeEventListener("pointermove", handlePointerMove);
++      window.removeEventListener("pointerup", handlePointerUp);
++    };
++  }, [isDragging, durationMs, onSeek, setPositionMs]);
++
+   return (
+     <ProgressWrapper>
+       <TimeDisplay style={{ textAlign: "right" }}>
+-        {formatTime(positionMs)}
++        {formatTime(displayMs)}
+       </TimeDisplay>
+-      <TrackLine onClick={handleSeekClick}>
++      <TrackLine 
++        ref={trackRef}
++        onPointerDown={handlePointerDown}
++      >
+         <Fill className="fill" style={{ width: `${clampedPct}%` }} />
+         <Thumb className="thumb" style={{ left: `${clampedPct}%` }} />
+       </TrackLine>
+diff --git a/src/hooks/usePlayerState.ts b/src/hooks/usePlayerState.ts
+index 72eedae..95d2226 100644
+--- a/src/hooks/usePlayerState.ts
++++ b/src/hooks/usePlayerState.ts
+@@ -47,7 +47,7 @@ export function usePlayerState(
+   const [isShuffle, setIsShuffle] = useState(false);
+   const [isRepeat, setIsRepeat] = useState(false);
+ 
+-  const intervalRef = useRef<NodeJS.Timeout | null>(null);
++  const intervalRef = useRef<NodeJS.Timeout | number | null>(null);
+ 
+   const toggleShuffle = () => setIsShuffle(prev => !prev);
+   const toggleRepeat = () => setIsRepeat(prev => !prev);
+diff --git a/src/lib/cache.ts b/src/lib/cache.ts
+index 1031e75..1ba5e81 100644
+--- a/src/lib/cache.ts
++++ b/src/lib/cache.ts
+@@ -1,14 +1,12 @@
+ import type { Track } from "@/types/music";
+ 
+ interface HomeCache {
+-  tracks: Track[] | null;
+-  hitlists: any[] | null;
++  homeSections: any[] | null;
+   timestamp: number;
+ }
+ 
+ const cache: HomeCache = {
+-  tracks: null,
+-  hitlists: null,
++  homeSections: null,
+   timestamp: 0,
+ };
+ 
+@@ -16,14 +14,12 @@ export function getHomeCache() {
+   return cache;
+ }
+ 
+-export function setHomeCache(tracks: Track[], hitlists: any[]) {
+-  cache.tracks = tracks;
+-  cache.hitlists = hitlists;
++export function setHomeCache(homeSections: any[]) {
++  cache.homeSections = homeSections;
+   cache.timestamp = Date.now();
+ }
+ 
+ export function clearHomeCache() {
+-  cache.tracks = null;
+-  cache.hitlists = null;
++  cache.homeSections = null;
+   cache.timestamp = 0;
+ }
+diff --git a/tsconfig.json b/tsconfig.json
+index dca6789..938e1bb 100644
+--- a/tsconfig.json
++++ b/tsconfig.json
+@@ -30,5 +30,5 @@
+     ".next/dev/types/**/*.ts",
+     "**/*.mts"
+   ],
+-  "exclude": ["node_modules", "ideation"]
++  "exclude": ["node_modules", "ideation", "mobile"]
+ }

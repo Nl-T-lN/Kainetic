@@ -512,6 +512,7 @@ export function HomeGrid() {
   };
   const [tracks, setTracks] = useState<Track[]>([]);
   const [hitlists, setHitlists] = useState<any[]>([]);
+  const [dynamicSections, setDynamicSections] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const { recentTracks } = useRecentTracks();
 
@@ -524,6 +525,9 @@ export function HomeGrid() {
       if (cached.tracks && cached.hitlists) {
         setTracks(cached.tracks);
         setHitlists(cached.hitlists);
+        if (cached.dynamicSections) {
+          setDynamicSections(cached.dynamicSections);
+        }
         setLoading(false);
         return;
       }
@@ -537,13 +541,15 @@ export function HomeGrid() {
 
         const hitlistUrl = recentArtistsStr ? `/api/home/hitlist?artists=${encodeURIComponent(recentArtistsStr)}` : `/api/home/hitlist`;
 
-        const [searchRes, hitlistRes] = await Promise.all([
+        const [searchRes, hitlistRes, homeRes] = await Promise.all([
           fetch(`/api/search?q=${encodeURIComponent("Top Pop Hits 2024")}`),
-          fetch(hitlistUrl)
+          fetch(hitlistUrl),
+          fetch(`/api/home`)
         ]);
 
         let finalTracks: Track[] = [];
         let finalHitlists: any[] = [];
+        let finalDynamicSections: any[] = [];
 
         if (searchRes.ok) {
           const data = await searchRes.json();
@@ -557,7 +563,13 @@ export function HomeGrid() {
           setHitlists(finalHitlists);
         }
         
-        setHomeCache(finalTracks, finalHitlists);
+        if (homeRes.ok) {
+          const data = await homeRes.json();
+          finalDynamicSections = data.sections || [];
+          setDynamicSections(finalDynamicSections);
+        }
+        
+        setHomeCache(finalTracks, finalHitlists, finalDynamicSections);
       } catch (error) {
         console.error("Error fetching home data", error);
       } finally {
@@ -697,6 +709,87 @@ export function HomeGrid() {
           </RecommendedContainer>
         </>
       )}
+
+      {dynamicSections.map((section, idx) => {
+        const isSongSection = section.items[0]?.type === 'song';
+        return (
+          <div key={`dyn-section-${idx}`}>
+            <SectionHeaderRow>
+              <SectionTitleGroup>
+                <h2>{section.title}</h2>
+              </SectionTitleGroup>
+              <IconButton><RefreshCw size={16} /></IconButton>
+            </SectionHeaderRow>
+            {isSongSection ? (
+              <RecommendedContainer>
+                {section.items.map((track: any, index: number) => (
+                  <RecommendedTrack key={`dyn-${track.videoId}-${index}`} $index={index} onClick={() => onPlay(track)} onContextMenu={(e) => handleContextMenuClick(e, track)}>
+                    <img src={track.thumbnailUrl} alt={track.title} loading="lazy" />
+                    <div className="info">
+                      <div className="title">{track.title}</div>
+                      <div 
+                        className="artist"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (track.channelTitle) {
+                            router.push('/search?q=' + encodeURIComponent(track.channelTitle));
+                          }
+                        }}
+                        style={{ cursor: 'pointer' }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.textDecoration = 'underline';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.textDecoration = 'none';
+                        }}
+                      >
+                        {track.channelTitle}
+                      </div>
+                    </div>
+                    <div className="meta">
+                      <button
+                        className="context-menu-btn"
+                        onClick={(e) => handleContextMenuClick(e, track)}
+                        style={{
+                          background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)',
+                          cursor: 'pointer', padding: '0px', display: 'flex', marginLeft: '12px'
+                        }}
+                      >
+                        <MoreVertical size={16} />
+                      </button>
+                    </div>
+                  </RecommendedTrack>
+                ))}
+              </RecommendedContainer>
+            ) : (
+              <ShelfContainer>
+                {section.items.map((item: any, i: number) => (
+                  <Card
+                    key={`dyn-hl-${item.id}-${i}`}
+                    $index={i}
+                    onClick={() => {
+                      if (item.type === 'playlist') {
+                        router.push('/playlist/' + item.id);
+                      } else {
+                        router.push('/album/' + item.id);
+                      }
+                    }}
+                  >
+                    <ImageContainer className="image-container">
+                      <img src={item.thumbnailUrl} alt={item.title} loading="lazy" />
+                      <PlayOverlay className="play-overlay">
+                        <Play fill="currentColor" size={24} />
+                      </PlayOverlay>
+                    </ImageContainer>
+                    <Title>{item.title}</Title>
+                    <Subtitle>{item.channelTitle || item.subtitle}</Subtitle>
+                  </Card>
+                ))}
+              </ShelfContainer>
+            )}
+          </div>
+        );
+      })}
 
       {hitlists.map((hitlist, idx) => (
         <div key={`hitlist-${idx}`}>
