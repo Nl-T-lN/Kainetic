@@ -20,6 +20,8 @@ export const defaultThemeSettings: ThemeSettings = {
   progressBarStyle: "thin",
   dynamicAccent: false,
   albumBackground: false,
+  audioQuality: "auto",
+  gaplessPlayback: true,
 };
 
 // Helper to convert hex to rgb string (e.g., "255, 107, 157")
@@ -36,16 +38,48 @@ export function useThemeSettings() {
 
   // Load from local storage on mount
   useEffect(() => {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        setSettings({ ...defaultThemeSettings, ...parsed });
-      } catch (e) {
-        console.error("Failed to parse theme settings", e);
+    const loadSettings = () => {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          setSettings(prev => {
+            const next = { ...defaultThemeSettings, ...parsed };
+            if (JSON.stringify(prev) === JSON.stringify(next)) {
+              return prev; // bail out if no actual change
+            }
+            return next;
+          });
+        } catch (e) {
+          console.error("Failed to parse theme settings", e);
+        }
       }
-    }
+    };
+
+    loadSettings();
     setIsLoaded(true);
+
+    const handleStorage = (e: StorageEvent) => {
+      if (e.key === STORAGE_KEY) {
+        loadSettings();
+      }
+    };
+
+    const handleCustomStorage = () => {
+      loadSettings();
+    };
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('storage', handleStorage);
+      window.addEventListener('vintify-settings-updated', handleCustomStorage);
+    }
+
+    return () => {
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('storage', handleStorage);
+        window.removeEventListener('vintify-settings-updated', handleCustomStorage);
+      }
+    };
   }, []);
 
   // Update CSS variables when settings change
@@ -71,8 +105,15 @@ export function useThemeSettings() {
     }
 
     root.style.setProperty("--radius", `${settings.radius}px`);
-    root.style.setProperty("--glass-opacity", `${settings.opacity / 100}`);
+    
+    // Toggle glassmorphism logic: if disabled, opacity is 1 (fully opaque background)
+    root.style.setProperty("--glass-opacity", settings.glassmorphism ? `${settings.opacity / 100}` : "1");
+    
+    // If not glassmorphism, blur should be 0px instead of blurred panel
+    root.style.setProperty("--glass-blur", settings.glassmorphism ? "12px" : "0px");
+
     root.style.setProperty("--sidebar-width", `${settings.sidebarWidth}px`);
+    root.style.setProperty("--font-scale", `${settings.fontSize / 100}`);
     
     // Add additional logic here for fonts, animations, etc., as needed based on Settings UI.
     if (settings.fontFamily === 'System') {
@@ -82,6 +123,9 @@ export function useThemeSettings() {
     }
 
     localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new Event('vintify-settings-updated'));
+    }
 
     return () => {
       if (typeof window !== 'undefined') {

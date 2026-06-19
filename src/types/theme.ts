@@ -13,6 +13,8 @@ export interface ThemeSettings {
   progressBarStyle: 'thin' | 'thick' | 'waveform';
   dynamicAccent: boolean;
   albumBackground: boolean;
+  audioQuality: 'auto' | 'high' | 'normal' | 'low';
+  gaplessPlayback: boolean;
 }
 
 export type ThemePreset = 'system' | 'black' | 'dark' | 'ocean' | 'purple' | 'forest' | 'mocha' | 'custom';

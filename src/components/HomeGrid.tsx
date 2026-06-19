@@ -201,6 +201,14 @@ const IconButton = styled.button`
     color: #fff;
     background: rgba(255, 255, 255, 0.1);
   }
+
+  .spin {
+    animation: spin 1s linear infinite;
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
 `;
 
 const ArtistCircle = styled.div<{ $index: number }>`
@@ -600,6 +608,62 @@ export function HomeGrid() {
     fetchHomeData();
   }, []);
 
+  const [refreshingTracks, setRefreshingTracks] = useState(false);
+  const refreshTracks = async () => {
+    setRefreshingTracks(true);
+    try {
+      const queries = ['Lofi', 'Trending', 'Pop Hits', 'Rock Classics', 'Viral Songs', 'Chill Vibes', 'Acoustic Covers', 'Electronic Dance'];
+      const q = queries[Math.floor(Math.random() * queries.length)];
+      const res = await fetch(`/api/search?q=${encodeURIComponent(q)}`);
+      if (res.ok) {
+        const data = await res.json();
+        setTracks(data.tracks || []);
+      }
+    } finally {
+      setRefreshingTracks(false);
+    }
+  };
+
+  const [refreshingDynamic, setRefreshingDynamic] = useState(false);
+  const refreshDynamicSections = async () => {
+    setRefreshingDynamic(true);
+    try {
+      const homeRes = await fetch(`/api/home`);
+      if (homeRes.ok) {
+        const data = await homeRes.json();
+        let sections = data.sections || [];
+        setDynamicSections(sections.sort(() => Math.random() - 0.5));
+      }
+    } finally {
+      setRefreshingDynamic(false);
+    }
+  };
+
+  const [refreshingHitlists, setRefreshingHitlists] = useState(false);
+  const refreshHitlists = async () => {
+    setRefreshingHitlists(true);
+    try {
+      let recentArtistsStr = "";
+      try {
+        const { useLibraryStore } = await import('@/store/libraryStore');
+        const rTracks = useLibraryStore.getState().recentTracks || [];
+        const artists = Array.from(new Set(rTracks.map((t: any) => t.channelTitle || t.artist).filter(Boolean)))
+          .sort(() => Math.random() - 0.5)
+          .slice(0, 2);
+        if (artists.length > 0) recentArtistsStr = (artists as string[]).join(',');
+      } catch (e) { }
+
+      const hitlistUrl = recentArtistsStr ? `/api/home/hitlist?artists=${encodeURIComponent(recentArtistsStr)}` : `/api/home/hitlist`;
+      const hitlistRes = await fetch(hitlistUrl);
+      if (hitlistRes.ok) {
+        const data = await hitlistRes.json();
+        setHitlists(data.hitlists || []);
+      }
+    } finally {
+      setRefreshingHitlists(false);
+    }
+  };
+
   if (loading) {
     return (
       <Container>
@@ -682,7 +746,9 @@ export function HomeGrid() {
             <SectionTitleGroup>
               <h2>Recommendations</h2>
             </SectionTitleGroup>
-            <IconButton><RefreshCw size={16} /></IconButton>
+            <IconButton onClick={refreshTracks}>
+              <RefreshCw size={16} className={refreshingTracks ? "spin" : ""} />
+            </IconButton>
           </SectionHeaderRow>
           <RecommendedContainer>
             {hits.map((track, index) => (
@@ -738,7 +804,9 @@ export function HomeGrid() {
               <SectionTitleGroup>
                 <h2>{section.title}</h2>
               </SectionTitleGroup>
-              <IconButton><RefreshCw size={16} /></IconButton>
+              <IconButton onClick={refreshDynamicSections}>
+                <RefreshCw size={16} className={refreshingDynamic ? "spin" : ""} />
+              </IconButton>
             </SectionHeaderRow>
             {isSongSection ? (
               <RecommendedContainer>
@@ -818,7 +886,9 @@ export function HomeGrid() {
             <SectionTitleGroup>
               <h2>{hitlist.title}</h2>
             </SectionTitleGroup>
-            <IconButton><RefreshCw size={16} /></IconButton>
+            <IconButton onClick={refreshHitlists}>
+              <RefreshCw size={16} className={refreshingHitlists ? "spin" : ""} />
+            </IconButton>
           </SectionHeaderRow>
           <ShelfContainer>
             {hitlist.items.map((item: any, i: number) => (
@@ -851,7 +921,11 @@ export function HomeGrid() {
             <SectionTitleGroup>
               <h2>Recommended Artists</h2>
             </SectionTitleGroup>
-            <IconButton><RefreshCw size={16} /></IconButton>
+            <IconButton onClick={() => {
+              // Just a visual refresh for recent tracks, though it updates automatically
+            }}>
+              <RefreshCw size={16} />
+            </IconButton>
           </SectionHeaderRow>
           <ShelfContainer>
             {recommended.slice(0, 8).map((track, index) => (

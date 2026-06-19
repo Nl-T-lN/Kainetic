@@ -10,6 +10,8 @@ import { Settings } from "lucide-react";
 
 const SettingsContainer = styled.div`
   width: 100%;
+  max-width: 900px;
+  padding: 0 2rem 4rem 2rem;
   color: ${({ theme }) => theme.colors.cream};
 `;
 
@@ -67,17 +69,27 @@ const Tab = styled.button<{ $active: boolean }>`
 const Section = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 2rem;
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  overflow: hidden;
 `;
 
 const SettingRow = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1.5rem;
-  background: rgba(255, 255, 255, 0.03);
-  border-radius: var(--radius);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  transition: background 0.2s;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.02);
+  }
+
+  &:last-child {
+    border-bottom: none;
+  }
 `;
 
 const SettingInfo = styled.div`
@@ -219,7 +231,7 @@ const PRESETS = [
 
 export function SettingsView() {
   const { settings, updateSetting, resetToDefaults, isLoaded } = useThemeSettings();
-  const [activeTab, setActiveTab] = useState<'appearance' | 'interface' | 'player' | 'playlist'>('appearance');
+  const [activeTab, setActiveTab] = useState<'appearance' | 'interface' | 'player' | 'audio' | 'playlist'>('appearance');
   const { recentTracks } = useRecentTracks();
 
   if (!isLoaded) return null;
@@ -237,6 +249,7 @@ export function SettingsView() {
         <Tab $active={activeTab === 'appearance'} onClick={() => setActiveTab('appearance')}>Appearance</Tab>
         <Tab $active={activeTab === 'interface'} onClick={() => setActiveTab('interface')}>Interface</Tab>
         <Tab $active={activeTab === 'player'} onClick={() => setActiveTab('player')}>Player</Tab>
+        <Tab $active={activeTab === 'audio'} onClick={() => setActiveTab('audio')}>Audio</Tab>
         <Tab $active={activeTab === 'playlist'} onClick={() => setActiveTab('playlist')}>Playlist Export</Tab>
       </Tabs>
 
@@ -248,7 +261,7 @@ export function SettingsView() {
 
       {activeTab === 'appearance' && (
         <Section>
-          <div>
+          <div style={{ padding: '1.5rem', borderBottom: '1px solid rgba(255, 255, 255, 0.05)' }}>
             <h3 style={{ marginBottom: '1rem' }}>Theme Presets</h3>
             <PresetsGrid>
               {PRESETS.map((preset) => (
@@ -256,6 +269,7 @@ export function SettingsView() {
                   key={preset.label} 
                   $color={preset.color}
                   onClick={() => {
+                    updateSetting('dynamicAccent', false);
                     updateSetting('accentColor', preset.color);
                     updateSetting('bgColor', preset.bg);
                   }}
@@ -310,6 +324,57 @@ export function SettingsView() {
               <span style={{ width: '40px', textAlign: 'right' }}>{settings.opacity}%</span>
             </ControlGroup>
           </SettingRow>
+
+          <SettingRow>
+            <SettingInfo>
+              <div className="title">Enable Glassmorphism</div>
+              <div className="desc">Use frosted glass effect on panels</div>
+            </SettingInfo>
+            <ControlGroup>
+              <Toggle>
+                <input 
+                  type="checkbox" 
+                  checked={settings.glassmorphism} 
+                  onChange={(e) => updateSetting('glassmorphism', e.target.checked)} 
+                />
+                <span />
+              </Toggle>
+            </ControlGroup>
+          </SettingRow>
+
+          <SettingRow>
+            <SettingInfo>
+              <div className="title">Dynamic Accent Colors</div>
+              <div className="desc">Adapt theme colors based on the playing track</div>
+            </SettingInfo>
+            <ControlGroup>
+              <Toggle>
+                <input 
+                  type="checkbox" 
+                  checked={settings.dynamicAccent} 
+                  onChange={(e) => updateSetting('dynamicAccent', e.target.checked)} 
+                />
+                <span />
+              </Toggle>
+            </ControlGroup>
+          </SettingRow>
+
+          <SettingRow>
+            <SettingInfo>
+              <div className="title">Album Background Blur</div>
+              <div className="desc">Show blurred album art as background</div>
+            </SettingInfo>
+            <ControlGroup>
+              <Toggle>
+                <input 
+                  type="checkbox" 
+                  checked={settings.albumBackground} 
+                  onChange={(e) => updateSetting('albumBackground', e.target.checked)} 
+                />
+                <span />
+              </Toggle>
+            </ControlGroup>
+          </SettingRow>
         </Section>
       )}
 
@@ -332,6 +397,22 @@ export function SettingsView() {
                 <option value="JetBrains Mono">JetBrains Mono</option>
                 <option value="System">System Default</option>
               </Select>
+            </ControlGroup>
+          </SettingRow>
+
+          <SettingRow>
+            <SettingInfo>
+              <div className="title">Font Size</div>
+              <div className="desc">Adjust the global text size</div>
+            </SettingInfo>
+            <ControlGroup>
+              <RangeInput 
+                type="range" 
+                min="80" max="130" 
+                value={settings.fontSize} 
+                onChange={(e) => updateSetting('fontSize', Number(e.target.value))} 
+              />
+              <span style={{ width: '40px', textAlign: 'right' }}>{settings.fontSize}%</span>
             </ControlGroup>
           </SettingRow>
 
@@ -390,6 +471,23 @@ export function SettingsView() {
 
           <SettingRow>
             <SettingInfo>
+              <div className="title">Progress Bar Style</div>
+              <div className="desc">Appearance of the playback seek bar</div>
+            </SettingInfo>
+            <ControlGroup>
+              <Select 
+                value={settings.progressBarStyle} 
+                onChange={(e) => updateSetting('progressBarStyle', e.target.value as any)}
+              >
+                <option value="thin">Thin Line</option>
+                <option value="thick">Thick Bar</option>
+                <option value="waveform">Waveform</option>
+              </Select>
+            </ControlGroup>
+          </SettingRow>
+
+          <SettingRow>
+            <SettingInfo>
               <div className="title">Animations</div>
               <div className="desc">Enable micro-animations and transitions</div>
             </SettingInfo>
@@ -399,6 +497,45 @@ export function SettingsView() {
                   type="checkbox" 
                   checked={settings.animations} 
                   onChange={(e) => updateSetting('animations', e.target.checked)} 
+                />
+                <span />
+              </Toggle>
+            </ControlGroup>
+          </SettingRow>
+        </Section>
+      )}
+
+      {activeTab === 'audio' && (
+        <Section>
+          <SettingRow>
+            <SettingInfo>
+              <div className="title">Audio Quality</div>
+              <div className="desc">Select the preferred streaming quality</div>
+            </SettingInfo>
+            <ControlGroup>
+              <Select 
+                value={settings.audioQuality} 
+                onChange={(e) => updateSetting('audioQuality', e.target.value as any)}
+              >
+                <option value="auto">Auto</option>
+                <option value="high">High (256kbps+)</option>
+                <option value="normal">Normal (128kbps)</option>
+                <option value="low">Data Saver (48kbps)</option>
+              </Select>
+            </ControlGroup>
+          </SettingRow>
+
+          <SettingRow>
+            <SettingInfo>
+              <div className="title">Gapless Playback</div>
+              <div className="desc">Eliminate silence between tracks</div>
+            </SettingInfo>
+            <ControlGroup>
+              <Toggle>
+                <input 
+                  type="checkbox" 
+                  checked={settings.gaplessPlayback} 
+                  onChange={(e) => updateSetting('gaplessPlayback', e.target.checked)} 
                 />
                 <span />
               </Toggle>

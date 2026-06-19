@@ -63,7 +63,7 @@ function generateM3U(tracks: Track[]) {
 
 function generateJSON(tracks: Track[]) {
   return JSON.stringify({
-    format: "monochrome-playlist",
+    format: "kainetic-playlist",
     generated: new Date().toISOString(),
     tracks: tracks.map((t, i) => ({
       position: i + 1,

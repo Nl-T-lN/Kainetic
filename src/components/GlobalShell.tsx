@@ -11,6 +11,7 @@ import { usePlayerState } from "@/hooks/usePlayerState";
 import { usePartyRoom } from "@/hooks/usePartyRoom";
 import { useRecentTracks } from "@/hooks/useRecentTracks";
 import { PlayerContext } from "@/contexts/PlayerContext";
+import { useThemeSettings } from "@/hooks/useThemeSettings";
 
 // Components
 import { Sidebar } from "./Sidebar";
@@ -171,6 +172,7 @@ export function GlobalShell({ children }: { children: React.ReactNode }) {
   const player = useYTPlayer();
   const playerState = usePlayerState(player.playerRef);
   const isPlaying = usePlayerStore(s => s.isPlaying);
+  const { settings } = useThemeSettings();
 
   const [volume, setVolumeState] = useState(70);
 
@@ -238,7 +240,7 @@ export function GlobalShell({ children }: { children: React.ReactNode }) {
   }, [party.isHost, party.partyPlayerState, player, playerState, playerState.currentTrack?.videoId, isPlaying]);
 
   useEffect(() => {
-    if (playerState.currentTrack?.thumbnailUrl) {
+    if (playerState.currentTrack?.thumbnailUrl && settings.dynamicAccent) {
       import('@/lib/vibrant-color').then(({ getVibrantColorFromImage }) => {
         getVibrantColorFromImage(playerState.currentTrack!.thumbnailUrl!)
           .then(color => {
@@ -275,7 +277,7 @@ export function GlobalShell({ children }: { children: React.ReactNode }) {
       // Force settings to re-apply their colors
       window.dispatchEvent(new Event('storage'));
     }
-  }, [playerState.currentTrack?.thumbnailUrl]);
+  }, [playerState.currentTrack?.thumbnailUrl, settings.dynamicAccent]);
 
   // Sync to OS MediaSession for background playback
   useEffect(() => {
