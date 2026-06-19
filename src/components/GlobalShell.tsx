@@ -194,9 +194,9 @@ export function GlobalShell({ children }: { children: React.ReactNode }) {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const { addTrack } = useRecentTracks();
   const pathname = usePathname();
-  const [pendingTrackAction, setPendingTrackAction] = useState<{track: Track, contextQueue?: Track[]} | null>(null);
+  const [pendingTrackAction, setPendingTrackAction] = useState<{ track: Track, contextQueue?: Track[] } | null>(null);
   const lastTrackChangeRef = useRef(0);
-  
+
   // Global lyrics fetching
   const { lyrics, plainLyrics, isLoading: isLyricsLoading } = useLyrics(playerState.currentTrack);
 
@@ -239,6 +239,16 @@ export function GlobalShell({ children }: { children: React.ReactNode }) {
     }
   }, [party.isHost, party.partyPlayerState, player, playerState, playerState.currentTrack?.videoId, isPlaying]);
 
+  // document title
+  useEffect(() => {
+    if (playerState.currentTrack) {
+      const trackName = playerState.currentTrack.title;
+      document.title = `${trackName} | Kainetic`;
+    } else {
+      document.title = "Kainetic";
+    }
+  }, [playerState.currentTrack]);
+
   useEffect(() => {
     if (playerState.currentTrack?.thumbnailUrl && settings.dynamicAccent) {
       import('@/lib/vibrant-color').then(({ getVibrantColorFromImage }) => {
@@ -251,7 +261,7 @@ export function GlobalShell({ children }: { children: React.ReactNode }) {
             const g = parseInt(color.slice(3, 5), 16);
             const b = parseInt(color.slice(5, 7), 16);
             document.documentElement.style.setProperty('--accent-rgb', `${r}, ${g}, ${b}`);
-            
+
             // Also set primary if needed by other components
             document.documentElement.style.setProperty('--primary', color);
 
@@ -264,7 +274,7 @@ export function GlobalShell({ children }: { children: React.ReactNode }) {
             document.documentElement.style.setProperty('--bg', `rgb(${bgR}, ${bgG}, ${bgB})`);
             document.documentElement.style.setProperty('--bg-rgb', `${bgR}, ${bgG}, ${bgB}`);
           })
-          .catch(() => {});
+          .catch(() => { });
       });
     } else {
       if (typeof window !== 'undefined') (window as any).__vintifyHasDynamicColor = false;
@@ -273,7 +283,7 @@ export function GlobalShell({ children }: { children: React.ReactNode }) {
       document.documentElement.style.removeProperty('--primary');
       document.documentElement.style.removeProperty('--bg');
       document.documentElement.style.removeProperty('--bg-rgb');
-      
+
       // Force settings to re-apply their colors
       window.dispatchEvent(new Event('storage'));
     }
@@ -302,7 +312,7 @@ export function GlobalShell({ children }: { children: React.ReactNode }) {
     // 1. Play track immediately and clear old queue
     playerState.setCurrentTrack(track);
     addTrack(track);
-    
+
     if (contextQueue && contextQueue.length > 0) {
       // Find the index of the track in the context queue
       const startIndex = contextQueue.findIndex(t => t.videoId === track.videoId);
@@ -313,7 +323,7 @@ export function GlobalShell({ children }: { children: React.ReactNode }) {
 
       // 2. Start fetching similar tracks
       const res = await fetch(`/api/music/upnext?videoId=${track.videoId}`);
-      
+
       if (res.ok) {
         const data = await res.json();
         if (data.tracks && data.tracks.length > 0) {
@@ -329,7 +339,7 @@ export function GlobalShell({ children }: { children: React.ReactNode }) {
   const togglePlay = () => {
     // Prevent guests from controlling playback directly
     if (party.roomCode && !party.isHost) return;
-    
+
     if (!playerState.currentTrack) return;
     if (isPlaying) {
       player.pause();
@@ -401,7 +411,7 @@ export function GlobalShell({ children }: { children: React.ReactNode }) {
       playerRef: player.playerRef
     }}>
       <AppLayout style={{ '--sidebar-width': isSidebarCollapsed ? '80px' : '230px' } as any}>
-        <Sidebar 
+        <Sidebar
           isCollapsed={isSidebarCollapsed}
           onToggleCollapse={() => setIsSidebarCollapsed(prev => !prev)}
         />
@@ -410,7 +420,7 @@ export function GlobalShell({ children }: { children: React.ReactNode }) {
           <TopBar>
             <div style={{ flex: 1 }}>
               <Suspense fallback={<div>Loading...</div>}>
-                <SearchHub 
+                <SearchHub
                   onSearch={search.search}
                   onMoodSearch={moodSearch.searchMood}
                   onPlaylistGenerate={playlistGen.generatePlaylist}
@@ -483,8 +493,8 @@ export function GlobalShell({ children }: { children: React.ReactNode }) {
           setVolume={handleSetVolume}
         />
 
-        <QueueSidebar 
-          isOpen={isQueueOpen} 
+        <QueueSidebar
+          isOpen={isQueueOpen}
           onClose={() => setIsQueueOpen(false)}
           queue={activeQueue}
           queueIndex={activeQueueIndex}
@@ -532,10 +542,10 @@ export function GlobalShell({ children }: { children: React.ReactNode }) {
         )}
 
         {playlistModalTrack && (
-          <AddToPlaylistModal 
-            track={playlistModalTrack} 
-            onClose={() => setPlaylistModalTrack(null)} 
-            onAdded={() => {}} 
+          <AddToPlaylistModal
+            track={playlistModalTrack}
+            onClose={() => setPlaylistModalTrack(null)}
+            onAdded={() => { }}
           />
         )}
       </AppLayout>
