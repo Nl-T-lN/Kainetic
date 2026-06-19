@@ -3,8 +3,7 @@
 import styled from "styled-components";
 
 
-// These are hand-crafted 32x32 pixel SVGs.
-// We use `currentColor` for fill so they automatically take the color
+
 
 
 const SvgContainer = styled.svg`

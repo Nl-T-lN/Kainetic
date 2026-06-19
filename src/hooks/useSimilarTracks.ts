@@ -3,14 +3,6 @@
 import { useState, useEffect, useRef } from "react";
 import type { Track } from "@/types/music";
 
-// ============================================================
-// 📚 LEARN: useSimilarTracks.ts
-// ============================================================
-// We add a 2000ms debounce here because if the user skips through tracks
-// quickly, we don't want to spam the API and get rate limited!
-// We fetch actual YouTube Music Up Next recommendations.
-// ============================================================
-
 export interface UseSimilarTracksReturn {
   tracks: Track[];
   isLoading: boolean;

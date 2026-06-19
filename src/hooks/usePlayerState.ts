@@ -4,17 +4,6 @@ import { useEffect, useState, useRef } from "react";
 import type { PlayerState, Track } from "@/types/music";
 import { usePlayerStore } from "@/store/playerStore";
 
-// ============================================================
-// 📚 LEARN: usePlayerState.ts
-// ============================================================
-// Instead of relying on events, we POLL the YouTube player every 500ms
-// to get the true playback position.
-//
-// Q: Why useRef for intervalId?
-// A: If we used useState(null) for intervalId, setting it would trigger a re-render!
-//    useRef holds mutable data that DOES NOT cause a re-render.
-// ============================================================
-
 export interface UsePlayerStateReturn extends PlayerState {
   setCurrentTrack: (track: Track | null) => void;
   queue: Track[];

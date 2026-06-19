@@ -3,14 +3,6 @@ import { runDJChain, createDJMemory } from "@/lib/chains/djChain";
 import { BufferMemory } from "langchain/memory";
 import { LRUCache } from "lru-cache";
 
-// ============================================================
-// 📚 LEARN: api/ai/dj/route.ts
-// ============================================================
-// We need to keep the DJ's memory alive across multiple API calls,
-// so we store memories in a global LRUCache associated with a `sessionId`.
-// The LRUCache limits the number of sessions, preventing unbounded memory leaks.
-// ============================================================
-
 // Memory store for user sessions 
 const memoryStore = new LRUCache<string, BufferMemory>({
   max: 1000,

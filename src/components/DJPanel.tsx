@@ -3,7 +3,6 @@
 import styled, { css, keyframes } from "styled-components";
 
 
-// AI DJ Display panel.
 
 const PanelContainer = styled.div`
   background: rgba(255, 255, 255, 0.03);

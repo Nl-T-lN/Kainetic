@@ -3,14 +3,6 @@
 import { useState, useEffect, useRef } from "react";
 import type { Track } from "@/types/music";
 
-// ============================================================
-// 📚 LEARN: useDJ.ts 
-// ============================================================
-// This hook automatically triggers the AI DJ whenever the current track changes.
-// It generates a stable `sessionId` so the DJ remembers what it said previously
-// during this browsing session.
-// ============================================================
-
 export interface UseDJReturn {
   djText: string;
   isLoading: boolean;

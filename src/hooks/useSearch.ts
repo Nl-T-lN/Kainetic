@@ -13,18 +13,6 @@ export interface UseSearchReturn {
   search: (query: string) => void;
 }
 
-// ============================================================
-// 📚 LEARN: useSearch.ts (Debounce Pattern)
-// ============================================================
-// A "debounce" prevents a function from running too often.
-// If the user types "D-A-F-T" quickly:
-// - Without debounce: 4 API calls fired instantly
-// - With debounce: Waits 400ms after they STOP typing, fires 1 call
-// 
-// You MUST clear the previous timeout before setting a new one, 
-// otherwise all 4 calls will still happen, just delayed!
-// ============================================================
-
 export function useSearch(): UseSearchReturn {
   const [tracks, setTracks] = useState<Track[]>([]);
   const [isLoading, setIsLoading] = useState(false);

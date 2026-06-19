@@ -1,10 +1,3 @@
-// ============================================================
-// 📚 LEARN: youtube.ts (We Code — Tricky Nested APIs)
-// ============================================================
-// The YouTube Data API v3 returns very deeply nested JSON.
-// We only type the parts we actually intend to read.
-// In TypeScript, you don't have to define every single field an API returns!
-// ============================================================
 
 export interface YouTubeSearchItem {
   id: {

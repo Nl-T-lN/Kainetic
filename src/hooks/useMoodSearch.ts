@@ -3,13 +3,6 @@
 import { useState, useCallback } from "react";
 import type { Track } from "@/types/music";
 
-// ============================================================
-// 📚 LEARN: useMoodSearch.ts
-// ============================================================
-// Since this is triggered by a button click (not typing), we don't
-// need a debounce here. Just a simple async fetch.
-// ============================================================
-
 export interface UseMoodSearchReturn {
   tracks: Track[];
   isLoading: boolean;

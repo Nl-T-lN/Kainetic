@@ -2,16 +2,6 @@ import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
 import { LLMChain } from "langchain/chains";
 import { PromptTemplate } from "@langchain/core/prompts";
 
-// ============================================================
-// 📚 LEARN: moodChain.ts (LLMChain - Stateless)
-// ============================================================
-// We use LLMChain here because we don't need memory — we just want
-// the AI to do one task immediately: translate a "Vibe" into "Search queries".
-// 
-// EX: "Melancholic rain" -> ["sad acoustic indie", "slow rain piano", "lofi chill sad"]
-// This is called "Query Expansion" in AI engineering.
-// ============================================================
-
 export async function runMoodChain(moodQuery: string): Promise<string[]> {
   const llm = new ChatGoogleGenerativeAI({
     model: "gemini-1.5-flash-latest",

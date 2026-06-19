@@ -1,12 +1,5 @@
 "use client";
 
-// ============================================================
-// 📚 LEARN: GlobalStyles.ts
-// ============================================================
-// Global CSS reset and base styles. Connects with our ThemeSettings
-// to dynamically apply user preferences to the root element.
-// ============================================================
-
 import { createGlobalStyle } from "styled-components";
 
 export const GlobalStyles = createGlobalStyle`

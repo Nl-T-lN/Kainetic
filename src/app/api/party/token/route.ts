@@ -1,15 +1,6 @@
 import { NextResponse } from "next/server";
 import Ably from "ably";
 
-// ============================================================
-// 📚 LEARN: api/party/route.ts (I Build)
-// ============================================================
-// We NEVER want to send our ABLY_API_KEY to the client's browser.
-// If we did, anyone could use our quota.
-// Instead, the client asks this endpoint: "Can I have a temporary token?"
-// We use the secret key to generate a short-lived token and send it back.
-// ============================================================
-
 export async function GET(req: Request) {
   if (!process.env.ABLY_API_KEY) {
     return NextResponse.json({ error: "Missing ABLY_API_KEY" }, { status: 500 });

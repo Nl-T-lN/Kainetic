@@ -1,10 +1,3 @@
-// ============================================================
-// 📚 LEARN: theme.ts (Styled Components)
-// ============================================================
-// 1. We define a `theme` object with CSS variables.
-// 2. We use `declare module "styled-components"` to force TypeScript
-//    to understand our theme structure.
-// ============================================================
 
 export const theme = {
   colors: {

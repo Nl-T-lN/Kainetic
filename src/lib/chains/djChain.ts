@@ -3,15 +3,6 @@ import { ConversationChain } from "langchain/chains";
 import { BufferMemory } from "langchain/memory";
 import { PromptTemplate } from "@langchain/core/prompts";
 
-// ============================================================
-// 📚 LEARN: djChain.ts (ConversationChain)
-// ============================================================
-// LangChain makes building AI easy by chaining together common parts.
-// We use "ConversationChain" here because the DJ needs MEMORY.
-// When track 3 plays, the DJ needs to remember what track 1 was to make
-// callbacks ("That was Daft Punk, moving on from the funk of Earth, Wind & Fire...").
-// ============================================================
-
 export function createDJMemory(): BufferMemory {
   // BufferMemory stores the entire chat history
   return new BufferMemory({

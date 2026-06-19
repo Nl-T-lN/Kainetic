@@ -3,12 +3,6 @@
 import { useState } from "react";
 import styled from "styled-components";
 
-// ============================================================
-// 📚 LEARN: PartyPanel.tsx
-// ============================================================
-// Controls for the Ably WebSocket integration.
-// ============================================================
-
 const PanelContainer = styled.div`
   background: ${({ theme }) => theme.colors.surface};
   border: 2px solid ${({ theme }) => theme.colors.background};
