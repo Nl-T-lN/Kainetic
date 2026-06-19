@@ -33,7 +33,7 @@ export async function GET(request: Request) {
     }
 
     const title = result.header?.title?.text || result.title || "Unknown Album";
-    const author = result.header?.author?.name || result.author || "Unknown Artist";
+    const author = result.header?.strapline_text_one?.text || result.header?.author?.name || result.author || "Unknown Artist";
     const thumbnailUrl = getHighResThumbnail(result.header?.thumbnail?.contents || result.header?.thumbnails || result.thumbnails || []);
     
     const tracks = (result.contents || result.items || []).map((item: any) => {

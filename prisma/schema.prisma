@@ -15,7 +15,7 @@ model User {
   playHistory     PlayHistory[]
   playlists       Playlist[]
 }
-// 2. The Central Track Database (Saved once, referenced millions of times)
+// 2. The Central Track Database 
 model Track {
   id              String        @id // YouTube Video ID
   title           String

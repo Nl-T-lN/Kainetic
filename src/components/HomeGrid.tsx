@@ -495,6 +495,7 @@ function getGreeting(): string {
 
 import { useRecentTracks } from "@/hooks/useRecentTracks";
 import { TrackContextMenu } from "./TrackContextMenu";
+import { PlaylistContextMenu } from "./PlaylistContextMenu";
 import { MoreVertical } from "lucide-react";
 import { usePlayer } from "@/contexts/PlayerContext";
 import { useRouter } from "next/navigation";
@@ -503,6 +504,7 @@ export function HomeGrid() {
   const { onPlay, onPlayNext, onAddToQueue, onStartRadio } = usePlayer();
   const router = useRouter();
   const [menuTrack, setMenuTrack] = useState<{ track: Track, x: number, y: number } | null>(null);
+  const [menuPlaylist, setMenuPlaylist] = useState<{ item: any, x: number, y: number } | null>(null);
 
   const handleContextMenuClick = (e: React.MouseEvent, track: Track) => {
     e.preventDefault();
@@ -510,6 +512,24 @@ export function HomeGrid() {
     const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
     setMenuTrack({ track, x: rect.right - 240, y: rect.bottom });
   };
+  
+  const handlePlaylistContextMenuClick = (e: React.MouseEvent, item: any) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+    setMenuPlaylist({ 
+      item: { 
+        playlistId: item.id, 
+        title: item.title, 
+        author: item.channelTitle || item.subtitle || "Unknown Artist", 
+        thumbnailUrl: item.thumbnailUrl, 
+        type: item.type || 'playlist' 
+      }, 
+      x: rect.right - 240, 
+      y: rect.bottom 
+    });
+  };
+
   const [tracks, setTracks] = useState<Track[]>([]);
   const [hitlists, setHitlists] = useState<any[]>([]);
   const [dynamicSections, setDynamicSections] = useState<any[]>([]);
@@ -774,6 +794,7 @@ export function HomeGrid() {
                         router.push('/album/' + item.id);
                       }
                     }}
+                    onContextMenu={(e) => handlePlaylistContextMenuClick(e, item)}
                   >
                     <ImageContainer className="image-container">
                       <img src={item.thumbnailUrl} alt={item.title} loading="lazy" />
@@ -860,6 +881,21 @@ export function HomeGrid() {
           onPlayNext={onPlayNext}
           onAddToQueue={onAddToQueue}
           onStartRadio={onStartRadio}
+        />
+      )}
+      {menuPlaylist && (
+        <PlaylistContextMenu 
+          item={menuPlaylist.item} 
+          x={menuPlaylist.x} 
+          y={menuPlaylist.y} 
+          onClose={() => setMenuPlaylist(null)}
+          onPlay={() => {
+             if (menuPlaylist.item.type === 'playlist') {
+               router.push('/playlist/' + menuPlaylist.item.playlistId);
+             } else {
+               router.push('/album/' + menuPlaylist.item.playlistId);
+             }
+          }}
         />
       )}
     </Container>

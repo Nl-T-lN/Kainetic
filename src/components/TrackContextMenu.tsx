@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import styled, { keyframes } from "styled-components";
-import { Play, Plus, ListPlus, Heart, Download, User, Mic2, Share2, Disc } from "lucide-react";
+import { Play, Plus, ListPlus, Heart, Download, User, Mic2, Share2, Disc, Check } from "lucide-react";
 import type { Track } from "@/types/music";
 import { useLikedTracks } from "@/hooks/useLikedTracks";
 import { useRouter } from "next/navigation";
@@ -92,6 +92,7 @@ export function TrackContextMenu({
   const player = usePlayer();
   const { setPlaylistModalTrack } = useUIStore();
   const liked = isLiked(track.videoId);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -121,7 +122,7 @@ export function TrackContextMenu({
   const handlePlayNext = onPlayNext || player.onPlayNext;
   const handleAddToQueue = onAddToQueue || player.onAddToQueue;
 
-  const hasAlbum = !!((track as any).albumId || track.album?.id);
+  const hasAlbum = !!((track as any).albumId || (track as any).album?.id);
 
   return (
     <MenuContainer ref={menuRef} $x={x} $y={adjustY} $alignRight={alignRight}>
@@ -139,15 +140,13 @@ export function TrackContextMenu({
         <ListPlus size={18} /> Add to queue
       </MenuItem>
       
-      <MenuItem onClick={() => { toggleLike(track); onClose(); }}>
-        <Heart size={18} fill={liked ? "#fff" : "none"} /> 
+      <MenuItem onClick={(e) => { 
+        e.stopPropagation();
+        toggleLike(track); 
+        setTimeout(() => onClose(), 800);
+      }}>
+        <Heart size={18} fill={liked ? "#fff" : "none"} style={{ transition: 'all 0.3s ease', transform: liked ? 'scale(1.1)' : 'scale(1)' }} /> 
         {liked ? "Remove from library" : "Save to library"}
-      </MenuItem>
-      
-      <Divider />
-      
-      <MenuItem onClick={() => onClose()}>
-        <Download size={18} /> Download
       </MenuItem>
       
       <MenuItem onClick={() => {
@@ -162,7 +161,7 @@ export function TrackContextMenu({
       {hasAlbum && (
         <MenuItem onClick={() => {
           onClose();
-          const id = (track as any).albumId || track.album?.id;
+          const id = (track as any).albumId || (track as any).album?.id;
           if (id) router.push('/album/' + id);
         }}>
           <Disc size={18} /> Go to album
@@ -171,7 +170,7 @@ export function TrackContextMenu({
       
       <MenuItem onClick={() => {
         onClose();
-        const artistId = track.artistId || track.artists?.[0]?.id;
+        const artistId = track.artistId || (track as any).artists?.[0]?.id;
         if (artistId) {
           router.push('/artist/' + artistId);
         }
@@ -179,11 +178,27 @@ export function TrackContextMenu({
         <User size={18} /> Go to artist
       </MenuItem>
       
-      <MenuItem onClick={() => {
-        navigator.clipboard.writeText(window.location.origin + '/track/' + track.videoId);
-        onClose();
+      <MenuItem onClick={async (e) => {
+        e.stopPropagation();
+        const url = window.location.origin + '/track/' + track.videoId;
+        if (navigator.share) {
+          try {
+            await navigator.share({ title: track.title, url });
+            onClose();
+          } catch (err) {
+            // Cancelled or failed, fallback to copy
+            navigator.clipboard.writeText(url);
+            setCopied(true);
+            setTimeout(() => onClose(), 1000);
+          }
+        } else {
+          navigator.clipboard.writeText(url);
+          setCopied(true);
+          setTimeout(() => onClose(), 1000);
+        }
       }}>
-        <Share2 size={18} /> Share
+        {copied ? <Check size={18} color="#4ade80" /> : <Share2 size={18} />}
+        {copied ? "Link Copied!" : "Share"}
       </MenuItem>
     </MenuContainer>
   );
